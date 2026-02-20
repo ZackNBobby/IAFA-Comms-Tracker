@@ -36,7 +36,6 @@ button,input,select{font-family:inherit;}
 .prog-wrap{background:#0f172a;border-radius:8px;height:14px;overflow:hidden;margin:6px 0;}
 .prog-bar{height:100%;border-radius:8px;transition:width 0.5s;}
 .kpi{font-size:18px;font-weight:800;margin-top:4px;}
-.tot-card{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:12px;padding:16px;border:1px solid #16a34a;margin-bottom:12px;box-shadow:0 0 20px rgba(22,163,74,0.15);}
 .pay-card{background:linear-gradient(135deg,#1e3a5f,#0f2942);border-radius:12px;padding:18px;border:1px solid #1e40af;margin-bottom:16px;text-align:center;}
 .camp-hdr{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:16px 20px;border-bottom:1px solid #1e40af;}
 .camp-card{background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;margin-bottom:20px;}
@@ -50,8 +49,8 @@ button,input,select{font-family:inherit;}
 .r-tag{background:#1e1b4b;border-radius:4px;padding:1px 8px;font-size:11px;color:#a78bfa;display:inline-block;margin:2px 4px 2px 0;}
 .badge{background:#0f2942;border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;}
 .t-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.save-ind{position:fixed;bottom:20px;right:20px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 16px;font-size:13px;color:#94a3b8;z-index:9999;display:none;}
-.save-ind.show{display:block;}
+/* fade transition */
+#app{transition:opacity 0.35s ease;}
 /* Calendar */
 .cal-wrap{position:relative;}
 .cal-row{display:flex;gap:6px;}
@@ -202,7 +201,6 @@ const todayStr = () => { const t=new Date(); return t.getFullYear()+"-"+String(t
 const getQ = m => { for(const [k,v] of Object.entries(QS)) if(v.months.includes(m)) return k; };
 const getTier = c => TIERS.find(t=>c>=t.min&&c<=t.max)||TIERS[0];
 const yearList = () => { const y=[],cur=new Date().getFullYear(); for(let i=cur;i>=2020;i--) y.push(i); return y; };
-function showSave(){ const e=document.getElementById("saveInd"); e.classList.add("show"); setTimeout(()=>e.classList.remove("show"),2000); }
 
 // ── State ──
 let sales=[], tab="log", activeQ="Q1", selYear=new Date().getFullYear();
@@ -220,8 +218,8 @@ onSnapshot(collection(db,COLL), snap=>{
   sales.sort((a,b)=>a.date<b.date?1:-1);
   renderAll();
 });
-async function addSaleDB(obj){ showSave(); try{ await addDoc(collection(db,COLL),obj); }catch(e){ alert("Save error: "+e.message); } }
-async function delSaleDB(fid){ showSave(); try{ await deleteDoc(doc(db,COLL,fid)); }catch(e){ alert("Delete error: "+e.message); } }
+async function addSaleDB(obj){ try{ await addDoc(collection(db,COLL),obj); }catch(e){ alert("Save error: "+e.message); } }
+async function delSaleDB(fid){ try{ await deleteDoc(doc(db,COLL,fid)); }catch(e){ alert("Delete error: "+e.message); } }
 
 // ── Render ──
 function renderAll(){ renderTabs(); renderPage(); }
@@ -430,17 +428,16 @@ function renderDash(){
   +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yrs.map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
   +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
   +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
+  +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:18px;border:1px solid #f97316;margin-bottom:12px;box-shadow:0 0 24px rgba(249,115,22,0.2);'>"
+  +"<div style='font-size:12px;color:#fed7aa;'>💼 Total Commission Earned (Base + Riders)</div>"
+  +"<div style='font-size:32px;font-weight:900;color:#fff;margin-top:4px;letter-spacing:-0.5px;'>"+$f(qd.tm)+"</div>"
+  +"<div style='font-size:12px;color:#fdba74;margin-top:4px;'>Q"+activeQ.slice(1)+" · "+selYear+"</div>"
+  +"</div>"
   +"<div class='g2' style='margin-bottom:12px;'>"
-  +"<div class='card'><div class='lbl'>💼 Base Commission</div><div class='kpi' style='color:#38bdf8;'>"+$f(qd.bc)+"</div></div>"
   +"<div class='card'><div class='lbl'>🎯 Total Credits</div><div class='kpi' style='color:#60a5fa;'>"+$c(qd.tc)+" pts</div></div>"
-  +"</div>"
-  +"<div class='g2' style='margin-bottom:12px;'>"
   +"<div class='card'><div class='lbl'>🏆 Quarterly Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;'>"+$f(qd.qb)+"</div></div>"
-  +"<div class='card'><div class='lbl'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3k min)")+"</div></div>"
   +"</div>"
-  +"<div class='tot-card' style='margin-bottom:16px;'>"
-  +"<div style='font-size:12px;color:#86efac;'>💰 Total Commission (Base + Riders)</div>"
-  +"<div style='font-size:28px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(qd.tm)+"</div></div>"
+  +"<div class='card' style='margin-bottom:12px;'><div class='lbl'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3,000 minimum)")+"</div></div>"
   +"<div class='pay-card'>"
   +"<div style='font-size:13px;color:#94a3b8;'>🚀 Total Bonus Payable in "+QS[activeQ].payout+"</div>"
   +"<div style='font-size:32px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div>"
@@ -498,7 +495,21 @@ function renderHist(){
         +"<span>Base Comm: <strong style='color:#38bdf8;'>"+$f(p.baseComm)+"</strong></span>"
         +"<span>Total Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
         +"<span>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span></div>"
-        +(p.riders&&p.riders.length>0?"<div style='margin-top:4px;'>"+p.riders.map(r=>"<span class='r-tag'>🔗 "+esc(r.name)+" · "+$f(r.premium)+"</span>").join("")+"</div>":"")
+        +(p.riders&&p.riders.length>0
+          ?"<div style='margin-top:8px;display:flex;flex-direction:column;gap:6px;'>"
+          +p.riders.map(r=>
+            "<div style='background:#0f172a;border-radius:8px;padding:8px 12px;border:1px solid #4f46e5;display:flex;flex-wrap:wrap;align-items:center;gap:10px;'>"
+            +"<span style='font-size:11px;color:#a78bfa;font-weight:700;'>🔗 "+esc(r.name)+"</span>"
+            +"<span style='font-size:11px;color:#64748b;'>│</span>"
+            +"<span style='font-size:11px;color:#94a3b8;'>Premium: <strong style='color:#e2e8f0;'>"+$f(r.premium)+"</strong></span>"
+            +"<span style='font-size:11px;color:#64748b;'>│</span>"
+            +"<span style='font-size:11px;color:#94a3b8;'>Comm <span style='color:#64748b;font-size:10px;'>("+r.commPct+"%)</span>: <strong style='color:#a78bfa;'>"+$f(r.comm)+"</strong></span>"
+            +"<span style='font-size:11px;color:#64748b;'>│</span>"
+            +"<span style='font-size:11px;color:#94a3b8;'>Credits: <strong style='color:#a78bfa;'>"+$c(r.credit)+" pts</strong></span>"
+            +"</div>"
+          ).join("")
+          +"</div>"
+          :"")
         +"</div>"
       ).join("")
       +"</div>";
