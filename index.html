@@ -71,11 +71,30 @@
   .cal-day.today{color:#60a5fa;outline:1px solid #334155;}
   .cal-day.selected{background:#1d4ed8!important;color:#fff!important;font-weight:700;}
   .cal-today-btn{margin-top:8px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}
+  /* Searchable dropdown */
+  .srch-wrap{position:relative;}
+  .srch-input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
+  .srch-input:focus{outline:none;border-color:#3b82f6;}
+  .srch-list{position:absolute;z-index:9999;top:calc(100% + 4px);left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+  .srch-category{padding:5px 12px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8;cursor:default;}
+  .srch-category.cat-trad{background:rgba(30,64,175,0.25);color:#93c5fd;}
+  .srch-category.cat-inv{background:rgba(109,40,217,0.25);color:#c4b5fd;}
+  .srch-category.cat-health{background:rgba(5,150,105,0.20);color:#6ee7b7;}
+  .srch-item{padding:8px 16px;font-size:13px;color:#e2e8f0;cursor:pointer;border-left:2px solid transparent;}
+  .srch-item:hover,.srch-item.highlighted{background:#0f2942;border-left-color:#3b82f6;color:#fff;}
+  .srch-item.cat-trad-item{border-left-color:transparent;}
+  .srch-item.cat-trad-item:hover{background:rgba(30,64,175,0.2);}
+  .srch-item.cat-inv-item:hover{background:rgba(109,40,217,0.2);}
+  .srch-item.cat-health-item:hover{background:rgba(5,150,105,0.15);}
+  .srch-selected{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px;cursor:pointer;text-align:left;}
+  .srch-selected:hover{border-color:#3b82f6;}
+  .srch-placeholder{color:#64748b;}
 </style>
 </head>
 <body>
 
 <div class="saving-indicator" id="savingIndicator">💾 Saving...</div>
+<canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999;display:none;"></canvas>
 
 <div class="header">
   <h1>📊 Sales Commission Tracker</h1>
@@ -201,7 +220,35 @@ const PRODUCTS = {
   "PrimeShield": { terms:[{label:"Yearly",yr1:35.00,credit:4}]},
   "Care Secure":  { terms:[{label:"Yearly",yr1:45.00,credit:4}]},
 };
-const RIDER_DATA = {
+const PRODUCT_CATEGORIES = [
+  { key:"trad", label:"Traditional Life Insurance", cls:"cat-trad", itemCls:"cat-trad-item", products:[
+    "Mortgage Term (MPN2)","Star Term Protect (TAN19)","TermLife Solitaire (TBN3)",
+    "Essential Protect (LBV3)","Complete Life Secure (VQMW)",
+    "Complete Life Secure - Protection Benefit (VQVW)","Total Protect (TPV1)",
+    "Complete Cancer Care (CBN3)","Complete Critical Protect (CCN1)",
+    "Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)",
+    "Cancer Premium Waiver / GIO (WPV10)","Payor Premium Waiver (WPV6)",
+    "Enhanced Payor Premium Waiver (WEV2)","Dread Disease Premium Waiver (WSV2)",
+    "Hospital CashAid (HBV3)","Lady 360 (LPN)","Maternity 360 (MBN)",
+    "Gro Power Saver Pro (RSME)","Gro Saver Flex Pro (GSME)","Gro Cash Flex Pro (GCME)",
+    "Gro Cash Plus (GDMW)","Gro Cash Sure (GCMW)","Savings Protector Pro (SPV3)",
+    "Gro Retire Flex Pro (GRME)","Gro Retire Flex Pro - Protection Benefit (SPV4)",
+    "Gro Annuity Pro (GAMA)","Provenance Solitaire (VPMW)",
+    "Provenance Solitaire - Protection Benefit (VPVW)",
+    "Provenance Disability Accelerator (TSN3)",
+    "Luxe Plus Solitaire II (LTMW)","Wealth Plus Solitaire (LHMWA)"
+  ]},
+  { key:"inv", label:"Investment Linked Insurance", cls:"cat-inv", itemCls:"cat-inv-item", products:[
+    "AstraLink (VA2)","Invest Flex (VS1)","Invest Flex Vantage (VS2)",
+    "Invest Flex TriVantage (VS3)","WealthLink (GL3)"
+  ]},
+  { key:"health", label:"Health Insurance", cls:"cat-health", itemCls:"cat-health-item", products:[
+    "Enhanced IncomeShield / IncomeShield Standard","PrimeShield","Care Secure"
+  ]}
+];
+
+// State for open searchable dropdowns: pid -> {open, query}
+let srchState={};
   "Disability Accelerator (TCN2)":{yr1:13.00,credit:3},
   "Essential Protect (LBV3)":{yr1:13.00,credit:4},
   "Total Protect (TPV1)":{yr1:10.20,credit:4},
@@ -370,6 +417,46 @@ function renderCalPopup(){
   </div>`;
 }
 
+function renderSearchableProduct(pid, selectedProduct){
+  const s=srchState[pid]||{open:false,query:""};
+  const query=s.query.toLowerCase();
+  // Filter products across all categories
+  const filtered=query
+    ? PRODUCT_CATEGORIES.map(cat=>({
+        ...cat,
+        products:cat.products.filter(p=>p.toLowerCase().includes(query))
+      })).filter(cat=>cat.products.length>0)
+    : PRODUCT_CATEGORIES;
+
+  const displayVal=selectedProduct||"";
+  return `
+  <div class="srch-wrap" id="srch-${pid}">
+    ${s.open ? `
+      <input class="srch-input" id="srch-input-${pid}" type="text"
+        placeholder="🔍 Type to search product..."
+        value="${escHtml(s.query)}"
+        oninput="srchType('${pid}',this.value)"
+        onkeydown="srchKey(event,'${pid}')"
+        autocomplete="off"
+      />
+      ${filtered.length>0 ? `
+      <div class="srch-list" id="srch-list-${pid}">
+        ${filtered.map(cat=>`
+          <div class="srch-category ${cat.cls}">${cat.label}</div>
+          ${cat.products.map(p=>`
+            <div class="srch-item ${cat.itemCls}" onclick="srchPick('${pid}','${escHtml(p)}')">${escHtml(p)}</div>
+          `).join("")}
+        `).join("")}
+      </div>` : `<div class="srch-list"><div style="padding:12px;font-size:13px;color:#64748b;">No products found</div></div>`}
+    ` : `
+      <button class="srch-selected" onclick="srchOpen('${pid}')">
+        <span class="${displayVal?"":"srch-placeholder"}">${displayVal||"-- Select Product --"}</span>
+        <span style="color:#64748b;font-size:11px;">▼</span>
+      </button>
+    `}
+  </div>`;
+}
+
 function renderPolicyBlock(b,i){
   const def=b.product?PRODUCTS[b.product]:null;
   const terms=def?.terms||[];
@@ -392,10 +479,7 @@ function renderPolicyBlock(b,i){
     <div class="grid-2" style="margin-bottom:12px;">
       <div>
         <label class="label">🏷️ Base Product</label>
-        <select class="select" style="color:${b.product?"#e2e8f0":"#64748b"}" onchange="updatePolicyProduct('${b.id}',this.value)">
-          <option value="">-- Select Product --</option>
-          ${Object.keys(PRODUCTS).map(p=>`<option value="${escHtml(p)}" ${b.product===p?"selected":""}>${escHtml(p)}</option>`).join("")}
-        </select>
+        ${renderSearchableProduct(b.id, b.product)}
       </div>
       <div>
         <label class="label">📆 Premium Term</label>
@@ -685,44 +769,58 @@ function attachEventListeners(){
     });
   }
 
-  // ── Policy annual premium inputs — update state without re-rendering ──
+  // ── Policy annual premium — update state silently while typing, rebuild only on blur ──
   document.querySelectorAll(".policy-premium-input").forEach(inp=>{
     inp.addEventListener("input", e=>{
       const pid=e.target.dataset.pid;
-      const val=e.target.value;
-      policies=policies.map(p=>p.id===pid?{...p,annualPremium:val}:p);
-      // Save cursor position
-      const cursorPos=e.target.selectionStart;
+      policies=policies.map(p=>p.id===pid?{...p,annualPremium:e.target.value}:p);
+      // No rebuild while typing — cursor stays put!
+    });
+    inp.addEventListener("blur", e=>{
+      const pid=e.target.dataset.pid;
+      policies=policies.map(p=>p.id===pid?{...p,annualPremium:e.target.value}:p);
       document.getElementById("logShell").innerHTML=buildLogHTML();
       attachEventListeners();
-      // Restore focus to the same premium input
-      const newInp=document.querySelector(`.policy-premium-input[data-pid="${pid}"]`);
-      if(newInp){newInp.focus();try{newInp.setSelectionRange(cursorPos,cursorPos);}catch(err){}}
     });
   });
 
-  // ── Rider premium inputs ──
+  // ── Rider premium — same approach ──
   document.querySelectorAll(".rider-premium-input").forEach(inp=>{
     inp.addEventListener("input", e=>{
       const pid=e.target.dataset.pid, rid=e.target.dataset.rid;
-      const val=e.target.value;
-      policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:val}:r)}:p);
-      const cursorPos=e.target.selectionStart;
+      policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
+      // No rebuild while typing
+    });
+    inp.addEventListener("blur", e=>{
+      const pid=e.target.dataset.pid, rid=e.target.dataset.rid;
+      policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
       document.getElementById("logShell").innerHTML=buildLogHTML();
       attachEventListeners();
-      const newInp=document.querySelector(`.rider-premium-input[data-pid="${pid}"][data-rid="${rid}"]`);
-      if(newInp){newInp.focus();try{newInp.setSelectionRange(cursorPos,cursorPos);}catch(err){}}
     });
   });
 
-  // ── Close calendar on outside click ──
+  // ── Close calendar + search dropdowns on outside click ──
   document.addEventListener("mousedown", function handler(e){
+    // Calendar
     const wrap=document.getElementById("calWrap");
     if(calOpen&&wrap&&!wrap.contains(e.target)){
       calOpen=false;
       document.getElementById("logShell").innerHTML=buildLogHTML();
       attachEventListeners();
     }
+    // Searchable product dropdowns
+    let anyOpen=false;
+    Object.keys(srchState).forEach(pid=>{
+      if(srchState[pid]?.open){
+        const el=document.getElementById(`srch-${pid}`);
+        if(el&&!el.contains(e.target)){
+          srchState[pid]={open:false,query:""};
+          anyOpen=true;
+        }
+      }
+    });
+    if(anyOpen){document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();}
+    // Year dropdown
     const yw=document.getElementById("yearSelectorWrap");
     const yd=document.getElementById("yearDD");
     if(yd&&yw&&!yw.contains(e.target)) yd.style.display="none";
@@ -758,7 +856,34 @@ window.pickToday=()=>{
   attachEventListeners();
 };
 
-window.addPolicy=()=>{policies.push(newPolicy());document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
+window.srchOpen=pid=>{
+  srchState[pid]={open:true,query:""};
+  document.getElementById("logShell").innerHTML=buildLogHTML();
+  attachEventListeners();
+  setTimeout(()=>document.getElementById(`srch-input-${pid}`)?.focus(),50);
+};
+window.srchType=(pid,val)=>{
+  srchState[pid]={open:true,query:val};
+  document.getElementById("logShell").innerHTML=buildLogHTML();
+  attachEventListeners();
+  setTimeout(()=>{
+    const inp=document.getElementById(`srch-input-${pid}`);
+    if(inp){inp.focus();inp.setSelectionRange(val.length,val.length);}
+  },10);
+};
+window.srchPick=(pid,val)=>{
+  srchState[pid]={open:false,query:""};
+  updatePolicyProduct(pid,val);
+};
+window.srchKey=(e,pid)=>{
+  if(e.key==="Escape"){srchState[pid]={open:false,query:""};document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();}
+};
+window.updatePolicyProduct=(id,val)=>{
+  srchState[id]={open:false,query:""};
+  policies=policies.map(p=>p.id===id?{...p,product:val,term:"",annualPremium:"",riders:[]}:p);
+  document.getElementById("logShell").innerHTML=buildLogHTML();
+  attachEventListeners();
+};
 window.removePolicy=id=>{policies=policies.filter(p=>p.id!==id);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
 window.updatePolicyProduct=(id,val)=>{policies=policies.map(p=>p.id===id?{...p,product:val,term:"",annualPremium:"",riders:[]}:p);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
 window.updatePolicyField=(id,f,v)=>{policies=policies.map(p=>p.id===id?{...p,[f]:v}:p);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
@@ -800,12 +925,60 @@ window.handleAddSale=async()=>{
     quarter:getQuarter(mo),month:mo,
   };
   await saveSale(saleObj);
+  launchConfetti();
   formClient="";policies=[newPolicy()];
   document.getElementById("logShell").innerHTML=buildLogHTML();
   attachEventListeners();
 };
 
 window.handleDeleteSale=async id=>{ if(confirm("Delete this sale?")) await deleteSale(id); };
+
+// ── Confetti ──
+function launchConfetti(){
+  const canvas=document.getElementById("confettiCanvas");
+  canvas.style.display="block";
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  const ctx=canvas.getContext("2d");
+  const pieces=[];
+  const colors=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
+  for(let i=0;i<180;i++){
+    pieces.push({
+      x:Math.random()*canvas.width,
+      y:-10-Math.random()*200,
+      w:8+Math.random()*8,
+      h:5+Math.random()*5,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      angle:Math.random()*360,
+      spin:(-1+Math.random()*2)*4,
+      vx:(-1+Math.random()*2)*3,
+      vy:3+Math.random()*5,
+      opacity:1
+    });
+  }
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      ctx.save();
+      ctx.globalAlpha=p.opacity;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.angle*Math.PI/180);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+      p.x+=p.vx;
+      p.y+=p.vy;
+      p.angle+=p.spin;
+      p.vy+=0.07;
+      if(frame>80) p.opacity-=0.018;
+    });
+    frame++;
+    if(frame<140) requestAnimationFrame(draw);
+    else{ ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display="none"; }
+  }
+  draw();
+}
 
 render();
 </script>
