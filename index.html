@@ -18,39 +18,26 @@ button,input,select{font-family:inherit;}
 .card{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
 .card-dark{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
 .lbl{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;}
-
-/* ── Hover glow on inputs & selects ── */
 .inp{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;transition:background 0.18s,border-color 0.18s;}
 .inp:hover{background:#1a2540;border-color:#3b82f6;}
 .inp:focus{outline:none;border-color:#3b82f6;background:#1a2540;}
 .sel{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;transition:background 0.18s,border-color 0.18s;}
 .sel:hover{background:#1a2540;border-color:#3b82f6;}
 .sel:focus{outline:none;border-color:#3b82f6;background:#1a2540;}
-
-/* ── Flash animation for missing fields ── */
-@keyframes flashRed {
-  0%{border-color:#ef4444;background:#2d0a0a;}
-  50%{border-color:#f87171;background:#450f0f;}
-  100%{border-color:#ef4444;background:#2d0a0a;}
-}
+@keyframes flashRed{0%{border-color:#ef4444;background:#2d0a0a;}50%{border-color:#f87171;background:#450f0f;}100%{border-color:#ef4444;background:#2d0a0a;}}
 .inp.field-error{border-color:#ef4444!important;background:#2d0a0a!important;animation:flashRed 0.4s ease 3;}
 .sel.field-error{border-color:#ef4444!important;background:#2d0a0a!important;animation:flashRed 0.4s ease 3;}
-
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-
-/* ── Add Sale button with hover effect ── */
 .btn-pri{padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:background 0.18s,box-shadow 0.18s,transform 0.1s;}
 .btn-pri:hover{background:linear-gradient(135deg,#1e40af,#1d4ed8);box-shadow:0 0 16px rgba(59,130,246,0.45);transform:translateY(-1px);}
 .btn-pri:active{transform:translateY(0);}
-
 .btn-sm{padding:5px 14px;border-radius:6px;border:1px solid #1d4ed8;background:#1e3a5f;color:#93c5fd;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.15s;}
 .btn-sm:hover{background:#1e40af;}
 .btn-del{background:#7f1d1d;border:none;border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:12px;cursor:pointer;transition:background 0.15s;}
 .btn-del:hover{background:#991b1b;}
 .btn-rider{padding:4px 12px;border-radius:6px;border:1px solid #4f46e5;background:#1e1b4b;color:#a5b4fc;font-size:11px;font-weight:600;cursor:pointer;transition:background 0.15s;}
 .btn-rider:hover{background:#312e81;}
-
 .pol-block{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #1e40af;margin-bottom:12px;}
 .rider-block{background:#0a1929;border-radius:8px;padding:12px;border:1px solid #4f46e5;margin-bottom:8px;}
 .prev-box{margin-top:12px;background:#0f2942;border-radius:10px;padding:12px;border:1px solid #1e40af;}
@@ -60,11 +47,8 @@ button,input,select{font-family:inherit;}
 .prog-wrap{background:#0f172a;border-radius:8px;height:14px;overflow:hidden;margin:6px 0;}
 .prog-bar{height:100%;border-radius:8px;transition:width 0.5s;}
 .kpi{font-size:18px;font-weight:800;margin-top:4px;}
-
-/* ── Dashboard stat cards — centered text ── */
 .pay-card{background:linear-gradient(135deg,#1e3a5f,#0f2942);border-radius:12px;padding:18px;border:1px solid #1e40af;margin-bottom:16px;text-align:center;}
 .dash-stat-card{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;text-align:center;}
-
 .camp-hdr{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:16px 20px;border-bottom:1px solid #1e40af;}
 .camp-card{background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;margin-bottom:20px;}
 .yr-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #0d9488;background:linear-gradient(135deg,#0f766e,#134e4a);color:#5eead4;font-size:13px;font-weight:700;cursor:pointer;}
@@ -76,7 +60,6 @@ button,input,select{font-family:inherit;}
 .pol-row{background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;margin-bottom:6px;}
 .badge{background:#0f2942;border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;}
 .t-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-/* Calendar */
 .cal-wrap{position:relative;}
 .cal-row{display:flex;gap:6px;}
 .cal-ico{padding:9px 13px;border-radius:8px;border:1px solid #334155;background:#0f172a;cursor:pointer;font-size:16px;color:#60a5fa;transition:background 0.15s;}
@@ -94,7 +77,6 @@ button,input,select{font-family:inherit;}
 .cal-day.today{color:#60a5fa;outline:1px solid #334155;}
 .cal-day.selected{background:#1d4ed8!important;color:#fff!important;font-weight:700;}
 .cal-tod{margin-top:8px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}
-/* Searchable dropdown */
 .srch-wrap{position:relative;}
 .srch-inp{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #3b82f6;background:#0f172a;color:#e2e8f0;font-size:14px;outline:none;transition:background 0.18s;}
 .srch-inp:hover{background:#1a2540;}
@@ -108,10 +90,24 @@ button,input,select{font-family:inherit;}
 .srch-sel{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px;cursor:pointer;text-align:left;transition:background 0.18s,border-color 0.18s;}
 .srch-sel:hover{border-color:#3b82f6;background:#1a2540;}
 .srch-ph{color:#64748b;}
-
-/* Validation error message */
 .val-err{color:#f87171;font-size:12px;font-weight:600;margin-top:8px;margin-bottom:8px;display:none;text-align:center;}
 .val-err.show{display:block;}
+/* MDRT styles */
+@keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+@keyframes pulseGlow{0%,100%{opacity:1;}50%{opacity:0.7;}}
+@keyframes riseIn{0%{opacity:0;transform:translateY(18px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-6px) rotate(4deg);}}
+@keyframes progFill{from{width:0;}to{width:var(--pw);}}
+.mdrt-card{border-radius:18px;padding:22px;margin-bottom:20px;border:1.5px solid;position:relative;overflow:hidden;transition:transform 0.22s,box-shadow 0.3s;}
+.mdrt-card:hover{transform:translateY(-4px);}
+.mdrt-hoverable{position:relative;display:inline-block;cursor:default;}
+.mdrt-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:12px;color:#e2e8f0;width:270px;text-align:center;z-index:200;line-height:1.6;box-shadow:0 8px 24px rgba(0,0,0,0.6);pointer-events:none;}
+.mdrt-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#334155;}
+.mdrt-hoverable:hover .mdrt-tip{display:block;}
+.shimmer-gold{background:linear-gradient(90deg,#fbbf24 0%,#fff 40%,#fbbf24 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
+.shimmer-blue{background:linear-gradient(90deg,#38bdf8 0%,#fff 40%,#38bdf8 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
+.shimmer-purple{background:linear-gradient(90deg,#c4b5fd 0%,#fff 40%,#a78bfa 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.2s linear infinite;}
+.crown-bob{display:inline-block;animation:crownBob 2s ease-in-out infinite;}
 </style>
 </head>
 <body>
@@ -127,45 +123,17 @@ button,input,select{font-family:inherit;}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const FB = {
-  apiKey:"AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",
-  authDomain:"zack-comms-tracker-iafa.firebaseapp.com",
-  projectId:"zack-comms-tracker-iafa",
-  storageBucket:"zack-comms-tracker-iafa.firebasestorage.app",
-  messagingSenderId:"889861149236",
-  appId:"1:889861149236:web:8488f5336ab9d2475bb061"
-};
-const db = getFirestore(initializeApp(FB));
-const COLL = "sales";
+const FB={apiKey:"AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",authDomain:"zack-comms-tracker-iafa.firebaseapp.com",projectId:"zack-comms-tracker-iafa",storageBucket:"zack-comms-tracker-iafa.firebasestorage.app",messagingSenderId:"889861149236",appId:"1:889861149236:web:8488f5336ab9d2475bb061"};
+const db=getFirestore(initializeApp(FB));
+const COLL="sales";
 
-const CATS = [
-  { label:"Traditional Life Insurance", hCls:"srch-cat ct", iCls:"srch-item", products:[
-    "Mortgage Term (MPN2)","Star Term Protect (TAN19)","TermLife Solitaire (TBN3)",
-    "Essential Protect (LBV3)","Complete Life Secure (VQMW)",
-    "Complete Life Secure - Protection Benefit (VQVW)","Total Protect (TPV1)",
-    "Complete Cancer Care (CBN3)","Complete Critical Protect (CCN1)",
-    "Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)",
-    "Cancer Premium Waiver / GIO (WPV10)","Payor Premium Waiver (WPV6)",
-    "Enhanced Payor Premium Waiver (WEV2)","Dread Disease Premium Waiver (WSV2)",
-    "Hospital CashAid (HBV3)","Lady 360 (LPN)","Maternity 360 (MBN)",
-    "Gro Power Saver Pro (RSME)","Gro Saver Flex Pro (GSME)","Gro Cash Flex Pro (GCME)",
-    "Gro Cash Plus (GDMW)","Gro Cash Sure (GCMW)","Savings Protector Pro (SPV3)",
-    "Gro Retire Flex Pro (GRME)","Gro Retire Flex Pro - Protection Benefit (SPV4)",
-    "Gro Annuity Pro (GAMA)","Provenance Solitaire (VPMW)",
-    "Provenance Solitaire - Protection Benefit (VPVW)",
-    "Provenance Disability Accelerator (TSN3)",
-    "Luxe Plus Solitaire II (LTMW)","Wealth Plus Solitaire (LHMWA)"
-  ]},
-  { label:"Investment Linked Insurance", hCls:"srch-cat ci", iCls:"srch-item", products:[
-    "AstraLink (VA2)","Invest Flex (VS1)","Invest Flex Vantage (VS2)",
-    "Invest Flex TriVantage (VS3)","WealthLink (GL3)"
-  ]},
-  { label:"Health Insurance", hCls:"srch-cat ch", iCls:"srch-item", products:[
-    "Enhanced IncomeShield / IncomeShield Standard","PrimeShield","Care Secure"
-  ]}
+const CATS=[
+  {label:"Traditional Life Insurance",hCls:"srch-cat ct",iCls:"srch-item",products:["Mortgage Term (MPN2)","Star Term Protect (TAN19)","TermLife Solitaire (TBN3)","Essential Protect (LBV3)","Complete Life Secure (VQMW)","Complete Life Secure - Protection Benefit (VQVW)","Total Protect (TPV1)","Complete Cancer Care (CBN3)","Complete Critical Protect (CCN1)","Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)","Cancer Premium Waiver / GIO (WPV10)","Payor Premium Waiver (WPV6)","Enhanced Payor Premium Waiver (WEV2)","Dread Disease Premium Waiver (WSV2)","Hospital CashAid (HBV3)","Lady 360 (LPN)","Maternity 360 (MBN)","Gro Power Saver Pro (RSME)","Gro Saver Flex Pro (GSME)","Gro Cash Flex Pro (GCME)","Gro Cash Plus (GDMW)","Gro Cash Sure (GCMW)","Savings Protector Pro (SPV3)","Gro Retire Flex Pro (GRME)","Gro Retire Flex Pro - Protection Benefit (SPV4)","Gro Annuity Pro (GAMA)","Provenance Solitaire (VPMW)","Provenance Solitaire - Protection Benefit (VPVW)","Provenance Disability Accelerator (TSN3)","Luxe Plus Solitaire II (LTMW)","Wealth Plus Solitaire (LHMWA)"]},
+  {label:"Investment Linked Insurance",hCls:"srch-cat ci",iCls:"srch-item",products:["AstraLink (VA2)","Invest Flex (VS1)","Invest Flex Vantage (VS2)","Invest Flex TriVantage (VS3)","WealthLink (GL3)"]},
+  {label:"Health Insurance",hCls:"srch-cat ch",iCls:"srch-item",products:["Enhanced IncomeShield / IncomeShield Standard","PrimeShield","Care Secure"]}
 ];
 
-const PROD = {
+const PROD={
   "Mortgage Term (MPN2)":{terms:[{l:"3 years",y:10.50,c:3},{l:"4 years",y:11.50,c:3},{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20+ years",y:40.00,c:3}]},
   "Star Term Protect (TAN19)":{riders:["Essential Protect (LBV3)","Total Protect (TPV1)"],terms:[{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:40.00,c:3},{l:"25+ years",y:40.00,c:3}]},
   "TermLife Solitaire (TBN3)":{riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Total Protect (TPV1)"],terms:[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}]},
@@ -208,28 +176,18 @@ const PROD = {
   "Care Secure":{terms:[{l:"Yearly",y:45.00,c:4}]}
 };
 
-const RIDER_TERMS = {
-  "Disability Accelerator (TCN2)":[
-    {l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},
-    {l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}
-  ],
-  "Essential Protect (LBV3)":[
-    {l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},
-    {l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}
-  ],
-  "Total Protect (TPV1)":[
-    {l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},
-    {l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}
-  ],
+const RIDER_TERMS={
+  "Disability Accelerator (TCN2)":[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}],
+  "Essential Protect (LBV3)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],
+  "Total Protect (TPV1)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],
   "Classic Care Rider":[{l:"Yearly",y:15.00,c:4}],
   "Deluxe Care Rider":[{l:"Yearly",y:15.00,c:4}]
 };
 
-function getRiderRate(riderName, riderTerm){
-  const terms=RIDER_TERMS[riderName]; if(!terms) return null;
-  if(terms.length===1) return {y:terms[0].y,c:terms[0].c};
-  const found=terms.find(t=>t.l===riderTerm);
-  return found?{y:found.y,c:found.c}:null;
+function getRiderRate(n,t){
+  const terms=RIDER_TERMS[n];if(!terms)return null;
+  if(terms.length===1)return{y:terms[0].y,c:terms[0].c};
+  const f=terms.find(x=>x.l===t);return f?{y:f.y,c:f.c}:null;
 }
 
 const QS={Q1:{months:[0,1,2],label:"Q1 (Jan-Mar)",payout:"April"},Q2:{months:[3,4,5],label:"Q2 (Apr-Jun)",payout:"July"},Q3:{months:[6,7,8],label:"Q3 (Jul-Sep)",payout:"October"},Q4:{months:[9,10,11],label:"Q4 (Oct-Dec)",payout:"January"}};
@@ -244,6 +202,25 @@ const todayStr=()=>{const t=new Date();return t.getFullYear()+"-"+String(t.getMo
 const getQ=m=>{for(const[k,v]of Object.entries(QS))if(v.months.includes(m))return k;};
 const getTier=c=>TIERS.find(t=>c>=t.min&&c<=t.max)||TIERS[0];
 const yearList=()=>{const y=[],cur=new Date().getFullYear();for(let i=cur;i>=2020;i--)y.push(i);return y;};
+
+// ── Shared helper: get full year totals (comm + bonus) ──
+function getYearTotals(yr){
+  const ys=sales.filter(s=>s.date.startsWith(String(yr)));
+  let totalComm=0,totalBaseComm=0,totalBonus=0;
+  Object.keys(QS).forEach(q=>{
+    const qs=ys.filter(s=>s.quarter===q);
+    const tm=qs.reduce((a,s)=>a+s.totalComm,0);
+    const bc=qs.reduce((a,s)=>a+s.baseComm,0);
+    const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
+    const tier=getTier(tc);
+    const eb=tm>=3000?tm*0.25:0;
+    const qb=tm*tier.bonus/100;
+    totalComm+=tm;
+    totalBaseComm+=bc;
+    totalBonus+=eb+qb;
+  });
+  return{totalComm,totalBaseComm,totalBonus,grand:totalComm+totalBonus};
+}
 
 let sales=[],tab="log",activeQ="Q1",selYear=new Date().getFullYear();
 let pols=[newPol()],fDate=todayStr(),fClient="";
@@ -262,23 +239,34 @@ onSnapshot(collection(db,COLL),snap=>{
 async function addSaleDB(obj){try{await addDoc(collection(db,COLL),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delSaleDB(fid){try{await deleteDoc(doc(db,COLL,fid));}catch(e){alert("Delete error: "+e.message);}}
 
+// ── RENDER ROUTING — single source of truth ──
 function renderAll(){renderTabs();renderPage();}
 
 function renderTabs(){
-  const tabs=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"],["mdrt","🏆 MDRT / COT / TOT"]];
-  document.getElementById("tabBar").innerHTML=tabs.map(([k,v])=>"<button class='tab-btn"+(tab===k?" active":"")+"' onclick='setTab(\""+k+"\")'>"+v+"</button>").join("");
+  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"],["mdrt","🏆 MDRT / COT / TOT"]];
+  document.getElementById("tabBar").innerHTML=TABS.map(([k,v])=>`<button class="tab-btn${tab===k?" active":""}" onclick="setTab('${k}')">${v}</button>`).join("");
 }
 
 function renderPage(){
   const el=document.getElementById("app");
-  if(tab==="log"){if(!document.getElementById("logShell"))el.innerHTML="<div id='logShell'></div>";renderLog();}
-  else if(tab==="dashboard")el.innerHTML=renderDash();
-  else if(tab==="history")el.innerHTML=renderHist();
-  else if(tab==="ignite")el.innerHTML=renderIgnite();
-  else el.innerHTML=renderTrail();
+  if(tab==="log"){
+    if(!document.getElementById("logShell"))el.innerHTML="<div id='logShell'></div>";
+    renderLog();
+  } else if(tab==="dashboard"){
+    el.innerHTML=renderDash();
+  } else if(tab==="history"){
+    el.innerHTML=renderHist();
+  } else if(tab==="ignite"){
+    el.innerHTML=renderIgnite();
+  } else if(tab==="trail"){
+    el.innerHTML=renderTrail();
+  } else if(tab==="mdrt"){
+    el.innerHTML=renderMDRT();
+  }
   attachAll();
 }
 
+// ── LOG ──
 function renderLog(){
   const shell=document.getElementById("logShell");
   if(shell)shell.innerHTML=buildLog();
@@ -364,14 +352,11 @@ function buildPolBlock(b,i){
   const ap=parseFloat(b.ap)||0;
   const chosen=b.riders.map(r=>r.name).filter(Boolean);
   const rC=b.riders.map(r=>{
-    const rd=getRiderRate(r.name,r.riderTerm);
-    const rp=parseFloat(r.premium)||0;
-    return {...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};
+    const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;
+    return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};
   });
-  const bc=selT&&ap?ap*selT.y/100:0;
-  const bCr=selT&&ap?ap*selT.c:0;
-  const rComm=rC.reduce((a,r)=>a+r.comm,0);
-  const rCred=rC.reduce((a,r)=>a+r.cred,0);
+  const bc=selT&&ap?ap*selT.y/100:0,bCr=selT&&ap?ap*selT.c:0;
+  const rComm=rC.reduce((a,r)=>a+r.comm,0),rCred=rC.reduce((a,r)=>a+r.cred,0);
   const hasR=rC.some(r=>r.name&&r.rp>0);
 
   let html="<div class='pol-block'>"
@@ -424,7 +409,6 @@ function buildPolBlock(b,i){
     }
     html+="</div>";
   });
-
   html+="</div>";
 
   if(selT&&ap>0){
@@ -459,8 +443,7 @@ function grandTot(){
     const ap=parseFloat(b.ap)||0;
     comm+=ap*t.y/100;cred+=ap*t.c;
     for(const r of b.riders){
-      const rd=getRiderRate(r.name,r.riderTerm);
-      const rp=parseFloat(r.premium)||0;
+      const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;
       if(rd&&rp){comm+=rp*rd.y/100;cred+=rp*rd.c;}
     }
   }
@@ -477,29 +460,24 @@ function renderDash(){
   +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
   +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
   +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
-  // Orange total commission card
   +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:18px;border:1px solid #f97316;margin-bottom:12px;box-shadow:0 0 24px rgba(249,115,22,0.2);text-align:center;'>"
   +"<div style='font-size:12px;color:#fed7aa;'>💼 Total Commission Earned (Base + Riders)</div>"
   +"<div style='font-size:32px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div>"
   +"<div style='font-size:12px;color:#fdba74;margin-top:4px;'>"+QS[activeQ].label+" · "+selYear+"</div>"
   +"</div>"
-  // Bonuses side by side — centered
   +"<div class='g2' style='margin-bottom:12px;'>"
   +"<div class='dash-stat-card'><div class='lbl' style='text-align:center;'>🏆 Quarterly Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;'>"+$f(qd.qb)+"</div></div>"
   +"<div class='dash-stat-card'><div class='lbl' style='text-align:center;'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3,000 min)")+"</div></div>"
   +"</div>"
-  // Credits full width — centered
   +"<div style='background:linear-gradient(135deg,#0f3460,#1a4a7a,#1e5f8a);border-radius:12px;padding:20px;border:1px solid #2563eb;margin-bottom:12px;text-align:center;'>"
   +"<div style='font-size:12px;color:#93c5fd;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px;'>🪙 Total Credits Earned</div>"
   +"<div style='font-size:30px;font-weight:900;color:#60a5fa;'>"+$c(qd.tc)+" <span style='font-size:16px;font-weight:600;color:#3b82f6;'>pts</span></div>"
   +"<div style='font-size:11px;color:#64748b;margin-top:4px;'>Resets every quarter</div>"
   +"</div>"
-  // Payout card — already centered via pay-card class
   +"<div class='pay-card'>"
   +"<div style='font-size:13px;color:#94a3b8;'>🚀 Total Bonus Payable in "+QS[activeQ].payout+"</div>"
   +"<div style='font-size:32px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div>"
   +"<div style='font-size:12px;color:#64748b;margin-top:4px;'>Quarterly Bonus "+$f(qd.qb)+" + Easy Bonus "+$f(qd.eb)+"</div></div>"
-  // Tier progress
   +"<div class='card' style='margin-bottom:16px;'><div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>📊 Credit Tier Progress</div>"
   +TIERS.map(t=>{
     const isA=qd.tc>=t.min&&qd.tc<=t.max,isU=qd.tc>=t.min;
@@ -510,7 +488,6 @@ function renderDash(){
   }).join("")
   +(nt?"<div style='margin-top:10px;font-size:12px;color:#f59e0b;'>⚡ Need <strong>"+$c(nt.min-qd.tc)+" more credits</strong> to reach "+nt.bonus+"% tier</div>":"")
   +"</div>"
-  // Easy bonus progress bar
   +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div>"
   +"<div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div>"
   +"<div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>";
@@ -573,10 +550,10 @@ function renderHist(){
   }).join(""));
 }
 
-// ── IGNITE ──
+// ── IGNITE — uses totalComm (base + rider, no bonus) ──
 function renderIgnite(){
   const ig=sales.filter(s=>{const m=new Date(s.date+"T00:00:00").getMonth();return s.date.startsWith("2026")&&m<=4;});
-  const ic=ig.reduce((a,s)=>a+s.baseComm,0);
+  const ic=ig.reduce((a,s)=>a+s.totalComm,0);
   const pct=Math.min(100,(ic/30000)*100);
   return "<div class='camp-card'><div class='camp-hdr'>"
   +"<div style='font-size:18px;font-weight:800;color:#60a5fa;'>🔥 Ignite 2026</div>"
@@ -592,10 +569,10 @@ function renderIgnite(){
   +"</div></div>";
 }
 
-// ── TRAILBLAZER ──
+// ── TRAILBLAZER — uses totalComm (base + rider, no bonus) ──
 function renderTrail(){
   const tr=sales.filter(s=>s.date.startsWith("2026"));
-  const tc=tr.reduce((a,s)=>a+s.baseComm,0);
+  const tc=tr.reduce((a,s)=>a+s.totalComm,0);
   const tiers=[{target:75000,label:"1 Ticket 🎫",color:"#f59e0b"},{target:150000,label:"2 Tickets 🎫🎫",color:"#a78bfa"}];
   return "<div class='camp-card'><div class='camp-hdr'>"
   +"<div style='font-size:18px;font-weight:800;color:#60a5fa;'>🌍 Trailblazer 2027</div>"
@@ -619,29 +596,141 @@ function renderTrail(){
   +"</div></div>";
 }
 
+// ── MDRT / COT / TOT ──
+function renderMDRT(){
+  const MDRT_T=75800, COT_T=MDRT_T*3, TOT_T=COT_T*2;
+  const{totalComm,totalBonus,grand}=getYearTotals(selYear);
+
+  const hitMDRT=grand>=MDRT_T, hitCOT=grand>=COT_T, hitTOT=grand>=TOT_T;
+  const pMDRT=Math.min(100,(grand/MDRT_T)*100);
+  const pCOT=Math.min(100,(grand/COT_T)*100);
+  const pTOT=Math.min(100,(grand/TOT_T)*100);
+
+  const TDATA=[
+    {key:"mdrt",label:"MDRT",full:"Million Dollar Round Table",target:MDRT_T,hit:hitMDRT,pct:pMDRT,
+     icon:"🥇",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",
+     grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",border:"#f59e0b",stars:"⭐",
+     tagline:"\"Every legend starts with a single step forward.\"",
+     hoverNo:"You're building your legacy. Keep going — MDRT is closer than you think! 💪",
+     hoverYes:"🏅 MDRT Achieved! You're now part of an elite group of top advisers worldwide. Wear it with pride!",
+     badge:"MDRT Member"},
+    {key:"cot",label:"COT",full:"Court of the Table",target:COT_T,hit:hitCOT,pct:pCOT,
+     icon:"💎",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",
+     grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",border:"#38bdf8",stars:"⭐⭐",
+     tagline:"\"Most never try. You chose to go further.\"",
+     hoverNo:"COT is only for those who refuse to settle. You're already in that rare group. Push harder! 🚀",
+     hoverYes:"💎 Court of the Table! You've tripled what most can only dream of. Absolutely elite.",
+     badge:"COT Member"},
+    {key:"tot",label:"TOT",full:"Top of the Table",target:TOT_T,hit:hitTOT,pct:pTOT,
+     icon:"👑",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",
+     grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",border:"#a78bfa",stars:"⭐⭐⭐",
+     tagline:"\"The summit is reserved for the relentless.\"",
+     hoverNo:"TOT is the pinnacle — the rarest of the rare. One day your name will be there. 🔥",
+     hoverYes:"👑 TOP OF THE TABLE! You are in the top 1% of financial advisers on the entire planet. LEGENDARY.",
+     badge:"TOT Member"}
+  ];
+
+  // Year selector
+  let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <div style="position:relative;" id="yrWrap"><button class="yr-btn" onclick="togYrDD()">📅 ${selYear} <span style="font-size:10px;opacity:0.7;">▼</span></button>
+    <div class="yr-dd" id="yrDD" style="display:none;">${yearList().map(y=>`<button class="yr-opt" style="color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};" onclick="selYr(${y})">${y}</button>`).join("")}</div></div>
+    <div style="font-size:13px;color:#94a3b8;">Full Year ${selYear} · Commissions + All Bonuses</div>
+  </div>`;
+
+  // Summary strip
+  html+=`<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:16px 20px;border:1px solid #334155;margin-bottom:22px;">
+    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">💰 ${selYear} Total Eligible Earnings (Comm + Bonuses)</div>
+    <div style="font-size:30px;font-weight:900;color:#e2e8f0;">${$f(grand)}</div>
+    <div style="display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;">
+      <div style="font-size:12px;color:#64748b;">Commission: <span style="color:#34d399;font-weight:700;">${$f(totalComm)}</span></div>
+      <div style="font-size:12px;color:#64748b;">Bonuses: <span style="color:#f59e0b;font-weight:700;">${$f(totalBonus)}</span></div>
+    </div>
+  </div>`;
+
+  TDATA.forEach((t,i)=>{
+    const remaining=Math.max(0,t.target-grand);
+    const iconHtml=t.key==="tot"?`<span class="crown-bob">${t.icon}</span>`:t.icon;
+    const glowCSS=t.hit?`box-shadow:0 0 28px ${t.glow};`:""
+
+    html+=`<div class="mdrt-card" style="background:${t.grad};border-color:${t.border};${glowCSS}animation:riseIn 0.45s ease ${i*0.12}s both;">`;
+
+    // Watermark
+    html+=`<div style="position:absolute;right:14px;top:10px;font-size:52px;opacity:0.05;font-weight:900;">${t.label}</div>`;
+
+    // Header
+    html+=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <div style="font-size:38px;line-height:1;">${iconHtml}</div>
+      <div style="flex:1;">
+        <div class="mdrt-hoverable">
+          <div class="${t.shimmer}" style="font-size:22px;font-weight:900;">${t.label} ${t.stars}</div>
+          <div class="mdrt-tip">${t.hit?t.hoverYes:t.hoverNo}</div>
+        </div>
+        <div style="font-size:11px;color:${t.color};opacity:0.85;margin-top:2px;font-weight:600;">${t.full}</div>
+      </div>
+      <div style="background:${t.hit?"rgba(52,211,153,0.15)":"rgba(100,116,139,0.12)"};border:1px solid ${t.hit?"#34d399":"#475569"};border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:${t.hit?"#34d399":"#64748b"};white-space:nowrap;">
+        ${t.hit?`✅ ${t.badge}`:"Not Yet"}
+      </div>
+    </div>`;
+
+    // Tagline
+    html+=`<div style="font-size:12px;color:${t.color};opacity:0.7;font-style:italic;margin-bottom:14px;">${t.tagline}</div>`;
+
+    // Stats
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Target</div>
+        <div style="font-size:14px;font-weight:800;color:${t.color};margin-top:3px;">${$f(t.target)}</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Earned</div>
+        <div style="font-size:14px;font-weight:800;color:#e2e8f0;margin-top:3px;">${$f(grand)}</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${t.hit?"Exceeded":"Still Need"}</div>
+        <div style="font-size:14px;font-weight:800;color:${t.hit?"#34d399":"#f87171"};margin-top:3px;">${t.hit?$f(grand-t.target):$f(remaining)}</div>
+      </div>
+    </div>`;
+
+    // Progress bar
+    html+=`<div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:5px;">
+      <span>Progress to ${t.label}</span><span style="color:${t.color};font-weight:700;">${t.pct.toFixed(1)}%</span>
+    </div>
+    <div style="background:rgba(0,0,0,0.35);border-radius:8px;height:16px;overflow:hidden;">
+      <div style="width:${t.pct}%;height:100%;border-radius:8px;background:linear-gradient(90deg,${t.color}66,${t.color});box-shadow:0 0 10px ${t.color};transition:width 0.8s ease;"></div>
+    </div>`;
+
+    // Achievement banner
+    if(t.hit){
+      html+=`<div style="margin-top:14px;background:linear-gradient(90deg,rgba(52,211,153,0.1),rgba(52,211,153,0.04));border:1px solid #34d39955;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="font-size:22px;">🎉</div>
+        <div style="font-size:13px;font-weight:700;color:#34d399;line-height:1.5;">${t.hoverYes}</div>
+      </div>`;
+    }
+    html+="</div>";
+  });
+
+  // Footer quote
+  html+=`<div style="text-align:center;padding:18px 10px 6px;">
+    <div style="font-size:12px;color:#334155;font-style:italic;line-height:1.8;">
+      "Success in this industry is not given — it is earned,<br>call by call, meeting by meeting, client by client."<br>
+      <span style="color:#1e293b;">Keep showing up. Your breakthrough is coming. 🌟</span>
+    </div>
+  </div>`;
+
+  return html;
+}
+
 // ── Confetti ──
 function launchConfetti(){
   const cv=document.getElementById("confetti");
   cv.style.display="block";cv.width=window.innerWidth;cv.height=window.innerHeight;
   const ctx=cv.getContext("2d");
   const cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
-  const pieces=Array.from({length:180},()=>({
-    x:Math.random()*cv.width,y:-10-Math.random()*200,
-    w:8+Math.random()*8,h:5+Math.random()*5,
-    color:cols[Math.floor(Math.random()*cols.length)],
-    angle:Math.random()*360,spin:(-1+Math.random()*2)*4,
-    vx:(-1+Math.random()*2)*3,vy:3+Math.random()*5,op:1
-  }));
+  const pieces=Array.from({length:180},()=>({x:Math.random()*cv.width,y:-10-Math.random()*200,w:8+Math.random()*8,h:5+Math.random()*5,color:cols[Math.floor(Math.random()*cols.length)],angle:Math.random()*360,spin:(-1+Math.random()*2)*4,vx:(-1+Math.random()*2)*3,vy:3+Math.random()*5,op:1}));
   let fr=0;
   function draw(){
     ctx.clearRect(0,0,cv.width,cv.height);
-    pieces.forEach(p=>{
-      ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);
-      ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;
-      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
-      p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;
-      if(fr>80)p.op-=0.018;
-    });
+    pieces.forEach(p=>{ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;if(fr>80)p.op-=0.018;});
     fr++;
     if(fr<140)requestAnimationFrame(draw);
     else{ctx.clearRect(0,0,cv.width,cv.height);cv.style.display="none";}
@@ -653,67 +742,39 @@ function launchConfetti(){
 function flashField(el){
   if(!el)return;
   el.classList.remove("field-error");
-  void el.offsetWidth; // force reflow so animation restarts
+  void el.offsetWidth;
   el.classList.add("field-error");
   setTimeout(()=>el.classList.remove("field-error"),1400);
 }
 
-// ── Event listeners ──
+// ── attachAll ──
 function attachAll(){
   const ci=document.getElementById("clientInp");
   if(ci)ci.addEventListener("input",e=>{fClient=e.target.value;});
-
   const di=document.getElementById("dateInp");
   if(di)di.addEventListener("input",e=>{
     fDate=e.target.value;
-    if(/^\d{4}-\d{2}-\d{2}$/.test(fDate)){
-      const dt=new Date(fDate+"T00:00:00");
-      if(!isNaN(dt)){calY=dt.getFullYear();calM=dt.getMonth();}
-      renderLog();attachAll();
-    }
+    if(/^\d{4}-\d{2}-\d{2}$/.test(fDate)){const dt=new Date(fDate+"T00:00:00");if(!isNaN(dt)){calY=dt.getFullYear();calM=dt.getMonth();}renderLog();attachAll();}
   });
-
   const ci2=document.getElementById("calIco");
   if(ci2)ci2.addEventListener("click",e=>{
     e.stopPropagation();calOpen=!calOpen;
     if(calOpen&&fDate){calY=parseInt(fDate.split("-")[0]);calM=parseInt(fDate.split("-")[1])-1;}
     renderLog();attachAll();
   });
-
   document.querySelectorAll(".pp-inp").forEach(inp=>{
-    inp.addEventListener("input",e=>{
-      const pid=e.target.dataset.pid;
-      pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);
-    });
-    inp.addEventListener("blur",e=>{
-      const pid=e.target.dataset.pid;
-      pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);
-      renderLog();attachAll();
-    });
+    inp.addEventListener("input",e=>{const pid=e.target.dataset.pid;pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);});
+    inp.addEventListener("blur",e=>{const pid=e.target.dataset.pid;pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);renderLog();attachAll();});
   });
-
   document.querySelectorAll(".rp-inp").forEach(inp=>{
-    inp.addEventListener("input",e=>{
-      const pid=e.target.dataset.pid,rid=e.target.dataset.rid;
-      pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
-    });
-    inp.addEventListener("blur",e=>{
-      const pid=e.target.dataset.pid,rid=e.target.dataset.rid;
-      pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
-      renderLog();attachAll();
-    });
+    inp.addEventListener("input",e=>{const pid=e.target.dataset.pid,rid=e.target.dataset.rid;pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);});
+    inp.addEventListener("blur",e=>{const pid=e.target.dataset.pid,rid=e.target.dataset.rid;pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);renderLog();attachAll();});
   });
-
   document.addEventListener("mousedown",function h(e){
     const cw=document.getElementById("calWrap");
     if(calOpen&&cw&&!cw.contains(e.target)){calOpen=false;renderLog();attachAll();}
     let changed=false;
-    Object.keys(srch).forEach(pid=>{
-      if(srch[pid]&&srch[pid].open){
-        const el=document.getElementById("srch-"+pid);
-        if(el&&!el.contains(e.target)){srch[pid]={open:false,query:""};changed=true;}
-      }
-    });
+    Object.keys(srch).forEach(pid=>{if(srch[pid]&&srch[pid].open){const el=document.getElementById("srch-"+pid);if(el&&!el.contains(e.target)){srch[pid]={open:false,query:""};changed=true;}}});
     if(changed){renderLog();attachAll();}
     const yw=document.getElementById("yrWrap"),yd=document.getElementById("yrDD");
     if(yd&&yw&&!yw.contains(e.target))yd.style.display="none";
@@ -722,24 +783,20 @@ function attachAll(){
 
 // ── Window handlers ──
 window.setTab=t=>{tab=t;if(t!=="log")document.getElementById("app").innerHTML="";renderAll();};
-window.selMDRTYr=y=>{selYear=y;document.getElementById("app").innerHTML=renderMDRT();attachAll();};
 window.setQ=q=>{activeQ=q;document.getElementById("app").innerHTML=renderDash();attachAll();};
-window.selYr=y=>{selYear=y;document.getElementById("app").innerHTML=renderDash();attachAll();};
+window.selYr=y=>{selYear=y;document.getElementById("app").innerHTML="";renderPage();};
 window.togYrDD=()=>{const d=document.getElementById("yrDD");if(d)d.style.display=d.style.display==="none"?"block":"none";};
 window.navM=dir=>{calM+=dir;if(calM<0){calM=11;calY--;}else if(calM>11){calM=0;calY++;}renderLog();attachAll();};
 window.jumpY=y=>{calY=y;renderLog();attachAll();};
 window.pickDay=d=>{fDate=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");calOpen=false;renderLog();attachAll();};
 window.pickToday=()=>{fDate=todayStr();calOpen=false;const t=new Date();calY=t.getFullYear();calM=t.getMonth();renderLog();attachAll();};
-
 window.srchOpen=pid=>{srch[pid]={open:true,query:""};renderLog();attachAll();setTimeout(()=>document.getElementById("sinp-"+pid)?.focus(),30);};
 window.srchType=(pid,val)=>{srch[pid]={open:true,query:val};renderLog();attachAll();setTimeout(()=>{const i=document.getElementById("sinp-"+pid);if(i){i.focus();i.setSelectionRange(val.length,val.length);}},10);};
 window.srchPick=(pid,val)=>{srch[pid]={open:false,query:""};pols=pols.map(p=>p.id===pid?{...p,product:val,term:"",ap:"",riders:[]}:p);renderLog();attachAll();};
 window.srchKey=(e,pid)=>{if(e.key==="Escape"){srch[pid]={open:false,query:""};renderLog();attachAll();}};
-
 window.addPol=()=>{pols.push(newPol());renderLog();attachAll();};
 window.remPol=id=>{srch[id]=null;pols=pols.filter(p=>p.id!==id);renderLog();attachAll();};
 window.updPolF=(id,f,v)=>{pols=pols.map(p=>p.id===id?{...p,[f]:v}:p);renderLog();attachAll();};
-
 window.addRider=id=>{
   pols=pols.map(p=>{
     if(p.id!==id)return p;
@@ -752,79 +809,33 @@ window.addRider=id=>{
   renderLog();attachAll();
 };
 window.remRider=(pid,rid)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.filter(r=>r.id!==rid)}:p);renderLog();attachAll();};
-window.updRiderName=(pid,rid,val)=>{
-  pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,name:val,riderTerm:""}:r)}:p);
-  renderLog();attachAll();
-};
-window.updRiderTerm=(pid,rid,val)=>{
-  pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,riderTerm:val}:r)}:p);
-  renderLog();attachAll();
-};
-window.updRider=(pid,rid,f,v)=>{
-  pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p);
-  renderLog();attachAll();
-};
+window.updRiderName=(pid,rid,val)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,name:val,riderTerm:""}:r)}:p);renderLog();attachAll();};
+window.updRiderTerm=(pid,rid,val)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,riderTerm:val}:r)}:p);renderLog();attachAll();};
+window.updRider=(pid,rid,f,v)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p);renderLog();attachAll();};
 
 window.doAddSale=async()=>{
   const ci=document.getElementById("clientInp");
   if(ci)fClient=ci.value.trim();
-
-  // ── Validation ──
   let hasErr=false;
-
-  // Check client name
-  if(!fClient){
-    flashField(document.getElementById("clientInp"));
-    hasErr=true;
-  }
-
-  // Check each policy for missing product, term, or AP
+  if(!fClient){flashField(document.getElementById("clientInp"));hasErr=true;}
   pols.forEach(b=>{
-    if(!b.product){
-      // Flash the product selector button
-      const sel=document.getElementById("srchsel-"+b.id);
-      if(sel){sel.style.transition="border-color 0.18s,background 0.18s";sel.style.borderColor="#ef4444";sel.style.background="#2d0a0a";setTimeout(()=>{sel.style.borderColor="";sel.style.background="";},1400);}
-      hasErr=true;
-    }
-    if(!b.term){
-      flashField(document.getElementById("term-"+b.id));
-      hasErr=true;
-    }
-    if(!b.ap||parseFloat(b.ap)<=0){
-      flashField(document.getElementById("ap-"+b.id));
-      hasErr=true;
-    }
+    if(!b.product){const sel=document.getElementById("srchsel-"+b.id);if(sel){sel.style.transition="border-color 0.18s,background 0.18s";sel.style.borderColor="#ef4444";sel.style.background="#2d0a0a";setTimeout(()=>{sel.style.borderColor="";sel.style.background="";},1400);}hasErr=true;}
+    if(!b.term){flashField(document.getElementById("term-"+b.id));hasErr=true;}
+    if(!b.ap||parseFloat(b.ap)<=0){flashField(document.getElementById("ap-"+b.id));hasErr=true;}
   });
-
-  if(hasErr){
-    const err=document.getElementById("valErr");
-    if(err){
-      err.classList.add("show");
-      setTimeout(()=>err.classList.remove("show"),3500);
-    }
-    return;
-  }
-
+  if(hasErr){const err=document.getElementById("valErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;}
   const mo=new Date(fDate+"T00:00:00").getMonth();
   const saved=pols.filter(b=>b.product&&b.term&&b.ap).map(b=>{
     const def=PROD[b.product];const t=def.terms.find(t=>t.l===b.term);
-    const ap=parseFloat(b.ap)||0;
-    const baseComm=ap*t.y/100,baseCred=ap*t.c;
+    const ap=parseFloat(b.ap)||0;const baseComm=ap*t.y/100,baseCred=ap*t.c;
     const riders=b.riders.filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{
-      const rd=getRiderRate(r.name,r.riderTerm);
-      const rp=parseFloat(r.premium)||0;
+      const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;
       return{name:r.name,riderTerm:r.riderTerm,premium:rp,commPct:rd?rd.y:0,comm:rd?rp*rd.y/100:0,credit:rd?rp*rd.c:0};
     });
     const rC=riders.reduce((a,r)=>a+r.comm,0),rCr=riders.reduce((a,r)=>a+r.credit,0);
     return{product:b.product,term:b.term,annualPremium:ap,commPct:t.y,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
   });
-  const obj={
-    date:fDate,clientName:fClient,policies:saved,
-    totalComm:saved.reduce((a,p)=>a+p.totalComm,0),
-    baseComm:saved.reduce((a,p)=>a+p.baseComm,0),
-    totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),
-    quarter:getQ(mo),month:mo
-  };
+  const obj={date:fDate,clientName:fClient,policies:saved,totalComm:saved.reduce((a,p)=>a+p.totalComm,0),baseComm:saved.reduce((a,p)=>a+p.baseComm,0),totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),quarter:getQ(mo),month:mo};
   await addSaleDB(obj);
   launchConfetti();
   fClient="";pols=[newPol()];srch={};
@@ -832,182 +843,6 @@ window.doAddSale=async()=>{
   renderAll();
 };
 window.doDelSale=async id=>{if(confirm("Delete this sale?"))await delSaleDB(id);};
-
-// ── MDRT / COT / TOT ──
-function renderMDRT(){
-  const MDRT_TARGET=75800;
-  const COT_TARGET=MDRT_TARGET*3;
-  const TOT_TARGET=COT_TARGET*2;
-
-  // Full year totals including bonuses
-  const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
-  // Commission per quarter
-  let totalComm=0, totalBonus=0;
-  Object.keys(QS).forEach(q=>{
-    const qs=ys.filter(s=>s.quarter===q);
-    const tm=qs.reduce((a,s)=>a+s.totalComm,0);
-    const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
-    const tier=getTier(tc);
-    const eb=tm>=3000?tm*0.25:0;
-    const qb=tm*tier.bonus/100;
-    totalComm+=tm;
-    totalBonus+=eb+qb;
-  });
-  const grand=totalComm+totalBonus;
-
-  const hitMDRT=grand>=MDRT_TARGET;
-  const hitCOT=grand>=COT_TARGET;
-  const hitTOT=grand>=TOT_TARGET;
-
-  const pMDRT=Math.min(100,(grand/MDRT_TARGET)*100);
-  const pCOT=Math.min(100,(grand/COT_TARGET)*100);
-  const pTOT=Math.min(100,(grand/TOT_TARGET)*100);
-
-  const tiers=[
-    {
-      key:"mdrt", label:"MDRT", full:"Million Dollar Round Table",
-      target:MDRT_TARGET, hit:hitMDRT, pct:pMDRT,
-      icon:"🥇", color:"#f59e0b", glow:"rgba(245,158,11,0.35)",
-      grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",
-      border:"#f59e0b",
-      tagline:"\"Every legend starts with a single step forward.\"",
-      hoverNo:"You're building your legacy. Keep going — MDRT is closer than you think! 💪",
-      hoverYes:"🏅 MDRT Achieved! You're now part of an elite group of top advisers worldwide. Wear it with pride!",
-      badge:"MDRT Member",
-      starCount:1
-    },
-    {
-      key:"cot", label:"COT", full:"Court of the Table",
-      target:COT_TARGET, hit:hitCOT, pct:pCOT,
-      icon:"💎", color:"#38bdf8", glow:"rgba(56,189,248,0.35)",
-      grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",
-      border:"#38bdf8",
-      tagline:"\"Most never try. You chose to go further.\"",
-      hoverNo:"COT is only for those who refuse to settle. You're in that rare group. Push harder! 🚀",
-      hoverYes:"💎 Court of the Table! You've tripled what most can only dream of. Absolutely elite.",
-      badge:"COT Member",
-      starCount:2
-    },
-    {
-      key:"tot", label:"TOT", full:"Top of the Table",
-      target:TOT_TARGET, hit:hitTOT, pct:pTOT,
-      icon:"👑", color:"#a78bfa", glow:"rgba(167,139,250,0.4)",
-      grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",
-      border:"#a78bfa",
-      tagline:"\"The summit is reserved for the relentless.\"",
-      hoverNo:"TOT is the pinnacle. The rarest of the rare. One day, your name will be on that list. 🔥",
-      hoverYes:"👑 TOP OF THE TABLE! You are in the top 1% of financial advisers on the entire planet. LEGENDARY.",
-      badge:"TOT Member",
-      starCount:3
-    }
-  ];
-
-  const stars=n=>Array.from({length:n},()=>"⭐").join("");
-
-  let html=`
-  <style>
-    @keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
-    @keyframes pulseGlow{0%,100%{box-shadow:0 0 18px var(--gc);}50%{box-shadow:0 0 38px var(--gc);}}
-    @keyframes riseIn{0%{opacity:0;transform:translateY(18px);}100%{opacity:1;transform:translateY(0);}}
-    @keyframes crownSpin{0%{transform:rotate(-8deg) scale(1.1);}50%{transform:rotate(8deg) scale(1.25);}100%{transform:rotate(-8deg) scale(1.1);}}
-    .mdrt-card{border-radius:18px;padding:22px;margin-bottom:20px;border:1.5px solid;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.3s;animation:riseIn 0.5s ease both;}
-    .mdrt-card:hover{transform:translateY(-3px);}
-    .mdrt-tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:12px;color:#e2e8f0;width:260px;text-align:center;z-index:100;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,0.5);pointer-events:none;margin-bottom:8px;}
-    .mdrt-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#334155;}
-    .mdrt-hoverable{position:relative;display:inline-block;cursor:default;}
-    .mdrt-hoverable:hover .mdrt-tooltip{display:block;}
-    .shimmer-text{background:linear-gradient(90deg,#fff 0%,#ffd700 40%,#fff 60%,#ffd700 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
-    .cot-shimmer{background:linear-gradient(90deg,#fff 0%,#38bdf8 40%,#fff 60%,#38bdf8 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
-    .tot-shimmer{background:linear-gradient(90deg,#e9d5ff 0%,#fff 40%,#a78bfa 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.2s linear infinite;}
-    .crown-anim{display:inline-block;animation:crownSpin 2s ease-in-out infinite;}
-    .prog-glow{height:100%;border-radius:8px;transition:width 0.8s cubic-bezier(.4,2,.6,1);}
-  </style>`;
-
-  // Year summary strip
-  html+=`<div style='background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:16px 20px;border:1px solid #334155;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;'>
-    <div><div style='font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;'>📅 ${selYear} — Total Eligible Earnings</div>
-    <div style='font-size:28px;font-weight:900;color:#e2e8f0;margin-top:4px;'>${$f(grand)}</div>
-    <div style='font-size:11px;color:#64748b;margin-top:2px;'>Commission ${$f(totalComm)} &nbsp;+&nbsp; Bonuses ${$f(totalBonus)}</div></div>
-    <div style='text-align:right;'>
-      <div style='font-size:11px;color:#64748b;'>Bonuses count ✅</div>
-      <div style='font-size:12px;color:#94a3b8;margin-top:4px;'>Easy + Quarterly Bonus included</div>
-    </div>
-  </div>`;
-
-  tiers.forEach((t,i)=>{
-    const remaining=Math.max(0,t.target-grand);
-    const shimmerClass=t.key==="mdrt"?"shimmer-text":t.key==="cot"?"cot-shimmer":"tot-shimmer";
-    const iconHtml=t.key==="tot"?`<span class='crown-anim'>${t.icon}</span>`:t.icon;
-    const glowStyle=t.hit?`--gc:${t.glow};animation:riseIn 0.5s ease ${i*0.15}s both, pulseGlow 2.5s ease-in-out infinite;`:`animation:riseIn 0.5s ease ${i*0.15}s both;`;
-
-    html+=`<div class='mdrt-card' style='background:${t.grad};border-color:${t.border};${glowStyle}'>`;
-
-    // Watermark
-    html+=`<div style='position:absolute;right:16px;top:12px;font-size:54px;opacity:0.06;font-weight:900;letter-spacing:-2px;'>${t.label}</div>`;
-
-    // Header row
-    html+=`<div style='display:flex;align-items:center;gap:12px;margin-bottom:6px;'>
-      <div style='font-size:36px;line-height:1;'>${iconHtml}</div>
-      <div style='flex:1;'>
-        <div class='mdrt-hoverable'>
-          <div class='${shimmerClass}' style='font-size:22px;font-weight:900;'>${t.label} ${stars(t.starCount)}</div>
-          <div class='mdrt-tooltip'>${t.hit?t.hoverYes:t.hoverNo}</div>
-        </div>
-        <div style='font-size:11px;color:${t.color};opacity:0.8;margin-top:1px;font-weight:600;'>${t.full}</div>
-      </div>
-      <div style='background:${t.hit?"rgba(52,211,153,0.15)":"rgba(100,116,139,0.15)"};border:1px solid ${t.hit?"#34d399":"#475569"};border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:${t.hit?"#34d399":"#64748b"};white-space:nowrap;'>
-        ${t.hit?`✅ ${t.badge}`:"Not Yet"}
-      </div>
-    </div>`;
-
-    // Tagline
-    html+=`<div style='font-size:12px;color:${t.color};opacity:0.75;font-style:italic;margin-bottom:14px;'>${t.tagline}</div>`;
-
-    // Stats row
-    html+=`<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;'>
-      <div style='background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;'>
-        <div style='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;'>Target</div>
-        <div style='font-size:15px;font-weight:800;color:${t.color};margin-top:3px;'>${$f(t.target)}</div>
-      </div>
-      <div style='background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;'>
-        <div style='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;'>Earned</div>
-        <div style='font-size:15px;font-weight:800;color:#e2e8f0;margin-top:3px;'>${$f(grand)}</div>
-      </div>
-      <div style='background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;'>
-        <div style='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;'>${t.hit?"Exceeded":"Still Need"}</div>
-        <div style='font-size:15px;font-weight:800;color:${t.hit?"#34d399":"#f87171"};margin-top:3px;'>${t.hit?$f(grand-t.target):$f(remaining)}</div>
-      </div>
-    </div>`;
-
-    // Progress bar
-    html+=`<div style='display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:5px;'>
-      <span>Progress to ${t.label}</span><span style='color:${t.color};font-weight:700;'>${t.pct.toFixed(1)}%</span>
-    </div>
-    <div style='background:rgba(0,0,0,0.35);border-radius:8px;height:16px;overflow:hidden;'>
-      <div class='prog-glow' style='width:${t.pct}%;background:linear-gradient(90deg,${t.color}66,${t.color});box-shadow:0 0 10px ${t.color};'></div>
-    </div>`;
-
-    // Achieved banner
-    if(t.hit){
-      html+=`<div style='margin-top:14px;background:linear-gradient(90deg,rgba(52,211,153,0.12),rgba(52,211,153,0.05));border:1px solid #34d39955;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;'>
-        <div style='font-size:22px;'>🎉</div>
-        <div style='font-size:13px;font-weight:700;color:#34d399;'>${t.hoverYes}</div>
-      </div>`;
-    }
-
-    html+="</div>";
-  });
-
-  // Motivational footer
-  html+=`<div style='text-align:center;padding:20px 10px 8px;'>
-    <div style='font-size:12px;color:#475569;font-style:italic;line-height:1.7;'>
-      "Success in this industry is not given — it is earned, call by call,<br>meeting by meeting, client by client."<br>
-      <span style='color:#334155;'>Keep showing up. Your breakthrough is coming. 🌟</span>
-    </div>
-  </div>`;
-
-  return html;
-}
 
 renderAll();
 </script>
