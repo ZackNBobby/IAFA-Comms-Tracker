@@ -5,223 +5,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Sales Commission Tracker</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
-  button{font-family:inherit;}
-  input,select{font-family:inherit;}
-  .header{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:20px 24px;border-bottom:1px solid #1e40af;}
-  .header h1{font-size:22px;font-weight:700;color:#60a5fa;}
-  .header p{font-size:12px;color:#94a3b8;margin-top:2px;}
-  .tabs{display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;}
-  .tab-btn{padding:12px 16px;border:none;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;background:transparent;color:#94a3b8;border-bottom:2px solid transparent;transition:all 0.2s;}
-  .tab-btn.active{background:#1e40af;color:#fff;border-bottom:2px solid #60a5fa;}
-  .content{padding:20px 24px;max-width:960px;margin:0 auto;}
-  .card{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
-  .card-dark{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
-  .label{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;}
-  .input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
-  .input:disabled{opacity:0.4;cursor:not-allowed;}
-  .select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-  .btn-primary{padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
-  .btn-primary:disabled{background:#334155;cursor:not-allowed;}
-  .btn-small{padding:5px 14px;border-radius:6px;border:1px solid #1d4ed8;background:#1e3a5f;color:#93c5fd;font-size:12px;font-weight:600;cursor:pointer;}
-  .btn-danger{background:#7f1d1d;border:none;border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:12px;cursor:pointer;}
-  .btn-rider{padding:4px 12px;border-radius:6px;border:1px solid #4f46e5;background:#1e1b4b;color:#a5b4fc;font-size:11px;font-weight:600;cursor:pointer;}
-  .policy-block{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #1e40af;margin-bottom:12px;}
-  .rider-block{background:#0a1929;border-radius:8px;padding:10px;border:1px solid #4f46e5;margin-bottom:8px;}
-  .preview-box{margin-top:12px;background:#0f2942;border-radius:10px;padding:12px;border:1px solid #1e40af;}
-  .mini-card{text-align:center;background:#0a1929;border-radius:6px;padding:6px 2px;}
-  .mini-card .lbl{font-size:10px;color:#64748b;}
-  .mini-card .val{font-size:13px;font-weight:700;margin-top:1px;}
-  .progress-wrap{background:#0f172a;border-radius:8px;height:14px;overflow:hidden;margin:6px 0;}
-  .progress-bar{height:100%;border-radius:8px;transition:width 0.5s;}
-  .kpi-val{font-size:18px;font-weight:800;margin-top:4px;}
-  .total-comm-card{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:12px;padding:16px;border:1px solid #16a34a;margin-bottom:12px;box-shadow:0 0 20px rgba(22,163,74,0.15);}
-  .payout-card{background:linear-gradient(135deg,#1e3a5f,#0f2942);border-radius:12px;padding:18px;border:1px solid #1e40af;margin-bottom:16px;text-align:center;}
-  .campaign-header{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:16px 20px;border-bottom:1px solid #1e40af;}
-  .campaign-card{background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;margin-bottom:20px;}
-  .year-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #0d9488;background:linear-gradient(135deg,#0f766e,#134e4a);color:#5eead4;font-size:13px;font-weight:700;cursor:pointer;}
-  .year-dropdown{position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1e293b;border:1px solid #0d9488;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:110px;overflow:hidden;max-height:240px;overflow-y:auto;}
-  .year-option{display:block;width:100%;padding:9px 16px;border:none;cursor:pointer;font-size:13px;text-align:left;font-family:inherit;}
-  .q-btn{flex:1;min-width:60px;padding:8px 0;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;border:1px solid #334155;background:#1e293b;color:#94a3b8;}
-  .q-btn.active{background:#1d4ed8;color:#fff;border-color:#3b82f6;}
-  .history-item{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
-  .policy-row{background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;margin-bottom:6px;}
-  .rider-tag{background:#1e1b4b;border-radius:4px;padding:1px 8px;font-size:11px;color:#a78bfa;display:inline-block;margin:2px 4px 2px 0;}
-  .badge{background:#0f2942;border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;}
-  .tier-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-  .saving-indicator{position:fixed;bottom:20px;right:20px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 16px;font-size:13px;color:#94a3b8;z-index:9999;display:none;}
-  .saving-indicator.show{display:block;}
-  /* Calendar */
-  .cal-wrap{position:relative;}
-  .cal-input-row{display:flex;gap:6px;}
-  .cal-icon-btn{padding:9px 13px;border-radius:8px;border:1px solid #334155;background:#0f172a;cursor:pointer;font-size:16px;color:#60a5fa;transition:background 0.2s;}
-  .cal-icon-btn.open{background:#1d4ed8;color:#fff;}
-  .cal-popup{position:absolute;z-index:999;top:calc(100% + 6px);left:0;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6);min-width:265px;}
-  .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-  .cal-nav-btn{background:#334155;border:none;border-radius:6px;padding:4px 12px;color:#e2e8f0;cursor:pointer;font-size:15px;}
-  .cal-year-select{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:3px 6px;color:#60a5fa;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-  .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
-  .cal-days-header span{text-align:center;font-size:11px;color:#64748b;font-weight:600;padding:2px 0;}
-  .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-  .cal-day{padding:6px 2px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:transparent;color:#e2e8f0;font-family:inherit;}
-  .cal-day.empty{cursor:default;color:transparent;}
-  .cal-day.today{color:#60a5fa;outline:1px solid #334155;}
-  .cal-day.selected{background:#1d4ed8!important;color:#fff!important;font-weight:700;}
-  .cal-today-btn{margin-top:8px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}
-  /* Searchable dropdown */
-  .srch-wrap{position:relative;}
-  .srch-input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
-  .srch-input:focus{outline:none;border-color:#3b82f6;}
-  .srch-list{position:absolute;z-index:9999;top:calc(100% + 4px);left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
-  .srch-category{padding:5px 12px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8;cursor:default;}
-  .srch-category.cat-trad{background:rgba(30,64,175,0.25);color:#93c5fd;}
-  .srch-category.cat-inv{background:rgba(109,40,217,0.25);color:#c4b5fd;}
-  .srch-category.cat-health{background:rgba(5,150,105,0.20);color:#6ee7b7;}
-  .srch-item{padding:8px 16px;font-size:13px;color:#e2e8f0;cursor:pointer;border-left:2px solid transparent;}
-  .srch-item:hover,.srch-item.highlighted{background:#0f2942;border-left-color:#3b82f6;color:#fff;}
-  .srch-item.cat-trad-item{border-left-color:transparent;}
-  .srch-item.cat-trad-item:hover{background:rgba(30,64,175,0.2);}
-  .srch-item.cat-inv-item:hover{background:rgba(109,40,217,0.2);}
-  .srch-item.cat-health-item:hover{background:rgba(5,150,105,0.15);}
-  .srch-selected{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px;cursor:pointer;text-align:left;}
-  .srch-selected:hover{border-color:#3b82f6;}
-  .srch-placeholder{color:#64748b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+button,input,select{font-family:inherit;}
+.header{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:20px 24px;border-bottom:1px solid #1e40af;}
+.header h1{font-size:22px;font-weight:700;color:#60a5fa;}
+.header p{font-size:12px;color:#94a3b8;margin-top:2px;}
+.tabs{display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;}
+.tab-btn{padding:12px 16px;border:none;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;background:transparent;color:#94a3b8;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab-btn.active{background:#1e40af;color:#fff;border-bottom:2px solid #60a5fa;}
+.content{padding:20px 24px;max-width:960px;margin:0 auto;}
+.card{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
+.card-dark{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
+.lbl{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;}
+.inp{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
+.inp:disabled{opacity:0.4;cursor:not-allowed;}
+.sel{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.btn-pri{padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
+.btn-sm{padding:5px 14px;border-radius:6px;border:1px solid #1d4ed8;background:#1e3a5f;color:#93c5fd;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-del{background:#7f1d1d;border:none;border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:12px;cursor:pointer;}
+.btn-rider{padding:4px 12px;border-radius:6px;border:1px solid #4f46e5;background:#1e1b4b;color:#a5b4fc;font-size:11px;font-weight:600;cursor:pointer;}
+.pol-block{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #1e40af;margin-bottom:12px;}
+.rider-block{background:#0a1929;border-radius:8px;padding:10px;border:1px solid #4f46e5;margin-bottom:8px;}
+.prev-box{margin-top:12px;background:#0f2942;border-radius:10px;padding:12px;border:1px solid #1e40af;}
+.mc{text-align:center;background:#0a1929;border-radius:6px;padding:6px 2px;}
+.mc .ml{font-size:10px;color:#64748b;}
+.mc .mv{font-size:13px;font-weight:700;margin-top:1px;}
+.prog-wrap{background:#0f172a;border-radius:8px;height:14px;overflow:hidden;margin:6px 0;}
+.prog-bar{height:100%;border-radius:8px;transition:width 0.5s;}
+.kpi{font-size:18px;font-weight:800;margin-top:4px;}
+.tot-card{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:12px;padding:16px;border:1px solid #16a34a;margin-bottom:12px;box-shadow:0 0 20px rgba(22,163,74,0.15);}
+.pay-card{background:linear-gradient(135deg,#1e3a5f,#0f2942);border-radius:12px;padding:18px;border:1px solid #1e40af;margin-bottom:16px;text-align:center;}
+.camp-hdr{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:16px 20px;border-bottom:1px solid #1e40af;}
+.camp-card{background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;margin-bottom:20px;}
+.yr-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #0d9488;background:linear-gradient(135deg,#0f766e,#134e4a);color:#5eead4;font-size:13px;font-weight:700;cursor:pointer;}
+.yr-dd{position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1e293b;border:1px solid #0d9488;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:110px;overflow:hidden;max-height:240px;overflow-y:auto;}
+.yr-opt{display:block;width:100%;padding:9px 16px;border:none;cursor:pointer;font-size:13px;text-align:left;font-family:inherit;}
+.q-btn{flex:1;min-width:60px;padding:8px 0;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;border:1px solid #334155;background:#1e293b;color:#94a3b8;}
+.q-btn.active{background:#1d4ed8;color:#fff;border-color:#3b82f6;}
+.hist-item{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
+.pol-row{background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;margin-bottom:6px;}
+.r-tag{background:#1e1b4b;border-radius:4px;padding:1px 8px;font-size:11px;color:#a78bfa;display:inline-block;margin:2px 4px 2px 0;}
+.badge{background:#0f2942;border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;}
+.t-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.save-ind{position:fixed;bottom:20px;right:20px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 16px;font-size:13px;color:#94a3b8;z-index:9999;display:none;}
+.save-ind.show{display:block;}
+/* Calendar */
+.cal-wrap{position:relative;}
+.cal-row{display:flex;gap:6px;}
+.cal-ico{padding:9px 13px;border-radius:8px;border:1px solid #334155;background:#0f172a;cursor:pointer;font-size:16px;color:#60a5fa;}
+.cal-ico.open{background:#1d4ed8;color:#fff;}
+.cal-pop{position:absolute;z-index:999;top:calc(100% + 6px);left:0;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6);min-width:265px;}
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.cal-nb{background:#334155;border:none;border-radius:6px;padding:4px 12px;color:#e2e8f0;cursor:pointer;font-size:15px;}
+.cal-ysel{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:3px 6px;color:#60a5fa;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.cal-dh{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-dh span{text-align:center;font-size:11px;color:#64748b;font-weight:600;padding:2px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{padding:6px 2px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:transparent;color:#e2e8f0;font-family:inherit;}
+.cal-day.empty{cursor:default;color:transparent;}
+.cal-day.today{color:#60a5fa;outline:1px solid #334155;}
+.cal-day.selected{background:#1d4ed8!important;color:#fff!important;font-weight:700;}
+.cal-tod{margin-top:8px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}
+/* Searchable dropdown */
+.srch-wrap{position:relative;}
+.srch-inp{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #3b82f6;background:#0f172a;color:#e2e8f0;font-size:14px;outline:none;}
+.srch-list{position:absolute;z-index:9999;top:calc(100% + 4px);left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+.srch-cat{padding:5px 12px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:default;}
+.srch-cat.ct{background:rgba(30,64,175,0.30);color:#93c5fd;}
+.srch-cat.ci{background:rgba(109,40,217,0.30);color:#c4b5fd;}
+.srch-cat.ch{background:rgba(5,150,105,0.25);color:#6ee7b7;}
+.srch-item{padding:8px 16px;font-size:13px;color:#e2e8f0;cursor:pointer;border-left:3px solid transparent;}
+.srch-item:hover{background:#0f2942;border-left-color:#3b82f6;}
+.srch-item.it:hover{background:rgba(30,64,175,0.18);}
+.srch-item.ii:hover{background:rgba(109,40,217,0.18);}
+.srch-item.ih:hover{background:rgba(5,150,105,0.15);}
+.srch-sel{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px;cursor:pointer;text-align:left;}
+.srch-sel:hover{border-color:#3b82f6;}
+.srch-ph{color:#64748b;}
 </style>
 </head>
 <body>
-
-<div class="saving-indicator" id="savingIndicator">💾 Saving...</div>
-<canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999;display:none;"></canvas>
-
+<div class="save-ind" id="saveInd">💾 Saving...</div>
+<canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999;display:none;"></canvas>
 <div class="header">
   <h1>📊 Sales Commission Tracker</h1>
   <p>Income Financial Consultant · Singapore</p>
 </div>
-
 <div class="tabs" id="tabBar"></div>
-<div class="content" id="appContent"></div>
+<div class="content" id="app"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",
-  authDomain: "zack-comms-tracker-iafa.firebaseapp.com",
-  projectId: "zack-comms-tracker-iafa",
-  storageBucket: "zack-comms-tracker-iafa.firebasestorage.app",
-  messagingSenderId: "889861149236",
-  appId: "1:889861149236:web:8488f5336ab9d2475bb061"
+const FB = {
+  apiKey:"AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",
+  authDomain:"zack-comms-tracker-iafa.firebaseapp.com",
+  projectId:"zack-comms-tracker-iafa",
+  storageBucket:"zack-comms-tracker-iafa.firebasestorage.app",
+  messagingSenderId:"889861149236",
+  appId:"1:889861149236:web:8488f5336ab9d2475bb061"
 };
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const db = getFirestore(initializeApp(FB));
 const COLL = "sales";
 
-const PRODUCTS = {
-  "Mortgage Term (MPN2)": { terms: [
-    {label:"3 years",yr1:10.50,credit:3},{label:"4 years",yr1:11.50,credit:3},
-    {label:"5 years",yr1:12.50,credit:3},{label:"6-9 years",yr1:13.00,credit:3},
-    {label:"10-14 years",yr1:18.00,credit:3},{label:"15-19 years",yr1:26.00,credit:3},
-    {label:"20+ years",yr1:40.00,credit:3}]},
-  "Star Term Protect (TAN19)": { riders:["Essential Protect (LBV3)","Total Protect (TPV1)"], terms:[
-    {label:"5 years",yr1:12.50,credit:3},{label:"6-9 years",yr1:13.00,credit:3},
-    {label:"10-14 years",yr1:18.00,credit:3},{label:"15-19 years",yr1:26.00,credit:3},
-    {label:"20-24 years",yr1:40.00,credit:3},{label:"25+ years",yr1:40.00,credit:3}]},
-  "TermLife Solitaire (TBN3)": { riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Total Protect (TPV1)"], terms:[
-    {label:"6-9 years",yr1:13.00,credit:3},{label:"10-14 years",yr1:18.00,credit:3},
-    {label:"15-19 years",yr1:26.00,credit:3},{label:"20-24 years",yr1:41.20,credit:3},
-    {label:"25+ years",yr1:45.50,credit:3}]},
-  "Essential Protect (LBV3)": { terms:[
-    {label:"5 years",yr1:12.50,credit:4},{label:"6-9 years",yr1:13.00,credit:4},
-    {label:"10-14 years",yr1:18.00,credit:4},{label:"15-19 years",yr1:26.00,credit:4},
-    {label:"20+ years",yr1:40.00,credit:4}]},
-  "Complete Life Secure (VQMW)": { terms:[
-    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
-    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
-    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Complete Life Secure - Protection Benefit (VQVW)": { terms:[
-    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
-    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
-    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Total Protect (TPV1)": { terms:[
-    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
-    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
-    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Complete Cancer Care (CBN3)": { terms:[{label:"10 years",yr1:22.00,credit:4}]},
-  "Complete Critical Protect (CCN1)": { terms:[
-    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
-    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Advanced Critical Secure (CSV10)": { terms:[
-    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
-    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
-    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Early Critical Secure (CSV11)": { terms:[
-    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
-    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
-    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Cancer Premium Waiver / GIO (WPV10)": { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
-  "Payor Premium Waiver (WPV6)":          { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
-  "Enhanced Payor Premium Waiver (WEV2)": { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
-  "Dread Disease Premium Waiver (WSV2)":  { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
-  "Hospital CashAid (HBV3)":  { terms:[{label:"All Terms",yr1:4.00,credit:4}]},
-  "Lady 360 (LPN)":            { terms:[{label:"All Terms",yr1:4.00,credit:4}]},
-  "Maternity 360 (MBN)":       { terms:[{label:"Single",yr1:5.00,credit:1}]},
-  "Gro Power Saver Pro (RSME)":{ terms:[{label:"3 years",yr1:3.30,credit:0.30}]},
-  "Gro Saver Flex Pro (GSME)": { terms:[{label:"Single",yr1:3.00,credit:1}]},
-  "Gro Cash Flex Pro (GCME)":  { terms:[{label:"Single",yr1:3.00,credit:1}]},
-  "Gro Cash Plus (GDMW)": { terms:[{label:"5 years",yr1:11.50,credit:1},{label:"10 years",yr1:18.30,credit:1}]},
-  "Gro Cash Sure (GCMW)": { terms:[
-    {label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:0.60},{label:"5yr (Policy >25)",yr1:10.00,credit:0.60},
-    {label:"10yr (Policy ≤25)",yr1:18.20,credit:0.60},{label:"10yr (Policy >25)",yr1:22.00,credit:0.60},
-    {label:"15yr (Policy >25)",yr1:33.00,credit:0.60},{label:"20yr (Policy >25)",yr1:44.00,credit:1.00},
-    {label:"25+ years",yr1:55.00,credit:1.00}]},
-  "Savings Protector Pro (SPV3)": { terms:[
-    {label:"1yr (Policy ≤10)",yr1:2.00,credit:4},{label:"2yr (Policy ≤10)",yr1:2.20,credit:4},
-    {label:"3yr (Policy ≤10)",yr1:3.30,credit:4},{label:"4yr (Policy ≤10)",yr1:4.40,credit:4},
-    {label:"5yr (Policy ≤10)",yr1:5.50,credit:4},{label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:4},
-    {label:"5yr (Policy >25)",yr1:10.00,credit:4},{label:"10yr (Policy ≤25)",yr1:18.20,credit:4},
-    {label:"10yr (Policy >25)",yr1:22.00,credit:4},{label:"15yr (Policy ≤25)",yr1:27.20,credit:4},
-    {label:"15yr (Policy >25)",yr1:33.00,credit:4},{label:"20yr (Policy ≤25)",yr1:36.30,credit:4},
-    {label:"20yr (Policy >25)",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
-  "Gro Retire Flex Pro (GRME)": { terms:[
-    {label:"Single",yr1:3.50,credit:1.00},{label:"5yr (Policy ≤10)",yr1:5.50,credit:0.60},
-    {label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:0.60},{label:"5yr (Policy >25)",yr1:10.00,credit:0.60},
-    {label:"10yr (Policy ≤25)",yr1:18.20,credit:0.60},{label:"10yr (Policy >25)",yr1:22.00,credit:0.60},
-    {label:"15yr (Policy ≤25)",yr1:27.20,credit:0.60},{label:"15yr (Policy >25)",yr1:33.00,credit:1.00},
-    {label:"20yr (Policy ≤25)",yr1:36.30,credit:1.00},{label:"20yr (Policy >25)",yr1:44.00,credit:1.00},
-    {label:"25+ years",yr1:55.00,credit:1.00}]},
-  "Gro Retire Flex Pro - Protection Benefit (SPV4)": { terms:[
-    {label:"5yr (Policy ≤10)",yr1:5.50,credit:0.60},{label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:0.60},
-    {label:"5yr (Policy >25)",yr1:10.00,credit:0.60},{label:"10yr (Policy ≤25)",yr1:18.20,credit:0.60},
-    {label:"10yr (Policy >25)",yr1:22.00,credit:0.60},{label:"15yr (Policy ≤25)",yr1:27.20,credit:0.60},
-    {label:"15yr (Policy >25)",yr1:33.00,credit:1.00},{label:"20yr (Policy ≤25)",yr1:36.30,credit:1.00},
-    {label:"20yr (Policy >25)",yr1:44.00,credit:1.00},{label:"25+ years",yr1:55.00,credit:1.00}]},
-  "Gro Annuity Pro (GAMA)":                          { terms:[{label:"Single",yr1:1.00,credit:0}]},
-  "Provenance Solitaire (VPMW)":                     { terms:[{label:"Single",yr1:5.50,credit:1}]},
-  "Provenance Solitaire - Protection Benefit (VPVW)":{ terms:[{label:"Single",yr1:5.50,credit:1}]},
-  "Provenance Disability Accelerator (TSN3)":        { terms:[{label:"Single",yr1:5.50,credit:1}]},
-  "Luxe Plus Solitaire II (LTMW)":  { terms:[{label:"Single",yr1:3.25,credit:1}]},
-  "Wealth Plus Solitaire (LHMWA)":  { terms:[{label:"Single",yr1:3.00,credit:1}]},
-  "AstraLink (VA2)": { terms:[
-    {label:"MIP 10yr",yr1:22.00,credit:4},{label:"MIP 15yr",yr1:33.00,credit:4},
-    {label:"MIP 20yr",yr1:44.00,credit:4},{label:"MIP 25yr",yr1:55.00,credit:4}]},
-  "Invest Flex (VS1)": { terms:[
-    {label:"5yr (All Policy Term)",yr1:3.85,credit:1.50},{label:"10yr (All Policy Term)",yr1:23.95,credit:2.50},
-    {label:"15yr (All Policy Term)",yr1:48.55,credit:3.00},{label:"20yr (All Policy Term)",yr1:52.35,credit:3.00}]},
-  "Invest Flex Vantage (VS2)": { terms:[
-    {label:"5yr (All Policy Term)",yr1:2.60,credit:1.50},{label:"10yr (All Policy Term)",yr1:23.00,credit:2.50},
-    {label:"15yr (All Policy Term)",yr1:44.20,credit:3.00},{label:"20yr (All Policy Term)",yr1:46.00,credit:3.00}]},
-  "Invest Flex TriVantage (VS3)": { terms:[{label:"10yr (All Policy Term)",yr1:11.00,credit:1.50}]},
-  "WealthLink (GL3)": { terms:[{label:"Single",yr1:1.50,credit:0}]},
-  "Enhanced IncomeShield / IncomeShield Standard": { riders:["Classic Care Rider","Deluxe Care Rider"], terms:[{label:"Yearly",yr1:30.00,credit:4}]},
-  "PrimeShield": { terms:[{label:"Yearly",yr1:35.00,credit:4}]},
-  "Care Secure":  { terms:[{label:"Yearly",yr1:45.00,credit:4}]},
-};
-const PRODUCT_CATEGORIES = [
-  { key:"trad", label:"Traditional Life Insurance", cls:"cat-trad", itemCls:"cat-trad-item", products:[
+// ── Product categories ──
+const CATS = [
+  { key:"t", label:"Traditional Life Insurance", hCls:"srch-cat ct", iCls:"srch-item it", products:[
     "Mortgage Term (MPN2)","Star Term Protect (TAN19)","TermLife Solitaire (TBN3)",
     "Essential Protect (LBV3)","Complete Life Secure (VQMW)",
     "Complete Life Secure - Protection Benefit (VQVW)","Total Protect (TPV1)",
@@ -238,749 +131,599 @@ const PRODUCT_CATEGORIES = [
     "Provenance Disability Accelerator (TSN3)",
     "Luxe Plus Solitaire II (LTMW)","Wealth Plus Solitaire (LHMWA)"
   ]},
-  { key:"inv", label:"Investment Linked Insurance", cls:"cat-inv", itemCls:"cat-inv-item", products:[
+  { key:"i", label:"Investment Linked Insurance", hCls:"srch-cat ci", iCls:"srch-item ii", products:[
     "AstraLink (VA2)","Invest Flex (VS1)","Invest Flex Vantage (VS2)",
     "Invest Flex TriVantage (VS3)","WealthLink (GL3)"
   ]},
-  { key:"health", label:"Health Insurance", cls:"cat-health", itemCls:"cat-health-item", products:[
+  { key:"h", label:"Health Insurance", hCls:"srch-cat ch", iCls:"srch-item ih", products:[
     "Enhanced IncomeShield / IncomeShield Standard","PrimeShield","Care Secure"
   ]}
 ];
 
-// State for open searchable dropdowns: pid -> {open, query}
-let srchState={};
-  "Disability Accelerator (TCN2)":{yr1:13.00,credit:3},
-  "Essential Protect (LBV3)":{yr1:13.00,credit:4},
-  "Total Protect (TPV1)":{yr1:10.20,credit:4},
-  "Classic Care Rider":{yr1:15.00,credit:4},
-  "Deluxe Care Rider":{yr1:15.00,credit:4},
+// ── Products data ──
+const PROD = {
+  "Mortgage Term (MPN2)":{terms:[{l:"3 years",y:10.50,c:3},{l:"4 years",y:11.50,c:3},{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20+ years",y:40.00,c:3}]},
+  "Star Term Protect (TAN19)":{riders:["Essential Protect (LBV3)","Total Protect (TPV1)"],terms:[{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:40.00,c:3},{l:"25+ years",y:40.00,c:3}]},
+  "TermLife Solitaire (TBN3)":{riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Total Protect (TPV1)"],terms:[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}]},
+  "Essential Protect (LBV3)":{terms:[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}]},
+  "Complete Life Secure (VQMW)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Complete Life Secure - Protection Benefit (VQVW)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Total Protect (TPV1)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Complete Cancer Care (CBN3)":{terms:[{l:"10 years",y:22.00,c:4}]},
+  "Complete Critical Protect (CCN1)":{terms:[{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Advanced Critical Secure (CSV10)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Early Critical Secure (CSV11)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Cancer Premium Waiver / GIO (WPV10)":{terms:[{l:"All Terms",y:20.00,c:4}]},
+  "Payor Premium Waiver (WPV6)":{terms:[{l:"All Terms",y:20.00,c:4}]},
+  "Enhanced Payor Premium Waiver (WEV2)":{terms:[{l:"All Terms",y:20.00,c:4}]},
+  "Dread Disease Premium Waiver (WSV2)":{terms:[{l:"All Terms",y:20.00,c:4}]},
+  "Hospital CashAid (HBV3)":{terms:[{l:"All Terms",y:4.00,c:4}]},
+  "Lady 360 (LPN)":{terms:[{l:"All Terms",y:4.00,c:4}]},
+  "Maternity 360 (MBN)":{terms:[{l:"Single",y:5.00,c:1}]},
+  "Gro Power Saver Pro (RSME)":{terms:[{l:"3 years",y:3.30,c:0.30}]},
+  "Gro Saver Flex Pro (GSME)":{terms:[{l:"Single",y:3.00,c:1}]},
+  "Gro Cash Flex Pro (GCME)":{terms:[{l:"Single",y:3.00,c:1}]},
+  "Gro Cash Plus (GDMW)":{terms:[{l:"5 years",y:11.50,c:1},{l:"10 years",y:18.30,c:1}]},
+  "Gro Cash Sure (GCMW)":{terms:[{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:0.60},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},
+  "Savings Protector Pro (SPV3)":{terms:[{l:"1yr (Policy <=10)",y:2.00,c:4},{l:"2yr (Policy <=10)",y:2.20,c:4},{l:"3yr (Policy <=10)",y:3.30,c:4},{l:"4yr (Policy <=10)",y:4.40,c:4},{l:"5yr (Policy <=10)",y:5.50,c:4},{l:"5yr (Policy >10 <=25)",y:9.00,c:4},{l:"5yr (Policy >25)",y:10.00,c:4},{l:"10yr (Policy <=25)",y:18.20,c:4},{l:"10yr (Policy >25)",y:22.00,c:4},{l:"15yr (Policy <=25)",y:27.20,c:4},{l:"15yr (Policy >25)",y:33.00,c:4},{l:"20yr (Policy <=25)",y:36.30,c:4},{l:"20yr (Policy >25)",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Gro Retire Flex Pro (GRME)":{terms:[{l:"Single",y:3.50,c:1.00},{l:"5yr (Policy <=10)",y:5.50,c:0.60},{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy <=25)",y:27.20,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:1.00},{l:"20yr (Policy <=25)",y:36.30,c:1.00},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},
+  "Gro Retire Flex Pro - Protection Benefit (SPV4)":{terms:[{l:"5yr (Policy <=10)",y:5.50,c:0.60},{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy <=25)",y:27.20,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:1.00},{l:"20yr (Policy <=25)",y:36.30,c:1.00},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},
+  "Gro Annuity Pro (GAMA)":{terms:[{l:"Single",y:1.00,c:0}]},
+  "Provenance Solitaire (VPMW)":{terms:[{l:"Single",y:5.50,c:1}]},
+  "Provenance Solitaire - Protection Benefit (VPVW)":{terms:[{l:"Single",y:5.50,c:1}]},
+  "Provenance Disability Accelerator (TSN3)":{terms:[{l:"Single",y:5.50,c:1}]},
+  "Luxe Plus Solitaire II (LTMW)":{terms:[{l:"Single",y:3.25,c:1}]},
+  "Wealth Plus Solitaire (LHMWA)":{terms:[{l:"Single",y:3.00,c:1}]},
+  "AstraLink (VA2)":{terms:[{l:"MIP 10yr",y:22.00,c:4},{l:"MIP 15yr",y:33.00,c:4},{l:"MIP 20yr",y:44.00,c:4},{l:"MIP 25yr",y:55.00,c:4}]},
+  "Invest Flex (VS1)":{terms:[{l:"5yr (All Policy Term)",y:3.85,c:1.50},{l:"10yr (All Policy Term)",y:23.95,c:2.50},{l:"15yr (All Policy Term)",y:48.55,c:3.00},{l:"20yr (All Policy Term)",y:52.35,c:3.00}]},
+  "Invest Flex Vantage (VS2)":{terms:[{l:"5yr (All Policy Term)",y:2.60,c:1.50},{l:"10yr (All Policy Term)",y:23.00,c:2.50},{l:"15yr (All Policy Term)",y:44.20,c:3.00},{l:"20yr (All Policy Term)",y:46.00,c:3.00}]},
+  "Invest Flex TriVantage (VS3)":{terms:[{l:"10yr (All Policy Term)",y:11.00,c:1.50}]},
+  "WealthLink (GL3)":{terms:[{l:"Single",y:1.50,c:0}]},
+  "Enhanced IncomeShield / IncomeShield Standard":{riders:["Classic Care Rider","Deluxe Care Rider"],terms:[{l:"Yearly",y:30.00,c:4}]},
+  "PrimeShield":{terms:[{l:"Yearly",y:35.00,c:4}]},
+  "Care Secure":{terms:[{l:"Yearly",y:45.00,c:4}]}
 };
-const QUARTERS={Q1:{months:[0,1,2],label:"Q1 (Jan–Mar)",payout:"April"},Q2:{months:[3,4,5],label:"Q2 (Apr–Jun)",payout:"July"},Q3:{months:[6,7,8],label:"Q3 (Jul–Sep)",payout:"October"},Q4:{months:[9,10,11],label:"Q4 (Oct–Dec)",payout:"January"}};
-const CREDIT_TIERS=[{min:0,max:49999,bonus:0,label:"< 50,000"},{min:50000,max:67999,bonus:10,label:"50,000 – 67,999"},{min:68000,max:96999,bonus:20,label:"68,000 – 96,999"},{min:97000,max:139999,bonus:30,label:"97,000 – 139,999"},{min:140000,max:Infinity,bonus:40,label:"140,000+"}];
-const MONTHS_FULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const RIDER_DATA = {
+  "Disability Accelerator (TCN2)":{y:13.00,c:3},
+  "Essential Protect (LBV3)":{y:13.00,c:4},
+  "Total Protect (TPV1)":{y:10.20,c:4},
+  "Classic Care Rider":{y:15.00,c:4},
+  "Deluxe Care Rider":{y:15.00,c:4}
+};
+const QS = {Q1:{months:[0,1,2],label:"Q1 (Jan-Mar)",payout:"April"},Q2:{months:[3,4,5],label:"Q2 (Apr-Jun)",payout:"July"},Q3:{months:[6,7,8],label:"Q3 (Jul-Sep)",payout:"October"},Q4:{months:[9,10,11],label:"Q4 (Oct-Dec)",payout:"January"}};
+const TIERS = [{min:0,max:49999,bonus:0,label:"< 50,000"},{min:50000,max:67999,bonus:10,label:"50,000 - 67,999"},{min:68000,max:96999,bonus:20,label:"68,000 - 96,999"},{min:97000,max:139999,bonus:30,label:"97,000 - 139,999"},{min:140000,max:Infinity,bonus:40,label:"140,000+"}];
+const MTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-const fmt  = n=>`$${n.toLocaleString("en-SG",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-const fmtC = n=>n.toLocaleString("en-SG",{minimumFractionDigits:0,maximumFractionDigits:0});
-const uid  = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
-function getQuarter(m){for(const[q,d]of Object.entries(QUARTERS))if(d.months.includes(m))return q;}
-function getCreditTier(c){return CREDIT_TIERS.find(t=>c>=t.min&&c<=t.max)||CREDIT_TIERS[0];}
-function todayStr(){const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;}
-function showSaving(){const el=document.getElementById("savingIndicator");el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2000);}
-function escHtml(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+// ── Helpers ──
+const $f = n => "$"+n.toLocaleString("en-SG",{minimumFractionDigits:2,maximumFractionDigits:2});
+const $c = n => n.toLocaleString("en-SG",{minimumFractionDigits:0,maximumFractionDigits:0});
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
+const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const todayStr = () => { const t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); };
+const getQ = m => { for(const [k,v] of Object.entries(QS)) if(v.months.includes(m)) return k; };
+const getTier = c => TIERS.find(t=>c>=t.min&&c<=t.max)||TIERS[0];
+const yearList = () => { const y=[],cur=new Date().getFullYear(); for(let i=cur;i>=2020;i--) y.push(i); return y; };
+function showSave(){ const e=document.getElementById("saveInd"); e.classList.add("show"); setTimeout(()=>e.classList.remove("show"),2000); }
 
 // ── State ──
-let sales=[];
-let activeTab="log";
-let activeQ="Q1";
-let selectedYear=new Date().getFullYear();
-let policies=[newPolicy()];
-let formDate=todayStr();
-let formClient="";
-let calOpen=false;
-let calYear=new Date().getFullYear();
-let calMonth=new Date().getMonth();
+let sales=[], tab="log", activeQ="Q1", selYear=new Date().getFullYear();
+let pols=[newPol()], fDate=todayStr(), fClient="";
+let calOpen=false, calY=new Date().getFullYear(), calM=new Date().getMonth();
+let srch={};  // pid -> {open, query}
 
-// ── FIX: Year range for calendar and dashboard ──
-const YEAR_START = 2020;
-function getYearList(){
-  const cur=new Date().getFullYear();
-  const years=[];
-  for(let y=cur;y>=YEAR_START;y--) years.push(y);
-  return years;
-}
+function newPol(){ return {id:uid(),product:"",term:"",ap:"",riders:[]}; }
+function newRider(){ return {id:uid(),name:"",premium:""}; }
 
-function newPolicy(){return {id:uid(),product:"",term:"",annualPremium:"",riders:[]};}
-function newRider(){return {id:uid(),name:"",premium:""};}
-
-onSnapshot(collection(db, COLL), snapshot=>{
+// ── Firebase ──
+onSnapshot(collection(db,COLL), snap=>{
   sales=[];
-  snapshot.forEach(d=>sales.push({...d.data(),fireId:d.id}));
+  snap.forEach(d=>sales.push({...d.data(),fid:d.id}));
   sales.sort((a,b)=>a.date<b.date?1:-1);
-  renderTabs();
-  renderContent();
+  renderAll();
 });
+async function addSaleDB(obj){ showSave(); try{ await addDoc(collection(db,COLL),obj); }catch(e){ alert("Save error: "+e.message); } }
+async function delSaleDB(fid){ showSave(); try{ await deleteDoc(doc(db,COLL,fid)); }catch(e){ alert("Delete error: "+e.message); } }
 
-async function saveSale(saleObj){
-  showSaving();
-  try{ await addDoc(collection(db,COLL), saleObj); }
-  catch(e){ alert("Error saving: "+e.message); }
-}
-async function deleteSale(fireId){
-  showSaving();
-  try{ await deleteDoc(doc(db,COLL,fireId)); }
-  catch(e){ alert("Error deleting: "+e.message); }
-}
-
-function render(){renderTabs();renderContent();}
+// ── Render ──
+function renderAll(){ renderTabs(); renderPage(); }
 
 function renderTabs(){
-  const tabs=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"]];
-  document.getElementById("tabBar").innerHTML=tabs.map(([k,v])=>
-    `<button class="tab-btn ${activeTab===k?"active":""}" onclick="switchTab('${k}')">${v}</button>`
+  const tabs=[["log","+ Log Sale"],["dashboard","Dashboard"],["history","All Sales"],["ignite","Ignite 2026"],["trail","Trailblazer 2027"]];
+  document.getElementById("tabBar").innerHTML = tabs.map(([k,v])=>
+    "<button class='tab-btn"+(tab===k?" active":"")+"' onclick='setTab(\""+k+"\")'>"+(k==="log"?"➕ ":k==="dashboard"?"📈 ":k==="history"?"📋 ":k==="ignite"?"🔥 ":"🌍 ")+v+"</button>"
   ).join("");
 }
 
-// ── FIX: renderContent does NOT re-render the log form while typing ──
-function renderContent(){
-  const el=document.getElementById("appContent");
-  if(activeTab==="log")            renderLogShell(el);
-  else if(activeTab==="dashboard") el.innerHTML=renderDashboard();
-  else if(activeTab==="history")   el.innerHTML=renderHistory();
-  else if(activeTab==="ignite")    el.innerHTML=renderIgnite();
-  else if(activeTab==="trail")     el.innerHTML=renderTrail();
-  attachEventListeners();
+function renderPage(){
+  const el=document.getElementById("app");
+  if(tab==="log")      { if(!document.getElementById("logShell")) el.innerHTML="<div id='logShell'></div>"; renderLog(); }
+  else if(tab==="dashboard") el.innerHTML=renderDash();
+  else if(tab==="history")   el.innerHTML=renderHist();
+  else if(tab==="ignite")    el.innerHTML=renderIgnite();
+  else                       el.innerHTML=renderTrail();
+  attachAll();
 }
 
-// ── LOG: shell renders once, inputs update state without full re-render ──
-function renderLogShell(el){
-  // Only build the shell if it doesn't already exist
-  if(!document.getElementById("logShell")){
-    el.innerHTML=`<div id="logShell"></div>`;
-  }
-  document.getElementById("logShell").innerHTML=buildLogHTML();
+// ── LOG TAB ──
+function renderLog(){
+  const shell=document.getElementById("logShell");
+  if(shell) shell.innerHTML=buildLog();
+}
+function buildLog(){
+  const gt=grandTot();
+  return "<div style='font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;'>Log a New Sale</div>"
+  +"<div class='card'>"
+  +"<div class='g2' style='margin-bottom:20px;'>"
+  +"<div><label class='lbl'>📅 Date of Sale</label>"+buildCal()+"</div>"
+  +"<div><label class='lbl'>👤 Client Name</label><input class='inp' id='clientInp' type='text' placeholder='e.g. John Tan' value='"+esc(fClient)+"'/></div>"
+  +"</div>"
+  +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>"
+  +"<span style='font-size:13px;font-weight:700;color:#60a5fa;'>📄 Policies ("+pols.length+")</span>"
+  +"<button class='btn-sm' onclick='addPol()'>+ Add Policy</button>"
+  +"</div>"
+  +pols.map((p,i)=>buildPolBlock(p,i)).join("")
+  +(gt.comm>0
+    ?"<div class='prev-box' style='margin-bottom:14px;'><div style='font-size:12px;color:#60a5fa;font-weight:700;margin-bottom:8px;'>🧮 Grand Total</div><div class='g2'><div class='mc' style='padding:10px 4px;'><div class='ml'>Total Commission</div><div style='font-size:18px;font-weight:800;color:#34d399;margin-top:2px;'>"+$f(gt.comm)+"</div></div><div class='mc' style='padding:10px 4px;'><div class='ml'>Total Credits</div><div style='font-size:18px;font-weight:800;color:#60a5fa;margin-top:2px;'>"+$c(gt.cred)+" pts</div></div></div></div>"
+    :"")
+  +"<button class='btn-pri' onclick='doAddSale()'>✅ Add Sale</button>"
+  +"</div>";
 }
 
-function buildLogHTML(){
-  const gt=grandTotals();
-  return `
-  <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;">Log a New Sale</div>
-  <div class="card">
-    <div class="grid-2" style="margin-bottom:20px;">
-      <div>
-        <label class="label">📅 Date of Sale</label>
-        ${renderCalendar()}
-      </div>
-      <div>
-        <label class="label">👤 Client Name</label>
-        <input class="input" id="clientInput" type="text" placeholder="e.g. John Tan" value="${escHtml(formClient)}"/>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <span style="font-size:13px;font-weight:700;color:#60a5fa;">📄 Policies (${policies.length})</span>
-      <button class="btn-small" onclick="addPolicy()">+ Add Policy</button>
-    </div>
-    ${policies.map((b,i)=>renderPolicyBlock(b,i)).join("")}
-    ${gt.comm>0?`
-    <div class="preview-box" style="margin-bottom:14px;">
-      <div style="font-size:12px;color:#60a5fa;font-weight:700;margin-bottom:8px;">🧮 Grand Total — All Policies</div>
-      <div class="grid-2">
-        <div class="mini-card" style="padding:10px 4px;"><div class="lbl" style="font-size:11px;">Total Commission</div><div style="font-size:18px;font-weight:800;color:#34d399;margin-top:2px;">${fmt(gt.comm)}</div></div>
-        <div class="mini-card" style="padding:10px 4px;"><div class="lbl" style="font-size:11px;">Total Credits</div><div style="font-size:18px;font-weight:800;color:#60a5fa;margin-top:2px;">${fmtC(gt.cred)} pts</div></div>
-      </div>
-    </div>`:""}
-    <button class="btn-primary" id="addSaleBtn" onclick="handleAddSale()">✅ Add Sale</button>
-  </div>`;
+function buildCal(){
+  const sd=fDate?new Date(fDate+"T00:00:00"):null;
+  const disp=sd?sd.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"}):"";
+  return "<div class='cal-wrap' id='calWrap'>"
+  +"<div class='cal-row'><input class='inp' id='dateInp' type='text' placeholder='YYYY-MM-DD' value='"+fDate+"' style='flex:1;'/>"
+  +"<button class='cal-ico"+(calOpen?" open":"")+"' id='calIco'>📅</button></div>"
+  +(disp?"<div style='font-size:11px;color:#64748b;margin-top:3px;'>"+disp+"</div>":"")
+  +(calOpen?buildCalPop():"")
+  +"</div>";
 }
 
-function renderCalendar(){
-  const selDate=formDate?new Date(formDate+"T00:00:00"):null;
-  const disp=selDate?selDate.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"}):"";
-  return `
-  <div class="cal-wrap" id="calWrap">
-    <div class="cal-input-row">
-      <input class="input" id="dateInput" type="text" placeholder="YYYY-MM-DD" value="${formDate}" style="flex:1;"/>
-      <button class="cal-icon-btn ${calOpen?"open":""}" id="calIconBtn">📅</button>
-    </div>
-    ${disp?`<div style="font-size:11px;color:#64748b;margin-top:3px;padding-left:2px;">${disp}</div>`:""}
-    ${calOpen?renderCalPopup():""}
-  </div>`;
-}
-
-function renderCalPopup(){
+function buildCalPop(){
   const today=new Date();
-  const first=new Date(calYear,calMonth,1).getDay();
-  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const selDate=formDate?new Date(formDate+"T00:00:00"):null;
+  const first=new Date(calY,calM,1).getDay();
+  const dim=new Date(calY,calM+1,0).getDate();
+  const sd=fDate?new Date(fDate+"T00:00:00"):null;
   let cells="";
-  for(let i=0;i<first;i++) cells+=`<button class="cal-day empty" disabled></button>`;
-  for(let d=1;d<=daysInMonth;d++){
-    const isSel=selDate&&selDate.getFullYear()===calYear&&selDate.getMonth()===calMonth&&selDate.getDate()===d;
-    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
-    cells+=`<button class="cal-day${isSel?" selected":isToday?" today":""}" onclick="pickCalDay(${d})">${d}</button>`;
+  for(let i=0;i<first;i++) cells+="<button class='cal-day empty' disabled></button>";
+  for(let d=1;d<=dim;d++){
+    const isSel=sd&&sd.getFullYear()===calY&&sd.getMonth()===calM&&sd.getDate()===d;
+    const isTod=today.getFullYear()===calY&&today.getMonth()===calM&&today.getDate()===d;
+    cells+="<button class='cal-day"+(isSel?" selected":isTod?" today":"")+"' onclick='pickDay("+d+")'>"+d+"</button>";
   }
-  // Year dropdown in calendar header — shows 2020 to current year
-  const yearList=getYearList();
-  const yearOpts=yearList.map(y=>`<option value="${y}" ${y===calYear?"selected":""}>${y}</option>`).join("");
-  return `
-  <div class="cal-popup" id="calPopup">
-    <div class="cal-nav">
-      <button class="cal-nav-btn" onclick="calNavMonth(-1)">‹</button>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-weight:700;font-size:13px;color:#60a5fa;">${MONTHS_FULL[calMonth]}</span>
-        <select class="cal-year-select" onchange="calJumpYear(parseInt(this.value))">${yearOpts}</select>
-      </div>
-      <button class="cal-nav-btn" onclick="calNavMonth(1)">›</button>
-    </div>
-    <div class="cal-days-header">${["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>`<span>${d}</span>`).join("")}</div>
-    <div class="cal-days">${cells}</div>
-    <button class="cal-today-btn" onclick="pickToday()">📌 Today</button>
-  </div>`;
+  const yOpts=yearList().map(y=>"<option value='"+y+"'"+(y===calY?" selected":"")+">"+y+"</option>").join("");
+  return "<div class='cal-pop' id='calPop'>"
+  +"<div class='cal-nav'><button class='cal-nb' onclick='navM(-1)'>&#8249;</button>"
+  +"<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:700;font-size:13px;color:#60a5fa;'>"+MTHS[calM]+"</span>"
+  +"<select class='cal-ysel' onchange='jumpY(parseInt(this.value))'>"+yOpts+"</select></div>"
+  +"<button class='cal-nb' onclick='navM(1)'>&#8250;</button></div>"
+  +"<div class='cal-dh'>"+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>"<span>"+d+"</span>").join("")+"</div>"
+  +"<div class='cal-days'>"+cells+"</div>"
+  +"<button class='cal-tod' onclick='pickToday()'>📌 Today</button>"
+  +"</div>";
 }
 
-function renderSearchableProduct(pid, selectedProduct){
-  const s=srchState[pid]||{open:false,query:""};
-  const query=s.query.toLowerCase();
-  // Filter products across all categories
-  const filtered=query
-    ? PRODUCT_CATEGORIES.map(cat=>({
-        ...cat,
-        products:cat.products.filter(p=>p.toLowerCase().includes(query))
-      })).filter(cat=>cat.products.length>0)
-    : PRODUCT_CATEGORIES;
-
-  const displayVal=selectedProduct||"";
-  return `
-  <div class="srch-wrap" id="srch-${pid}">
-    ${s.open ? `
-      <input class="srch-input" id="srch-input-${pid}" type="text"
-        placeholder="🔍 Type to search product..."
-        value="${escHtml(s.query)}"
-        oninput="srchType('${pid}',this.value)"
-        onkeydown="srchKey(event,'${pid}')"
-        autocomplete="off"
-      />
-      ${filtered.length>0 ? `
-      <div class="srch-list" id="srch-list-${pid}">
-        ${filtered.map(cat=>`
-          <div class="srch-category ${cat.cls}">${cat.label}</div>
-          ${cat.products.map(p=>`
-            <div class="srch-item ${cat.itemCls}" onclick="srchPick('${pid}','${escHtml(p)}')">${escHtml(p)}</div>
-          `).join("")}
-        `).join("")}
-      </div>` : `<div class="srch-list"><div style="padding:12px;font-size:13px;color:#64748b;">No products found</div></div>`}
-    ` : `
-      <button class="srch-selected" onclick="srchOpen('${pid}')">
-        <span class="${displayVal?"":"srch-placeholder"}">${displayVal||"-- Select Product --"}</span>
-        <span style="color:#64748b;font-size:11px;">▼</span>
-      </button>
-    `}
-  </div>`;
+function buildSrchDrop(pid, selProd){
+  const s=srch[pid]||{open:false,query:""};
+  const q=s.query.toLowerCase();
+  const filtered=q
+    ? CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0)
+    : CATS;
+  if(s.open){
+    return "<div class='srch-wrap' id='srch-"+pid+"'>"
+    +"<input class='srch-inp' id='sinp-"+pid+"' type='text' placeholder='🔍 Type to search...' value='"+esc(s.query)+"'"
+    +" oninput='srchType(\""+pid+"\",this.value)' onkeydown='srchKey(event,\""+pid+"\")' autocomplete='off'/>"
+    +(filtered.length>0
+      ?"<div class='srch-list' id='slist-"+pid+"'>"
+      +filtered.map(cat=>
+        "<div class='"+cat.hCls+"'>"+cat.label+"</div>"
+        +cat.products.map(p=>"<div class='"+cat.iCls+"' onclick='srchPick(\""+pid+"\",\""+esc(p)+"\")'>"+esc(p)+"</div>").join("")
+      ).join("")
+      +"</div>"
+      :"<div class='srch-list'><div style='padding:12px;font-size:13px;color:#64748b;'>No products found</div></div>")
+    +"</div>";
+  }
+  return "<div class='srch-wrap' id='srch-"+pid+"'>"
+  +"<button class='srch-sel' onclick='srchOpen(\""+pid+"\")'>"
+  +"<span class='"+(selProd?"":"srch-ph")+"'>"+(selProd?esc(selProd):"-- Select Product --")+"</span>"
+  +"<span style='color:#64748b;font-size:11px;'>&#9660;</span>"
+  +"</button></div>";
 }
 
-function renderPolicyBlock(b,i){
-  const def=b.product?PRODUCTS[b.product]:null;
-  const terms=def?.terms||[];
-  const avR=def?.riders||[];
-  const selT=terms.find(t=>t.label===b.term);
-  const ap=parseFloat(b.annualPremium)||0;
+function buildPolBlock(b,i){
+  const def=PROD[b.product]||null;
+  const terms=def?def.terms:[];
+  const avR=def&&def.riders?def.riders:[];
+  const selT=terms.find(t=>t.l===b.term)||null;
+  const ap=parseFloat(b.ap)||0;
   const chosen=b.riders.map(r=>r.name).filter(Boolean);
-  const baseComm=selT&&ap?ap*selT.yr1/100:0;
-  const baseCred=selT&&ap?ap*selT.credit:0;
-  const rCalcs=b.riders.map(r=>{const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.yr1/100:0,credit:rd&&rp?rp*rd.credit:0,yr1:rd?.yr1||0};});
-  const rComm=rCalcs.reduce((a,r)=>a+r.comm,0);
-  const rCred=rCalcs.reduce((a,r)=>a+r.credit,0);
-  const hasRiderVals=rCalcs.some(r=>r.name&&r.rp>0);
-  return `
-  <div class="policy-block">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <span style="font-size:13px;font-weight:700;color:#60a5fa;">📋 Policy ${i+1}</span>
-      ${policies.length>1?`<button class="btn-danger" onclick="removePolicy('${b.id}')">✕ Remove</button>`:""}
-    </div>
-    <div class="grid-2" style="margin-bottom:12px;">
-      <div>
-        <label class="label">🏷️ Base Product</label>
-        ${renderSearchableProduct(b.id, b.product)}
-      </div>
-      <div>
-        <label class="label">📆 Premium Term</label>
-        <select class="select" style="color:${b.term?"#e2e8f0":"#64748b"};opacity:${b.product?1:0.4}" ${!b.product?"disabled":""} onchange="updatePolicyField('${b.id}','term',this.value)">
-          <option value="">-- Select Term --</option>
-          ${terms.map(t=>`<option value="${escHtml(t.label)}" ${b.term===t.label?"selected":""}>${escHtml(t.label)}</option>`).join("")}
-        </select>
-      </div>
-    </div>
-    <div style="margin-bottom:12px;">
-      <label class="label">💰 Annual Premium (SGD)</label>
-      <input class="input policy-premium-input" data-pid="${b.id}" type="number" placeholder="e.g. 12000" value="${b.annualPremium}"/>
-    </div>
-    <div style="border-top:1px solid #1e3a5f;padding-top:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-size:12px;font-weight:700;color:#a78bfa;">🔗 Riders</span>
-        ${avR.length>0&&b.riders.length<avR.length
-          ?`<button class="btn-rider" onclick="addRider('${b.id}')">+ Add Rider</button>`
-          :`<span style="font-size:11px;color:#475569;">${avR.length===0?"No riders for this product":"All riders added"}</span>`}
-      </div>
-      ${b.riders.length===0&&avR.length>0?`<div style="font-size:11px;color:#475569;font-style:italic;">Click "+ Add Rider" to attach riders.</div>`:""}
-      ${b.riders.map((row,ri)=>{
-        const avail=avR.filter(r=>r===row.name||!chosen.includes(r));
-        return `
-        <div class="rider-block">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:11px;color:#a78bfa;font-weight:600;">Rider ${ri+1}</span>
-            <button class="btn-danger" style="font-size:11px;padding:2px 8px;" onclick="removeRider('${b.id}','${row.id}')">✕</button>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label class="label" style="font-size:11px;">Rider</label>
-              <select class="select" style="font-size:12px;color:${row.name?"#e2e8f0":"#64748b"}" onchange="updateRider('${b.id}','${row.id}','name',this.value)">
-                <option value="">-- Select --</option>
-                ${avail.map(r=>`<option value="${escHtml(r)}" ${row.name===r?"selected":""}>${escHtml(r)}</option>`).join("")}
-              </select>
-            </div>
-            <div>
-              <label class="label" style="font-size:11px;">Annual Premium (SGD)</label>
-              <input class="input rider-premium-input" style="font-size:12px;" data-pid="${b.id}" data-rid="${row.id}" type="number" value="${row.premium}" placeholder="e.g. 1200"/>
-            </div>
-          </div>
-        </div>`;
-      }).join("")}
-    </div>
-    ${selT&&ap>0?`
-    <div class="preview-box">
-      <div style="font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:8px;">⚡ Preview — Policy ${i+1}</div>
-      <div class="grid-3" style="margin-bottom:${hasRiderVals?8:0}px;">
-        <div class="mini-card"><div class="lbl">Base Comm</div><div class="val" style="color:#34d399;">${fmt(baseComm)}</div></div>
-        <div class="mini-card"><div class="lbl">Base Credits</div><div class="val" style="color:#60a5fa;">${fmtC(baseCred)} pts</div></div>
-        <div class="mini-card"><div class="lbl">Comm %</div><div class="val" style="color:#94a3b8;">${selT.yr1}%</div></div>
-      </div>
-      ${rCalcs.filter(r=>r.name&&r.rp>0).map((r,ri)=>`
-        <div style="margin-bottom:6px;">
-          <div style="font-size:10px;color:#64748b;margin-bottom:4px;">Rider ${ri+1}: ${escHtml(r.name)}</div>
-          <div class="grid-3">
-            <div class="mini-card"><div class="lbl">Comm</div><div class="val" style="color:#a78bfa;">${fmt(r.comm)}</div></div>
-            <div class="mini-card"><div class="lbl">Credits</div><div class="val" style="color:#a78bfa;">${fmtC(r.credit)} pts</div></div>
-            <div class="mini-card"><div class="lbl">Comm %</div><div class="val" style="color:#64748b;">${r.yr1}%</div></div>
-          </div>
-        </div>`).join("")}
-      ${hasRiderVals?`
-      <div style="border-top:1px solid #1e40af;padding-top:8px;" class="grid-2">
-        <div class="mini-card"><div class="lbl">Total Comm</div><div class="val" style="color:#34d399;font-size:14px;">${fmt(baseComm+rComm)}</div></div>
-        <div class="mini-card"><div class="lbl">Total Credits</div><div class="val" style="color:#60a5fa;font-size:14px;">${fmtC(baseCred+rCred)} pts</div></div>
-      </div>`:""}
-    </div>`:""}
-  </div>`;
+  const bc=selT&&ap?ap*selT.y/100:0;
+  const bCr=selT&&ap?ap*selT.c:0;
+  const rC=b.riders.map(r=>{const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
+  const rComm=rC.reduce((a,r)=>a+r.comm,0), rCred=rC.reduce((a,r)=>a+r.cred,0);
+  const hasR=rC.some(r=>r.name&&r.rp>0);
+
+  let html="<div class='pol-block'>"
+  +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>"
+  +"<span style='font-size:13px;font-weight:700;color:#60a5fa;'>📋 Policy "+(i+1)+"</span>"
+  +(pols.length>1?"<button class='btn-del' onclick='remPol(\""+b.id+"\")'>✕ Remove</button>":"")
+  +"</div>"
+  +"<div class='g2' style='margin-bottom:12px;'>"
+  +"<div><label class='lbl'>🏷️ Base Product</label>"+buildSrchDrop(b.id,b.product)+"</div>"
+  +"<div><label class='lbl'>📆 Premium Term</label>"
+  +"<select class='sel' style='color:"+(b.term?"#e2e8f0":"#64748b")+";opacity:"+(b.product?1:0.4)+"' "+(b.product?"":"disabled")+" onchange='updPolF(\""+b.id+"\",\"term\",this.value)'>"
+  +"<option value=''>-- Select Term --</option>"
+  +terms.map(t=>"<option value='"+esc(t.l)+"'"+(b.term===t.l?" selected":"")+">"+esc(t.l)+"</option>").join("")
+  +"</select></div></div>"
+  +"<div style='margin-bottom:12px;'><label class='lbl'>💰 Annual Premium (SGD)</label>"
+  +"<input class='inp pp-inp' type='number' data-pid='"+b.id+"' placeholder='e.g. 12000' value='"+esc(b.ap)+"'/></div>"
+  +"<div style='border-top:1px solid #1e3a5f;padding-top:12px;'>"
+  +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>"
+  +"<span style='font-size:12px;font-weight:700;color:#a78bfa;'>🔗 Riders</span>"
+  +(avR.length>0&&b.riders.length<avR.length
+    ?"<button class='btn-rider' onclick='addRider(\""+b.id+"\")'>+ Add Rider</button>"
+    :"<span style='font-size:11px;color:#475569;'>"+(avR.length===0?"No riders for this product":"All riders added")+"</span>")
+  +"</div>"
+  +(b.riders.length===0&&avR.length>0?"<div style='font-size:11px;color:#475569;font-style:italic;'>Click \"+ Add Rider\" to attach riders.</div>":"")
+  +b.riders.map((row,ri)=>{
+    const avail=avR.filter(r=>r===row.name||!chosen.includes(r));
+    return "<div class='rider-block'>"
+    +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'>"
+    +"<span style='font-size:11px;color:#a78bfa;font-weight:600;'>Rider "+(ri+1)+"</span>"
+    +"<button class='btn-del' style='font-size:11px;padding:2px 8px;' onclick='remRider(\""+b.id+"\",\""+row.id+"\")'>✕</button></div>"
+    +"<div class='g2'><div><label class='lbl' style='font-size:11px;'>Rider</label>"
+    +"<select class='sel' style='font-size:12px;color:"+(row.name?"#e2e8f0":"#64748b")+";' onchange='updRider(\""+b.id+"\",\""+row.id+"\",\"name\",this.value)'>"
+    +"<option value=''>-- Select --</option>"
+    +avail.map(r=>"<option value='"+esc(r)+"'"+(row.name===r?" selected":"")+">"+esc(r)+"</option>").join("")
+    +"</select></div>"
+    +"<div><label class='lbl' style='font-size:11px;'>Annual Premium (SGD)</label>"
+    +"<input class='inp rp-inp' style='font-size:12px;' type='number' data-pid='"+b.id+"' data-rid='"+row.id+"' value='"+esc(row.premium)+"' placeholder='e.g. 1200'/></div>"
+    +"</div></div>";
+  }).join("")
+  +"</div>";
+
+  if(selT&&ap>0){
+    html+="<div class='prev-box'><div style='font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:8px;'>⚡ Preview — Policy "+(i+1)+"</div>"
+    +"<div class='g3' style='margin-bottom:"+(hasR?8:0)+"px;'>"
+    +"<div class='mc'><div class='ml'>Base Comm</div><div class='mv' style='color:#34d399;'>"+$f(bc)+"</div></div>"
+    +"<div class='mc'><div class='ml'>Base Credits</div><div class='mv' style='color:#60a5fa;'>"+$c(bCr)+" pts</div></div>"
+    +"<div class='mc'><div class='ml'>Comm %</div><div class='mv' style='color:#94a3b8;'>"+selT.y+"%</div></div>"
+    +"</div>"
+    +rC.filter(r=>r.name&&r.rp>0).map((r,ri)=>
+      "<div style='margin-bottom:6px;'><div style='font-size:10px;color:#64748b;margin-bottom:4px;'>Rider "+(ri+1)+": "+esc(r.name)+"</div>"
+      +"<div class='g3'><div class='mc'><div class='ml'>Comm</div><div class='mv' style='color:#a78bfa;'>"+$f(r.comm)+"</div></div>"
+      +"<div class='mc'><div class='ml'>Credits</div><div class='mv' style='color:#a78bfa;'>"+$c(r.cred)+" pts</div></div>"
+      +"<div class='mc'><div class='ml'>Comm %</div><div class='mv' style='color:#64748b;'>"+r.pct+"%</div></div>"
+      +"</div></div>"
+    ).join("")
+    +(hasR
+      ?"<div style='border-top:1px solid #1e40af;padding-top:8px;' class='g2'>"
+      +"<div class='mc'><div class='ml'>Total Comm</div><div class='mv' style='color:#34d399;font-size:14px;'>"+$f(bc+rComm)+"</div></div>"
+      +"<div class='mc'><div class='ml'>Total Credits</div><div class='mv' style='color:#60a5fa;font-size:14px;'>"+$c(bCr+rCred)+" pts</div></div></div>"
+      :"")
+    +"</div>";
+  }
+  html+="</div>";
+  return html;
+}
+
+function grandTot(){
+  let comm=0,cred=0;
+  for(const b of pols){
+    const def=PROD[b.product]; if(!def) continue;
+    const t=def.terms.find(t=>t.l===b.term); if(!t) continue;
+    const ap=parseFloat(b.ap)||0;
+    comm+=ap*t.y/100; cred+=ap*t.c;
+    for(const r of b.riders){const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.y/100;cred+=rp*rd.c;}}
+  }
+  return {comm,cred};
 }
 
 // ── DASHBOARD ──
-function renderDashboard(){
-  const yearSales=sales.filter(s=>s.date.startsWith(String(selectedYear)));
-  const qData=getQData(yearSales,activeQ);
-  const nt=CREDIT_TIERS.find(t=>t.min>qData.totalCred);
-  const availYears=getYearList(); // FIX: always 2020 → current year
-  return `
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-    <div style="position:relative;" id="yearSelectorWrap">
-      <button class="year-btn" onclick="toggleYearDD()">📅 ${selectedYear} <span style="font-size:10px;opacity:0.7;">▼</span></button>
-      <div class="year-dropdown" id="yearDD" style="display:none;">
-        ${availYears.map(y=>`<button class="year-option" style="color:${y===selectedYear?"#fff":"#94a3b8"};background:${y===selectedYear?"#0f766e":"transparent"};" onclick="selectYear(${y})">${y}</button>`).join("")}
-      </div>
-    </div>
-    <div style="display:flex;gap:6px;flex:1;flex-wrap:wrap;">
-      ${Object.keys(QUARTERS).map(q=>`<button class="q-btn ${activeQ===q?"active":""}" onclick="switchQ('${q}')">${q}</button>`).join("")}
-    </div>
-  </div>
-  <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;">${selectedYear} · ${QUARTERS[activeQ].label} · Bonus paid in <span style="color:#60a5fa;font-weight:700;">${QUARTERS[activeQ].payout}</span></div>
-  <div class="grid-2" style="margin-bottom:12px;">
-    <div class="card"><div class="label">💼 Base Commission</div><div class="kpi-val" style="color:#38bdf8;">${fmt(qData.baseComm)}</div></div>
-    <div class="card"><div class="label">🎯 Total Credits</div><div class="kpi-val" style="color:#60a5fa;">${fmtC(qData.totalCred)} pts</div></div>
-  </div>
-  <div class="grid-2" style="margin-bottom:12px;">
-    <div class="card"><div class="label">🏆 Quarterly Bonus (${qData.tier.bonus}%)</div><div class="kpi-val" style="color:#a78bfa;">${fmt(qData.qb)}</div></div>
-    <div class="card"><div class="label">🎉 Easy Bonus (25%)</div><div class="kpi-val" style="color:${qData.totalComm>=3000?"#f59e0b":"#64748b"};">${qData.totalComm>=3000?fmt(qData.fun):"Not reached ($3k min)"}</div></div>
-  </div>
-  <div class="total-comm-card" style="margin-bottom:16px;">
-    <div style="font-size:12px;color:#86efac;">💰 Total Commission (Base + Riders)</div>
-    <div style="font-size:28px;font-weight:900;color:#34d399;margin-top:4px;letter-spacing:-0.5px;">${fmt(qData.totalComm)}</div>
-  </div>
-  <div class="payout-card">
-    <div style="font-size:13px;color:#94a3b8;">🚀 Total Bonus Payable in ${QUARTERS[activeQ].payout}</div>
-    <div style="font-size:32px;font-weight:900;color:#fbbf24;margin-top:4px;">${fmt(qData.totalBonus)}</div>
-    <div style="font-size:12px;color:#64748b;margin-top:4px;">Easy Bonus ${fmt(qData.fun)} + Quarterly Bonus ${fmt(qData.qb)}</div>
-  </div>
-  <div class="card" style="margin-bottom:16px;">
-    <div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;">📊 Credit Tier Progress</div>
-    ${CREDIT_TIERS.map(t=>{
-      const isA=qData.totalCred>=t.min&&qData.totalCred<=t.max;
-      const isU=qData.totalCred>=t.min;
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div class="tier-dot" style="background:${isA?"#34d399":isU?"#1d4ed8":"#334155"};"></div>
-        <div style="flex:1;font-size:12px;color:${isA?"#e2e8f0":isU?"#94a3b8":"#475569"};">${t.label} credits</div>
-        <div style="font-size:13px;font-weight:700;color:${isA?"#34d399":isU?"#60a5fa":"#475569"};">${t.bonus}% ${isA?"← YOU ARE HERE":""}</div>
-      </div>`;
-    }).join("")}
-    ${nt?`<div style="margin-top:10px;font-size:12px;color:#f59e0b;">⚡ Need <strong>${fmtC(nt.min-qData.totalCred)} more credits</strong> to reach ${nt.bonus}% tier</div>`:""}
-  </div>
-  <div class="card">
-    <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;">🎉 Easy Bonus Progress</div>
-    <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(100,(qData.totalComm/3000)*100)}%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);"></div></div>
-    <div style="font-size:12px;color:#94a3b8;margin-top:6px;">${fmt(qData.totalComm)} / $3,000.00 ${qData.totalComm>=3000?"✅ Unlocked!":`· ${fmt(3000-qData.totalComm)} more to unlock`}</div>
-  </div>`;
+function renderDash(){
+  const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
+  const qd=getQD(ys,activeQ);
+  const nt=TIERS.find(t=>t.min>qd.tc);
+  const yrs=yearList();
+  return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+  +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
+  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yrs.map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
+  +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
+  +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
+  +"<div class='g2' style='margin-bottom:12px;'>"
+  +"<div class='card'><div class='lbl'>💼 Base Commission</div><div class='kpi' style='color:#38bdf8;'>"+$f(qd.bc)+"</div></div>"
+  +"<div class='card'><div class='lbl'>🎯 Total Credits</div><div class='kpi' style='color:#60a5fa;'>"+$c(qd.tc)+" pts</div></div>"
+  +"</div>"
+  +"<div class='g2' style='margin-bottom:12px;'>"
+  +"<div class='card'><div class='lbl'>🏆 Quarterly Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;'>"+$f(qd.qb)+"</div></div>"
+  +"<div class='card'><div class='lbl'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3k min)")+"</div></div>"
+  +"</div>"
+  +"<div class='tot-card' style='margin-bottom:16px;'>"
+  +"<div style='font-size:12px;color:#86efac;'>💰 Total Commission (Base + Riders)</div>"
+  +"<div style='font-size:28px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(qd.tm)+"</div></div>"
+  +"<div class='pay-card'>"
+  +"<div style='font-size:13px;color:#94a3b8;'>🚀 Total Bonus Payable in "+QS[activeQ].payout+"</div>"
+  +"<div style='font-size:32px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div>"
+  +"<div style='font-size:12px;color:#64748b;margin-top:4px;'>Easy Bonus "+$f(qd.eb)+" + Quarterly Bonus "+$f(qd.qb)+"</div></div>"
+  +"<div class='card' style='margin-bottom:16px;'><div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>📊 Credit Tier Progress</div>"
+  +TIERS.map(t=>{
+    const isA=qd.tc>=t.min&&qd.tc<=t.max, isU=qd.tc>=t.min;
+    return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'>"
+    +"<div class='t-dot' style='background:"+(isA?"#34d399":isU?"#1d4ed8":"#334155")+";'></div>"
+    +"<div style='flex:1;font-size:12px;color:"+(isA?"#e2e8f0":isU?"#94a3b8":"#475569")+";'>"+t.label+" credits</div>"
+    +"<div style='font-size:13px;font-weight:700;color:"+(isA?"#34d399":isU?"#60a5fa":"#475569")+";'>"+t.bonus+"% "+(isA?"← YOU ARE HERE":"")+"</div></div>";
+  }).join("")
+  +(nt?"<div style='margin-top:10px;font-size:12px;color:#f59e0b;'>⚡ Need <strong>"+$c(nt.min-qd.tc)+" more credits</strong> to reach "+nt.bonus+"% tier</div>":"")
+  +"</div>"
+  +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div>"
+  +"<div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div>"
+  +"<div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>";
 }
 
-function getQData(yearSales,q){
-  const qs=yearSales.filter(s=>s.quarter===q);
-  const totalComm=qs.reduce((a,s)=>a+s.totalComm,0);
-  const baseComm =qs.reduce((a,s)=>a+s.baseComm,0);
-  const totalCred=qs.reduce((a,s)=>a+s.totalCredit,0);
-  const tier=getCreditTier(totalCred);
-  const fun=totalComm>=3000?totalComm*0.25:0;
-  const qb=totalComm*tier.bonus/100;
-  return{qs,totalComm,baseComm,totalCred,tier,fun,qb,totalBonus:fun+qb};
+function getQD(ys,q){
+  const qs=ys.filter(s=>s.quarter===q);
+  const tm=qs.reduce((a,s)=>a+s.totalComm,0);
+  const bc=qs.reduce((a,s)=>a+s.baseComm,0);
+  const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
+  const tier=getTier(tc);
+  const eb=tm>=3000?tm*0.25:0;
+  const qb=tm*tier.bonus/100;
+  return {qs,tm,bc,tc,tier,eb,qb,tb:eb+qb};
 }
 
-function renderHistory(){
-  return `
-  <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;">📋 All Sales (${sales.length})</div>
-  ${sales.length===0?`<div style="text-align:center;color:#64748b;padding:40px;">No sales logged yet.</div>`
-  :sales.map(s=>`
-  <div class="history-item">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-      <div style="flex:1;">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">
-          <span style="font-weight:700;font-size:15px;color:#e2e8f0;">${escHtml(s.clientName)}</span>
-          <span class="badge">${s.quarter}</span>
-          <span style="font-size:11px;color:#64748b;">${new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"})}</span>
-        </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
-          <span style="font-size:12px;">Base Comm: <strong style="color:#38bdf8;">${fmt(s.baseComm)}</strong></span>
-          <span style="font-size:12px;">Total Comm: <strong style="color:#34d399;">${fmt(s.totalComm)}</strong></span>
-          <span style="font-size:12px;">Credits: <strong style="color:#60a5fa;">${fmtC(s.totalCredit)}</strong></span>
-          <span style="font-size:12px;color:#64748b;">${s.policies.length} polic${s.policies.length>1?"ies":"y"}</span>
-        </div>
-      </div>
-      <button class="btn-danger" onclick="handleDeleteSale('${s.fireId}')">✕</button>
-    </div>
-    ${s.policies.map((p,i)=>`
-    <div class="policy-row">
-      <div style="font-size:12px;color:#93c5fd;font-weight:600;margin-bottom:4px;">Policy ${i+1}: ${escHtml(p.product)} · ${escHtml(p.term)}</div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
-        <span>Premium: <strong style="color:#e2e8f0;">${fmt(p.annualPremium)}</strong></span>
-        <span>Base Comm: <strong style="color:#38bdf8;">${fmt(p.baseComm)}</strong></span>
-        <span>Total Comm: <strong style="color:#34d399;">${fmt(p.totalComm)}</strong></span>
-        <span>Credits: <strong style="color:#60a5fa;">${fmtC(p.totalCredit)}</strong></span>
-      </div>
-      ${p.riders?.length>0?`<div style="margin-top:4px;">${p.riders.map(r=>`<span class="rider-tag">🔗 ${escHtml(r.name)} · ${fmt(r.premium)}</span>`).join("")}</div>`:""}
-    </div>`).join("")}
-  </div>`).join("")}`;
+// ── HISTORY ──
+function renderHist(){
+  return "<div style='font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;'>📋 All Sales ("+sales.length+")</div>"
+  +(sales.length===0
+    ?"<div style='text-align:center;color:#64748b;padding:40px;'>No sales logged yet.</div>"
+    :sales.map(s=>{
+      const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+      return "<div class='hist-item'>"
+      +"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+      +"<div style='flex:1;'>"
+      +"<div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;'>"
+      +"<span style='font-weight:700;font-size:15px;color:#e2e8f0;'>"+esc(s.clientName)+"</span>"
+      +"<span class='badge'>"+s.quarter+"</span>"
+      +"<span style='font-size:11px;color:#64748b;'>"+dt+"</span></div>"
+      +"<div style='display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;'>"
+      +"<span style='font-size:12px;'>Base Comm: <strong style='color:#38bdf8;'>"+$f(s.baseComm)+"</strong></span>"
+      +"<span style='font-size:12px;'>Total Comm: <strong style='color:#34d399;'>"+$f(s.totalComm)+"</strong></span>"
+      +"<span style='font-size:12px;'>Credits: <strong style='color:#60a5fa;'>"+$c(s.totalCredit)+"</strong></span>"
+      +"<span style='font-size:12px;color:#64748b;'>"+s.policies.length+" polic"+(s.policies.length>1?"ies":"y")+"</span></div>"
+      +"</div><button class='btn-del' onclick='doDelSale(\""+s.fid+"\")'>✕</button></div>"
+      +s.policies.map((p,i)=>"<div class='pol-row'>"
+        +"<div style='font-size:12px;color:#93c5fd;font-weight:600;margin-bottom:4px;'>Policy "+(i+1)+": "+esc(p.product)+" · "+esc(p.term)+"</div>"
+        +"<div style='display:flex;gap:12px;flex-wrap:wrap;font-size:11px;'>"
+        +"<span>Premium: <strong style='color:#e2e8f0;'>"+$f(p.annualPremium)+"</strong></span>"
+        +"<span>Base Comm: <strong style='color:#38bdf8;'>"+$f(p.baseComm)+"</strong></span>"
+        +"<span>Total Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
+        +"<span>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span></div>"
+        +(p.riders&&p.riders.length>0?"<div style='margin-top:4px;'>"+p.riders.map(r=>"<span class='r-tag'>🔗 "+esc(r.name)+" · "+$f(r.premium)+"</span>").join("")+"</div>":"")
+        +"</div>"
+      ).join("")
+      +"</div>";
+    }).join(""));
 }
 
+// ── IGNITE ──
 function renderIgnite(){
-  const ign=sales.filter(s=>{const mo=new Date(s.date+"T00:00:00").getMonth();return s.date.startsWith("2026")&&mo>=0&&mo<=4;});
-  const ignComm=ign.reduce((a,s)=>a+s.baseComm,0);
-  const pct=Math.min(100,(ignComm/30000)*100);
-  return `
-  <div class="campaign-card">
-    <div class="campaign-header">
-      <div style="font-size:18px;font-weight:800;color:#60a5fa;">🔥 Ignite 2026</div>
-      <div style="font-size:13px;color:#94a3b8;margin-top:2px;">✈️ Hangzhou, China 🇨🇳 &nbsp;·&nbsp; 📆 Jan – May 2026</div>
-    </div>
-    <div style="padding:20px;">
-      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;">
-        Hit <strong style="color:#34d399;">$30,000</strong> in base commissions between January and May 2026 to qualify.<br>
-        <span style="font-size:12px;color:#64748b;">Note: Base commissions only — bonuses do not count.</span>
-      </div>
-      <div class="grid-2" style="margin-bottom:16px;">
-        <div class="card-dark"><div style="font-size:12px;color:#94a3b8;">Base Comm (Jan–May)</div><div style="font-size:24px;font-weight:900;color:#34d399;margin-top:4px;">${fmt(ignComm)}</div></div>
-        <div class="card-dark"><div style="font-size:12px;color:#94a3b8;">Still Needed</div><div style="font-size:24px;font-weight:900;color:${ignComm>=30000?"#34d399":"#f87171"};margin-top:4px;">${ignComm>=30000?"✅ Qualified!":fmt(30000-ignComm)}</div></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-bottom:4px;"><span>Progress to $30,000</span><span>${pct.toFixed(1)}%</span></div>
-      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:linear-gradient(90deg,#34d39988,#34d399);"></div></div>
-      ${ignComm>=30000?`<div style="background:linear-gradient(135deg,#064e3b,#065f46);border-radius:10px;padding:14px;border:1px solid #059669;text-align:center;margin-top:12px;"><div style="font-size:20px;">🎉</div><div style="font-size:14px;font-weight:700;color:#34d399;margin-top:4px;">Congratulations! You're qualified for Hangzhou!</div></div>`:""}
-    </div>
-  </div>`;
+  const ig=sales.filter(s=>{const m=new Date(s.date+"T00:00:00").getMonth();return s.date.startsWith("2026")&&m<=4;});
+  const ic=ig.reduce((a,s)=>a+s.baseComm,0);
+  const pct=Math.min(100,(ic/30000)*100);
+  return "<div class='camp-card'><div class='camp-hdr'>"
+  +"<div style='font-size:18px;font-weight:800;color:#60a5fa;'>🔥 Ignite 2026</div>"
+  +"<div style='font-size:13px;color:#94a3b8;margin-top:2px;'>✈️ Hangzhou, China 🇨🇳 · 📆 Jan – May 2026</div></div>"
+  +"<div style='padding:20px;'>"
+  +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;'>Hit <strong style='color:#34d399;'>$30,000</strong> in base commissions between January and May 2026 to qualify.<br><span style='font-size:12px;color:#64748b;'>Note: Base commissions only — bonuses do not count.</span></div>"
+  +"<div class='g2' style='margin-bottom:16px;'>"
+  +"<div class='card-dark'><div style='font-size:12px;color:#94a3b8;'>Base Comm (Jan–May)</div><div style='font-size:24px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(ic)+"</div></div>"
+  +"<div class='card-dark'><div style='font-size:12px;color:#94a3b8;'>Still Needed</div><div style='font-size:24px;font-weight:900;color:"+(ic>=30000?"#34d399":"#f87171")+";margin-top:4px;'>"+(ic>=30000?"✅ Qualified!":$f(30000-ic))+"</div></div></div>"
+  +"<div style='display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-bottom:4px;'><span>Progress to $30,000</span><span>"+pct.toFixed(1)+"%</span></div>"
+  +"<div class='prog-wrap'><div class='prog-bar' style='width:"+pct+"%;background:linear-gradient(90deg,#34d39988,#34d399);'></div></div>"
+  +(ic>=30000?"<div style='background:linear-gradient(135deg,#064e3b,#065f46);border-radius:10px;padding:14px;border:1px solid #059669;text-align:center;margin-top:12px;'><div style='font-size:20px;'>🎉</div><div style='font-size:14px;font-weight:700;color:#34d399;margin-top:4px;'>Congratulations! You're qualified for Hangzhou!</div></div>":"")
+  +"</div></div>";
 }
 
+// ── TRAILBLAZER ──
 function renderTrail(){
-  const trail=sales.filter(s=>s.date.startsWith("2026"));
-  const trailComm=trail.reduce((a,s)=>a+s.baseComm,0);
-  const tiers=[{tickets:1,target:75000,label:"1 Ticket to South Africa 🎫",color:"#f59e0b"},{tickets:2,target:150000,label:"2 Tickets to South Africa 🎫🎫",color:"#a78bfa"}];
-  return `
-  <div class="campaign-card">
-    <div class="campaign-header">
-      <div style="font-size:18px;font-weight:800;color:#60a5fa;">🌍 Trailblazer 2027</div>
-      <div style="font-size:13px;color:#94a3b8;margin-top:2px;">✈️ South Africa 🇿🇦 &nbsp;·&nbsp; 📆 Jan – Dec 2026 (Full Year)</div>
-    </div>
-    <div style="padding:20px;">
-      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;">
-        Earn your way to South Africa based on full-year 2026 base commissions.<br>
-        <span style="font-size:12px;color:#64748b;">Note: Base commissions only — bonuses do not count.</span>
-      </div>
-      ${tiers.map(tier=>{
-        const q=trailComm>=tier.target;
-        const p=Math.min(100,(trailComm/tier.target)*100);
-        return `
-        <div style="background:#0f172a;border-radius:12px;padding:16px;border:1px solid ${q?"#059669":"#334155"};margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="font-size:14px;font-weight:700;color:${tier.color};">${tier.label}</div>
-            <div style="font-size:13px;font-weight:700;background:${q?"#064e3b":"#1e293b"};color:${q?"#34d399":"#64748b"};padding:3px 10px;border-radius:6px;border:1px solid ${q?"#059669":"#334155"};">${q?"✅ Qualified":"Not Yet"}</div>
-          </div>
-          <div class="grid-2" style="margin-bottom:10px;">
-            <div><div style="font-size:11px;color:#64748b;">Target</div><div style="font-size:16px;font-weight:700;color:#e2e8f0;">${fmt(tier.target)}</div></div>
-            <div><div style="font-size:11px;color:#64748b;">${q?"Exceeded by":"Still Needed"}</div><div style="font-size:16px;font-weight:700;color:${q?"#34d399":"#f87171"};">${q?fmt(trailComm-tier.target):fmt(tier.target-trailComm)}</div></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:4px;"><span>${fmt(trailComm)} earned</span><span>${p.toFixed(1)}%</span></div>
-          <div class="progress-wrap"><div class="progress-bar" style="width:${p}%;background:linear-gradient(90deg,${tier.color}88,${tier.color});"></div></div>
-        </div>`;
-      }).join("")}
-      <div class="card-dark">
-        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Total Base Comm (Full Year 2026)</div>
-        <div style="font-size:28px;font-weight:900;color:#60a5fa;">${fmt(trailComm)}</div>
-      </div>
-    </div>
-  </div>`;
+  const tr=sales.filter(s=>s.date.startsWith("2026"));
+  const tc=tr.reduce((a,s)=>a+s.baseComm,0);
+  const tiers=[{n:1,target:75000,label:"1 Ticket to South Africa 🎫",color:"#f59e0b"},{n:2,target:150000,label:"2 Tickets to South Africa 🎫🎫",color:"#a78bfa"}];
+  return "<div class='camp-card'><div class='camp-hdr'>"
+  +"<div style='font-size:18px;font-weight:800;color:#60a5fa;'>🌍 Trailblazer 2027</div>"
+  +"<div style='font-size:13px;color:#94a3b8;margin-top:2px;'>✈️ South Africa 🇿🇦 · 📆 Jan – Dec 2026 (Full Year)</div></div>"
+  +"<div style='padding:20px;'>"
+  +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;'>Earn your way to South Africa based on full-year 2026 base commissions.<br><span style='font-size:12px;color:#64748b;'>Note: Base commissions only — bonuses do not count.</span></div>"
+  +tiers.map(tier=>{
+    const q=tc>=tier.target, p=Math.min(100,(tc/tier.target)*100);
+    return "<div style='background:#0f172a;border-radius:12px;padding:16px;border:1px solid "+(q?"#059669":"#334155")+";margin-bottom:14px;'>"
+    +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;'>"
+    +"<div style='font-size:14px;font-weight:700;color:"+tier.color+";'>"+tier.label+"</div>"
+    +"<div style='font-size:13px;font-weight:700;background:"+(q?"#064e3b":"#1e293b")+";color:"+(q?"#34d399":"#64748b")+";padding:3px 10px;border-radius:6px;border:1px solid "+(q?"#059669":"#334155")+";'>"+(q?"✅ Qualified":"Not Yet")+"</div></div>"
+    +"<div class='g2' style='margin-bottom:10px;'>"
+    +"<div><div style='font-size:11px;color:#64748b;'>Target</div><div style='font-size:16px;font-weight:700;color:#e2e8f0;'>"+$f(tier.target)+"</div></div>"
+    +"<div><div style='font-size:11px;color:#64748b;'>"+(q?"Exceeded by":"Still Needed")+"</div><div style='font-size:16px;font-weight:700;color:"+(q?"#34d399":"#f87171")+";'>"+(q?$f(tc-tier.target):$f(tier.target-tc))+"</div></div></div>"
+    +"<div style='display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:4px;'><span>"+$f(tc)+" earned</span><span>"+p.toFixed(1)+"%</span></div>"
+    +"<div class='prog-wrap'><div class='prog-bar' style='width:"+p+"%;background:linear-gradient(90deg,"+tier.color+"88,"+tier.color+");'></div></div>"
+    +"</div>";
+  }).join("")
+  +"<div class='card-dark'><div style='font-size:12px;color:#94a3b8;margin-bottom:4px;'>Total Base Comm (Full Year 2026)</div><div style='font-size:28px;font-weight:900;color:#60a5fa;'>"+$f(tc)+"</div></div>"
+  +"</div></div>";
 }
-
-function grandTotals(){
-  let comm=0,cred=0;
-  for(const b of policies){
-    const def=PRODUCTS[b.product];if(!def)continue;
-    const t=def.terms.find(t=>t.label===b.term);if(!t)continue;
-    const ap=parseFloat(b.annualPremium)||0;
-    comm+=ap*t.yr1/100;cred+=ap*t.credit;
-    for(const r of b.riders){const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.yr1/100;cred+=rp*rd.credit;}}
-  }
-  return{comm,cred};
-}
-
-// ── Event Listeners — FIX: use event delegation, no re-render on each keystroke ──
-function attachEventListeners(){
-  // ── Client name — sync state on every keystroke, no re-render ──
-  const clientInput=document.getElementById("clientInput");
-  if(clientInput){
-    clientInput.addEventListener("input", e=>{ formClient=e.target.value; });
-    // Restore cursor position safety net
-    clientInput.addEventListener("focus", e=>{ formClient=e.target.value; });
-  }
-
-  // ── Date input — update state on input, only re-render if valid date ──
-  const dateInput=document.getElementById("dateInput");
-  if(dateInput){
-    dateInput.addEventListener("input", e=>{
-      formDate=e.target.value;
-      if(/^\d{4}-\d{2}-\d{2}$/.test(formDate)){
-        const dt=new Date(formDate+"T00:00:00");
-        if(!isNaN(dt)){calYear=dt.getFullYear();calMonth=dt.getMonth();}
-        // Re-render only to update the display label below the input
-        document.getElementById("logShell").innerHTML=buildLogHTML();
-        attachEventListeners();
-      }
-    });
-  }
-
-  // ── Calendar icon button ──
-  const calIconBtn=document.getElementById("calIconBtn");
-  if(calIconBtn){
-    calIconBtn.addEventListener("click", e=>{
-      e.stopPropagation();
-      calOpen=!calOpen;
-      if(calOpen&&formDate){calYear=parseInt(formDate.split("-")[0]);calMonth=parseInt(formDate.split("-")[1])-1;}
-      document.getElementById("logShell").innerHTML=buildLogHTML();
-      attachEventListeners();
-    });
-  }
-
-  // ── Policy annual premium — update state silently while typing, rebuild only on blur ──
-  document.querySelectorAll(".policy-premium-input").forEach(inp=>{
-    inp.addEventListener("input", e=>{
-      const pid=e.target.dataset.pid;
-      policies=policies.map(p=>p.id===pid?{...p,annualPremium:e.target.value}:p);
-      // No rebuild while typing — cursor stays put!
-    });
-    inp.addEventListener("blur", e=>{
-      const pid=e.target.dataset.pid;
-      policies=policies.map(p=>p.id===pid?{...p,annualPremium:e.target.value}:p);
-      document.getElementById("logShell").innerHTML=buildLogHTML();
-      attachEventListeners();
-    });
-  });
-
-  // ── Rider premium — same approach ──
-  document.querySelectorAll(".rider-premium-input").forEach(inp=>{
-    inp.addEventListener("input", e=>{
-      const pid=e.target.dataset.pid, rid=e.target.dataset.rid;
-      policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
-      // No rebuild while typing
-    });
-    inp.addEventListener("blur", e=>{
-      const pid=e.target.dataset.pid, rid=e.target.dataset.rid;
-      policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
-      document.getElementById("logShell").innerHTML=buildLogHTML();
-      attachEventListeners();
-    });
-  });
-
-  // ── Close calendar + search dropdowns on outside click ──
-  document.addEventListener("mousedown", function handler(e){
-    // Calendar
-    const wrap=document.getElementById("calWrap");
-    if(calOpen&&wrap&&!wrap.contains(e.target)){
-      calOpen=false;
-      document.getElementById("logShell").innerHTML=buildLogHTML();
-      attachEventListeners();
-    }
-    // Searchable product dropdowns
-    let anyOpen=false;
-    Object.keys(srchState).forEach(pid=>{
-      if(srchState[pid]?.open){
-        const el=document.getElementById(`srch-${pid}`);
-        if(el&&!el.contains(e.target)){
-          srchState[pid]={open:false,query:""};
-          anyOpen=true;
-        }
-      }
-    });
-    if(anyOpen){document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();}
-    // Year dropdown
-    const yw=document.getElementById("yearSelectorWrap");
-    const yd=document.getElementById("yearDD");
-    if(yd&&yw&&!yw.contains(e.target)) yd.style.display="none";
-  },{once:true});
-}
-
-window.switchTab=t=>{activeTab=t;renderTabs();renderContent();};
-window.switchQ=q=>{activeQ=q;renderContent();};
-window.selectYear=y=>{selectedYear=y;renderContent();};
-window.toggleYearDD=()=>{const d=document.getElementById("yearDD");if(d)d.style.display=d.style.display==="none"?"block":"none";};
-window.calNavMonth=dir=>{
-  calMonth+=dir;
-  if(calMonth<0){calMonth=11;calYear--;}
-  else if(calMonth>11){calMonth=0;calYear++;}
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-};
-window.calJumpYear=y=>{
-  calYear=y;
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-};
-window.pickCalDay=d=>{
-  const s=`${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-  formDate=s;calOpen=false;
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-};
-window.pickToday=()=>{
-  formDate=todayStr();calOpen=false;
-  const t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-};
-
-window.srchOpen=pid=>{
-  srchState[pid]={open:true,query:""};
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-  setTimeout(()=>document.getElementById(`srch-input-${pid}`)?.focus(),50);
-};
-window.srchType=(pid,val)=>{
-  srchState[pid]={open:true,query:val};
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-  setTimeout(()=>{
-    const inp=document.getElementById(`srch-input-${pid}`);
-    if(inp){inp.focus();inp.setSelectionRange(val.length,val.length);}
-  },10);
-};
-window.srchPick=(pid,val)=>{
-  srchState[pid]={open:false,query:""};
-  updatePolicyProduct(pid,val);
-};
-window.srchKey=(e,pid)=>{
-  if(e.key==="Escape"){srchState[pid]={open:false,query:""};document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();}
-};
-window.updatePolicyProduct=(id,val)=>{
-  srchState[id]={open:false,query:""};
-  policies=policies.map(p=>p.id===id?{...p,product:val,term:"",annualPremium:"",riders:[]}:p);
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-};
-window.removePolicy=id=>{policies=policies.filter(p=>p.id!==id);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
-window.updatePolicyProduct=(id,val)=>{policies=policies.map(p=>p.id===id?{...p,product:val,term:"",annualPremium:"",riders:[]}:p);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
-window.updatePolicyField=(id,f,v)=>{policies=policies.map(p=>p.id===id?{...p,[f]:v}:p);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
-window.addRider=id=>{
-  policies=policies.map(p=>{
-    if(p.id!==id)return p;
-    const def=PRODUCTS[p.product];if(!def?.riders)return p;
-    const chosen=p.riders.map(r=>r.name).filter(Boolean);
-    const next=def.riders.find(r=>!chosen.includes(r));
-    if(next===undefined)return p;
-    return{...p,riders:[...p.riders,{...newRider(),name:next||""}]};
-  });
-  document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();
-};
-window.removeRider=(pid,rid)=>{policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.filter(r=>r.id!==rid)}:p);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
-window.updateRider=(pid,rid,f,v)=>{policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p);document.getElementById("logShell").innerHTML=buildLogHTML();attachEventListeners();};
-
-window.handleAddSale=async()=>{
-  // Sync client name from the live input field before checking
-  const clientInputEl=document.getElementById("clientInput");
-  if(clientInputEl) formClient=clientInputEl.value.trim();
-  if(!formClient||!formDate||!policies.some(b=>b.product&&b.term&&b.annualPremium))return;
-  const mo=new Date(formDate+"T00:00:00").getMonth();
-  const saved=policies.filter(b=>b.product&&b.term&&b.annualPremium).map(b=>{
-    const def=PRODUCTS[b.product];const t=def.terms.find(t=>t.label===b.term);
-    const ap=parseFloat(b.annualPremium)||0;
-    const baseComm=ap*t.yr1/100,baseCred=ap*t.credit;
-    const riders=b.riders.filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{
-      const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;
-      return{name:r.name,premium:rp,commPct:rd.yr1,comm:rp*rd.yr1/100,credit:rp*rd.credit};
-    });
-    const rC=riders.reduce((a,r)=>a+r.comm,0),rCr=riders.reduce((a,r)=>a+r.credit,0);
-    return{product:b.product,term:b.term,annualPremium:ap,commPct:t.yr1,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
-  });
-  const saleObj={date:formDate,clientName:formClient,policies:saved,
-    totalComm:saved.reduce((a,p)=>a+p.totalComm,0),
-    baseComm:saved.reduce((a,p)=>a+p.baseComm,0),
-    totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),
-    quarter:getQuarter(mo),month:mo,
-  };
-  await saveSale(saleObj);
-  launchConfetti();
-  formClient="";policies=[newPolicy()];
-  document.getElementById("logShell").innerHTML=buildLogHTML();
-  attachEventListeners();
-};
-
-window.handleDeleteSale=async id=>{ if(confirm("Delete this sale?")) await deleteSale(id); };
 
 // ── Confetti ──
 function launchConfetti(){
-  const canvas=document.getElementById("confettiCanvas");
-  canvas.style.display="block";
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  const ctx=canvas.getContext("2d");
-  const pieces=[];
-  const colors=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
-  for(let i=0;i<180;i++){
-    pieces.push({
-      x:Math.random()*canvas.width,
-      y:-10-Math.random()*200,
-      w:8+Math.random()*8,
-      h:5+Math.random()*5,
-      color:colors[Math.floor(Math.random()*colors.length)],
-      angle:Math.random()*360,
-      spin:(-1+Math.random()*2)*4,
-      vx:(-1+Math.random()*2)*3,
-      vy:3+Math.random()*5,
-      opacity:1
-    });
-  }
-  let frame=0;
+  const cv=document.getElementById("confetti");
+  cv.style.display="block"; cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const ctx=cv.getContext("2d");
+  const cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
+  const pieces=Array.from({length:180},()=>({
+    x:Math.random()*cv.width, y:-10-Math.random()*200,
+    w:8+Math.random()*8, h:5+Math.random()*5,
+    color:cols[Math.floor(Math.random()*cols.length)],
+    angle:Math.random()*360, spin:(-1+Math.random()*2)*4,
+    vx:(-1+Math.random()*2)*3, vy:3+Math.random()*5, op:1
+  }));
+  let fr=0;
   function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,cv.width,cv.height);
     pieces.forEach(p=>{
-      ctx.save();
-      ctx.globalAlpha=p.opacity;
-      ctx.translate(p.x,p.y);
-      ctx.rotate(p.angle*Math.PI/180);
-      ctx.fillStyle=p.color;
-      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-      ctx.restore();
-      p.x+=p.vx;
-      p.y+=p.vy;
-      p.angle+=p.spin;
-      p.vy+=0.07;
-      if(frame>80) p.opacity-=0.018;
+      ctx.save(); ctx.globalAlpha=p.op; ctx.translate(p.x,p.y); ctx.rotate(p.angle*Math.PI/180);
+      ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.angle+=p.spin; p.vy+=0.07;
+      if(fr>80) p.op-=0.018;
     });
-    frame++;
-    if(frame<140) requestAnimationFrame(draw);
-    else{ ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display="none"; }
+    fr++;
+    if(fr<140) requestAnimationFrame(draw);
+    else{ ctx.clearRect(0,0,cv.width,cv.height); cv.style.display="none"; }
   }
   draw();
 }
 
-render();
+// ── Attach event listeners ──
+function attachAll(){
+  // Client name
+  const ci=document.getElementById("clientInp");
+  if(ci){ ci.addEventListener("input",e=>{ fClient=e.target.value; }); }
+
+  // Date input
+  const di=document.getElementById("dateInp");
+  if(di){
+    di.addEventListener("input",e=>{
+      fDate=e.target.value;
+      if(/^\d{4}-\d{2}-\d{2}$/.test(fDate)){
+        const dt=new Date(fDate+"T00:00:00");
+        if(!isNaN(dt)){ calY=dt.getFullYear(); calM=dt.getMonth(); }
+        renderLog(); attachAll();
+      }
+    });
+  }
+
+  // Calendar icon
+  const ci2=document.getElementById("calIco");
+  if(ci2){
+    ci2.addEventListener("click",e=>{
+      e.stopPropagation();
+      calOpen=!calOpen;
+      if(calOpen&&fDate){ calY=parseInt(fDate.split("-")[0]); calM=parseInt(fDate.split("-")[1])-1; }
+      renderLog(); attachAll();
+    });
+  }
+
+  // Annual premium inputs — update on input (no rebuild), rebuild on blur
+  document.querySelectorAll(".pp-inp").forEach(inp=>{
+    inp.addEventListener("input",e=>{
+      const pid=e.target.dataset.pid;
+      pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);
+    });
+    inp.addEventListener("blur",e=>{
+      const pid=e.target.dataset.pid;
+      pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);
+      renderLog(); attachAll();
+    });
+  });
+
+  // Rider premium inputs
+  document.querySelectorAll(".rp-inp").forEach(inp=>{
+    inp.addEventListener("input",e=>{
+      const pid=e.target.dataset.pid, rid=e.target.dataset.rid;
+      pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
+    });
+    inp.addEventListener("blur",e=>{
+      const pid=e.target.dataset.pid, rid=e.target.dataset.rid;
+      pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);
+      renderLog(); attachAll();
+    });
+  });
+
+  // Close dropdowns on outside click
+  document.addEventListener("mousedown",function h(e){
+    // Calendar
+    const cw=document.getElementById("calWrap");
+    if(calOpen&&cw&&!cw.contains(e.target)){ calOpen=false; renderLog(); attachAll(); }
+    // Search dropdowns
+    let changed=false;
+    Object.keys(srch).forEach(pid=>{
+      if(srch[pid]&&srch[pid].open){
+        const el=document.getElementById("srch-"+pid);
+        if(el&&!el.contains(e.target)){ srch[pid]={open:false,query:""}; changed=true; }
+      }
+    });
+    if(changed){ renderLog(); attachAll(); }
+    // Year dropdown
+    const yw=document.getElementById("yrWrap"), yd=document.getElementById("yrDD");
+    if(yd&&yw&&!yw.contains(e.target)) yd.style.display="none";
+  },{once:true});
+}
+
+// ── Window-level handlers ──
+window.setTab=t=>{ tab=t; if(t!=="log") document.getElementById("app").innerHTML=""; renderAll(); };
+window.setQ=q=>{ activeQ=q; document.getElementById("app").innerHTML=renderDash(); attachAll(); };
+window.selYr=y=>{ selYear=y; document.getElementById("app").innerHTML=renderDash(); attachAll(); };
+window.togYrDD=()=>{ const d=document.getElementById("yrDD"); if(d) d.style.display=d.style.display==="none"?"block":"none"; };
+
+window.navM=dir=>{ calM+=dir; if(calM<0){calM=11;calY--;}else if(calM>11){calM=0;calY++;} renderLog(); attachAll(); };
+window.jumpY=y=>{ calY=y; renderLog(); attachAll(); };
+window.pickDay=d=>{ fDate=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"); calOpen=false; renderLog(); attachAll(); };
+window.pickToday=()=>{ fDate=todayStr(); calOpen=false; const t=new Date(); calY=t.getFullYear(); calM=t.getMonth(); renderLog(); attachAll(); };
+
+window.srchOpen=pid=>{ srch[pid]={open:true,query:""}; renderLog(); attachAll(); setTimeout(()=>document.getElementById("sinp-"+pid)?.focus(),30); };
+window.srchType=(pid,val)=>{
+  srch[pid]={open:true,query:val};
+  renderLog(); attachAll();
+  setTimeout(()=>{ const i=document.getElementById("sinp-"+pid); if(i){i.focus();i.setSelectionRange(val.length,val.length);} },10);
+};
+window.srchPick=(pid,val)=>{ srch[pid]={open:false,query:""}; pols=pols.map(p=>p.id===pid?{...p,product:val,term:"",ap:"",riders:[]}:p); renderLog(); attachAll(); };
+window.srchKey=(e,pid)=>{ if(e.key==="Escape"){srch[pid]={open:false,query:""}; renderLog(); attachAll();} };
+
+window.addPol=()=>{ pols.push(newPol()); renderLog(); attachAll(); };
+window.remPol=id=>{ srch[id]=null; pols=pols.filter(p=>p.id!==id); renderLog(); attachAll(); };
+window.updPolF=(id,f,v)=>{ pols=pols.map(p=>p.id===id?{...p,[f]:v}:p); renderLog(); attachAll(); };
+window.addRider=id=>{
+  pols=pols.map(p=>{
+    if(p.id!==id) return p;
+    const def=PROD[p.product]; if(!def||!def.riders) return p;
+    const chosen=p.riders.map(r=>r.name).filter(Boolean);
+    const next=def.riders.find(r=>!chosen.includes(r));
+    if(!next) return p;
+    return {...p,riders:[...p.riders,{...newRider(),name:next}]};
+  });
+  renderLog(); attachAll();
+};
+window.remRider=(pid,rid)=>{ pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.filter(r=>r.id!==rid)}:p); renderLog(); attachAll(); };
+window.updRider=(pid,rid,f,v)=>{ pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p); renderLog(); attachAll(); };
+
+window.doAddSale=async()=>{
+  const ci=document.getElementById("clientInp");
+  if(ci) fClient=ci.value.trim();
+  if(!fClient||!fDate||!pols.some(b=>b.product&&b.term&&b.ap)) return;
+  const mo=new Date(fDate+"T00:00:00").getMonth();
+  const saved=pols.filter(b=>b.product&&b.term&&b.ap).map(b=>{
+    const def=PROD[b.product]; const t=def.terms.find(t=>t.l===b.term);
+    const ap=parseFloat(b.ap)||0;
+    const baseComm=ap*t.y/100, baseCred=ap*t.c;
+    const riders=b.riders.filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{
+      const rd=RIDER_DATA[r.name]; const rp=parseFloat(r.premium)||0;
+      return {name:r.name,premium:rp,commPct:rd.y,comm:rp*rd.y/100,credit:rp*rd.c};
+    });
+    const rC=riders.reduce((a,r)=>a+r.comm,0), rCr=riders.reduce((a,r)=>a+r.credit,0);
+    return {product:b.product,term:b.term,annualPremium:ap,commPct:t.y,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
+  });
+  const obj={date:fDate,clientName:fClient,policies:saved,
+    totalComm:saved.reduce((a,p)=>a+p.totalComm,0),
+    baseComm:saved.reduce((a,p)=>a+p.baseComm,0),
+    totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),
+    quarter:getQ(mo),month:mo
+  };
+  await addSaleDB(obj);
+  launchConfetti();
+  fClient=""; pols=[newPol()]; srch={};
+  renderLog(); attachAll();
+};
+window.doDelSale=async id=>{ if(confirm("Delete this sale?")) await delSaleDB(id); };
+
+renderAll();
 </script>
 </body>
 </html>
