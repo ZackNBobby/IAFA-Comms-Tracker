@@ -97,6 +97,8 @@ button,input,select{font-family:inherit;}
 @keyframes pulseGlow{0%,100%{opacity:1;}50%{opacity:0.7;}}
 @keyframes riseIn{0%{opacity:0;transform:translateY(18px);}100%{opacity:1;transform:translateY(0);}}
 @keyframes crownBob{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-6px) rotate(4deg);}}
+@keyframes goldBob{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-5px) scale(1.15);}}
+@keyframes diamondBob{0%,100%{transform:rotate(-6deg) scale(1);}50%{transform:rotate(6deg) scale(1.18);}}
 @keyframes progFill{from{width:0;}to{width:var(--pw);}}
 .mdrt-card{border-radius:18px;padding:22px;margin-bottom:20px;border:1.5px solid;position:relative;overflow:hidden;transition:transform 0.22s,box-shadow 0.3s;}
 .mdrt-card:hover{transform:translateY(-4px);}
@@ -108,6 +110,11 @@ button,input,select{font-family:inherit;}
 .shimmer-blue{background:linear-gradient(90deg,#38bdf8 0%,#fff 40%,#38bdf8 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
 .shimmer-purple{background:linear-gradient(90deg,#c4b5fd 0%,#fff 40%,#a78bfa 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.2s linear infinite;}
 .crown-bob{display:inline-block;animation:crownBob 2s ease-in-out infinite;}
+.gold-bob{display:inline-block;animation:goldBob 2s ease-in-out infinite;}
+.diamond-bob{display:inline-block;animation:diamondBob 1.8s ease-in-out infinite;}
+/* Hover reveal message on MDRT cards */
+.mdrt-hover-msg{display:none;margin-top:12px;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;line-height:1.6;text-align:center;border:1px solid;}
+.mdrt-card:hover .mdrt-hover-msg{display:block;}
 </style>
 </head>
 <body>
@@ -608,25 +615,25 @@ function renderMDRT(){
 
   const TDATA=[
     {key:"mdrt",label:"MDRT",full:"Million Dollar Round Table",target:MDRT_T,hit:hitMDRT,pct:pMDRT,
-     icon:"🥇",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",
+     icon:"🥇",iconCls:"gold-bob",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",
      grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",border:"#f59e0b",stars:"⭐",
      tagline:"\"Every legend starts with a single step forward.\"",
-     hoverNo:"You're building your legacy. Keep going — MDRT is closer than you think! 💪",
-     hoverYes:"🏅 MDRT Achieved! You're now part of an elite group of top advisers worldwide. Wear it with pride!",
+     hoverNo:"💪 You're laying the foundation of greatness. Every policy you write brings MDRT closer — don't stop now!",
+     hoverYes:"🏅 MDRT unlocked! You've crossed the threshold that only the top advisers in the world reach. Stand tall!",
      badge:"MDRT Member"},
     {key:"cot",label:"COT",full:"Court of the Table",target:COT_T,hit:hitCOT,pct:pCOT,
-     icon:"💎",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",
+     icon:"💎",iconCls:"diamond-bob",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",
      grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",border:"#38bdf8",stars:"⭐⭐",
      tagline:"\"Most never try. You chose to go further.\"",
-     hoverNo:"COT is only for those who refuse to settle. You're already in that rare group. Push harder! 🚀",
-     hoverYes:"💎 Court of the Table! You've tripled what most can only dream of. Absolutely elite.",
+     hoverNo:"🚀 COT demands 3x the effort — and you're chasing it anyway. That separates you from the rest. Grind on!",
+     hoverYes:"💎 Court of the Table achieved! Less than 4% of MDRT members ever get here. You are genuinely elite.",
      badge:"COT Member"},
     {key:"tot",label:"TOT",full:"Top of the Table",target:TOT_T,hit:hitTOT,pct:pTOT,
-     icon:"👑",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",
+     icon:"👑",iconCls:"crown-bob",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",
      grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",border:"#a78bfa",stars:"⭐⭐⭐",
      tagline:"\"The summit is reserved for the relentless.\"",
-     hoverNo:"TOT is the pinnacle — the rarest of the rare. One day your name will be there. 🔥",
-     hoverYes:"👑 TOP OF THE TABLE! You are in the top 1% of financial advisers on the entire planet. LEGENDARY.",
+     hoverNo:"🔥 TOT is the pinnacle of the entire profession. The rarest of the rare. Stay relentless — legends are made here.",
+     hoverYes:"👑 TOP OF THE TABLE. You are in the top 1% of the top 1% of financial advisers on the planet. LEGENDARY.",
      badge:"TOT Member"}
   ];
 
@@ -649,7 +656,7 @@ function renderMDRT(){
 
   TDATA.forEach((t,i)=>{
     const remaining=Math.max(0,t.target-grand);
-    const iconHtml=t.key==="tot"?`<span class="crown-bob">${t.icon}</span>`:t.icon;
+    const iconHtml=`<span class="${t.iconCls}">${t.icon}</span>`;
     const glowCSS=t.hit?`box-shadow:0 0 28px ${t.glow};`:""
 
     html+=`<div class="mdrt-card" style="background:${t.grad};border-color:${t.border};${glowCSS}animation:riseIn 0.45s ease ${i*0.12}s both;">`;
@@ -699,6 +706,11 @@ function renderMDRT(){
       <div style="width:${t.pct}%;height:100%;border-radius:8px;background:linear-gradient(90deg,${t.color}66,${t.color});box-shadow:0 0 10px ${t.color};transition:width 0.8s ease;"></div>
     </div>`;
 
+    // Hover reveal message (shows above footer on card hover)
+    html+=`<div class="mdrt-hover-msg" style="background:${t.hit?"rgba(52,211,153,0.08)":"rgba(0,0,0,0.25)"};border-color:${t.hit?"#34d39966":t.color+"55"};color:${t.hit?"#34d399":t.color};">
+      ${t.hit?t.hoverYes:t.hoverNo}
+    </div>`;
+
     // Achievement banner
     if(t.hit){
       html+=`<div style="margin-top:14px;background:linear-gradient(90deg,rgba(52,211,153,0.1),rgba(52,211,153,0.04));border:1px solid #34d39955;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
@@ -711,9 +723,9 @@ function renderMDRT(){
 
   // Footer quote
   html+=`<div style="text-align:center;padding:18px 10px 6px;">
-    <div style="font-size:12px;color:#334155;font-style:italic;line-height:1.8;">
+    <div style="font-size:12px;color:#94a3b8;font-style:italic;line-height:1.8;">
       "Success in this industry is not given — it is earned,<br>call by call, meeting by meeting, client by client."<br>
-      <span style="color:#1e293b;">Keep showing up. Your breakthrough is coming. 🌟</span>
+      <span style="color:#60a5fa;font-weight:600;">Keep showing up. Your breakthrough is coming. 🌟</span>
     </div>
   </div>`;
 
