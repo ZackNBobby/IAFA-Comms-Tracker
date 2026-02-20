@@ -265,7 +265,7 @@ async function delSaleDB(fid){try{await deleteDoc(doc(db,COLL,fid));}catch(e){al
 function renderAll(){renderTabs();renderPage();}
 
 function renderTabs(){
-  const tabs=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"]];
+  const tabs=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"],["mdrt","🏆 MDRT / COT / TOT"]];
   document.getElementById("tabBar").innerHTML=tabs.map(([k,v])=>"<button class='tab-btn"+(tab===k?" active":"")+"' onclick='setTab(\""+k+"\")'>"+v+"</button>").join("");
 }
 
@@ -722,6 +722,7 @@ function attachAll(){
 
 // ── Window handlers ──
 window.setTab=t=>{tab=t;if(t!=="log")document.getElementById("app").innerHTML="";renderAll();};
+window.selMDRTYr=y=>{selYear=y;document.getElementById("app").innerHTML=renderMDRT();attachAll();};
 window.setQ=q=>{activeQ=q;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.selYr=y=>{selYear=y;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.togYrDD=()=>{const d=document.getElementById("yrDD");if(d)d.style.display=d.style.display==="none"?"block":"none";};
@@ -831,6 +832,182 @@ window.doAddSale=async()=>{
   renderAll();
 };
 window.doDelSale=async id=>{if(confirm("Delete this sale?"))await delSaleDB(id);};
+
+// ── MDRT / COT / TOT ──
+function renderMDRT(){
+  const MDRT_TARGET=75800;
+  const COT_TARGET=MDRT_TARGET*3;
+  const TOT_TARGET=COT_TARGET*2;
+
+  // Full year totals including bonuses
+  const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
+  // Commission per quarter
+  let totalComm=0, totalBonus=0;
+  Object.keys(QS).forEach(q=>{
+    const qs=ys.filter(s=>s.quarter===q);
+    const tm=qs.reduce((a,s)=>a+s.totalComm,0);
+    const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
+    const tier=getTier(tc);
+    const eb=tm>=3000?tm*0.25:0;
+    const qb=tm*tier.bonus/100;
+    totalComm+=tm;
+    totalBonus+=eb+qb;
+  });
+  const grand=totalComm+totalBonus;
+
+  const hitMDRT=grand>=MDRT_TARGET;
+  const hitCOT=grand>=COT_TARGET;
+  const hitTOT=grand>=TOT_TARGET;
+
+  const pMDRT=Math.min(100,(grand/MDRT_TARGET)*100);
+  const pCOT=Math.min(100,(grand/COT_TARGET)*100);
+  const pTOT=Math.min(100,(grand/TOT_TARGET)*100);
+
+  const tiers=[
+    {
+      key:"mdrt", label:"MDRT", full:"Million Dollar Round Table",
+      target:MDRT_TARGET, hit:hitMDRT, pct:pMDRT,
+      icon:"🥇", color:"#f59e0b", glow:"rgba(245,158,11,0.35)",
+      grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",
+      border:"#f59e0b",
+      tagline:"\"Every legend starts with a single step forward.\"",
+      hoverNo:"You're building your legacy. Keep going — MDRT is closer than you think! 💪",
+      hoverYes:"🏅 MDRT Achieved! You're now part of an elite group of top advisers worldwide. Wear it with pride!",
+      badge:"MDRT Member",
+      starCount:1
+    },
+    {
+      key:"cot", label:"COT", full:"Court of the Table",
+      target:COT_TARGET, hit:hitCOT, pct:pCOT,
+      icon:"💎", color:"#38bdf8", glow:"rgba(56,189,248,0.35)",
+      grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",
+      border:"#38bdf8",
+      tagline:"\"Most never try. You chose to go further.\"",
+      hoverNo:"COT is only for those who refuse to settle. You're in that rare group. Push harder! 🚀",
+      hoverYes:"💎 Court of the Table! You've tripled what most can only dream of. Absolutely elite.",
+      badge:"COT Member",
+      starCount:2
+    },
+    {
+      key:"tot", label:"TOT", full:"Top of the Table",
+      target:TOT_TARGET, hit:hitTOT, pct:pTOT,
+      icon:"👑", color:"#a78bfa", glow:"rgba(167,139,250,0.4)",
+      grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",
+      border:"#a78bfa",
+      tagline:"\"The summit is reserved for the relentless.\"",
+      hoverNo:"TOT is the pinnacle. The rarest of the rare. One day, your name will be on that list. 🔥",
+      hoverYes:"👑 TOP OF THE TABLE! You are in the top 1% of financial advisers on the entire planet. LEGENDARY.",
+      badge:"TOT Member",
+      starCount:3
+    }
+  ];
+
+  const stars=n=>Array.from({length:n},()=>"⭐").join("");
+
+  let html=`
+  <style>
+    @keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 18px var(--gc);}50%{box-shadow:0 0 38px var(--gc);}}
+    @keyframes riseIn{0%{opacity:0;transform:translateY(18px);}100%{opacity:1;transform:translateY(0);}}
+    @keyframes crownSpin{0%{transform:rotate(-8deg) scale(1.1);}50%{transform:rotate(8deg) scale(1.25);}100%{transform:rotate(-8deg) scale(1.1);}}
+    .mdrt-card{border-radius:18px;padding:22px;margin-bottom:20px;border:1.5px solid;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.3s;animation:riseIn 0.5s ease both;}
+    .mdrt-card:hover{transform:translateY(-3px);}
+    .mdrt-tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:12px;color:#e2e8f0;width:260px;text-align:center;z-index:100;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,0.5);pointer-events:none;margin-bottom:8px;}
+    .mdrt-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#334155;}
+    .mdrt-hoverable{position:relative;display:inline-block;cursor:default;}
+    .mdrt-hoverable:hover .mdrt-tooltip{display:block;}
+    .shimmer-text{background:linear-gradient(90deg,#fff 0%,#ffd700 40%,#fff 60%,#ffd700 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
+    .cot-shimmer{background:linear-gradient(90deg,#fff 0%,#38bdf8 40%,#fff 60%,#38bdf8 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.5s linear infinite;}
+    .tot-shimmer{background:linear-gradient(90deg,#e9d5ff 0%,#fff 40%,#a78bfa 60%,#fff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 2.2s linear infinite;}
+    .crown-anim{display:inline-block;animation:crownSpin 2s ease-in-out infinite;}
+    .prog-glow{height:100%;border-radius:8px;transition:width 0.8s cubic-bezier(.4,2,.6,1);}
+  </style>`;
+
+  // Year summary strip
+  html+=`<div style='background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:16px 20px;border:1px solid #334155;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;'>
+    <div><div style='font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;'>📅 ${selYear} — Total Eligible Earnings</div>
+    <div style='font-size:28px;font-weight:900;color:#e2e8f0;margin-top:4px;'>${$f(grand)}</div>
+    <div style='font-size:11px;color:#64748b;margin-top:2px;'>Commission ${$f(totalComm)} &nbsp;+&nbsp; Bonuses ${$f(totalBonus)}</div></div>
+    <div style='text-align:right;'>
+      <div style='font-size:11px;color:#64748b;'>Bonuses count ✅</div>
+      <div style='font-size:12px;color:#94a3b8;margin-top:4px;'>Easy + Quarterly Bonus included</div>
+    </div>
+  </div>`;
+
+  tiers.forEach((t,i)=>{
+    const remaining=Math.max(0,t.target-grand);
+    const shimmerClass=t.key==="mdrt"?"shimmer-text":t.key==="cot"?"cot-shimmer":"tot-shimmer";
+    const iconHtml=t.key==="tot"?`<span class='crown-anim'>${t.icon}</span>`:t.icon;
+    const glowStyle=t.hit?`--gc:${t.glow};animation:riseIn 0.5s ease ${i*0.15}s both, pulseGlow 2.5s ease-in-out infinite;`:`animation:riseIn 0.5s ease ${i*0.15}s both;`;
+
+    html+=`<div class='mdrt-card' style='background:${t.grad};border-color:${t.border};${glowStyle}'>`;
+
+    // Watermark
+    html+=`<div style='position:absolute;right:16px;top:12px;font-size:54px;opacity:0.06;font-weight:900;letter-spacing:-2px;'>${t.label}</div>`;
+
+    // Header row
+    html+=`<div style='display:flex;align-items:center;gap:12px;margin-bottom:6px;'>
+      <div style='font-size:36px;line-height:1;'>${iconHtml}</div>
+      <div style='flex:1;'>
+        <div class='mdrt-hoverable'>
+          <div class='${shimmerClass}' style='font-size:22px;font-weight:900;'>${t.label} ${stars(t.starCount)}</div>
+          <div class='mdrt-tooltip'>${t.hit?t.hoverYes:t.hoverNo}</div>
+        </div>
+        <div style='font-size:11px;color:${t.color};opacity:0.8;margin-top:1px;font-weight:600;'>${t.full}</div>
+      </div>
+      <div style='background:${t.hit?"rgba(52,211,153,0.15)":"rgba(100,116,139,0.15)"};border:1px solid ${t.hit?"#34d399":"#475569"};border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:${t.hit?"#34d399":"#64748b"};white-space:nowrap;'>
+        ${t.hit?`✅ ${t.badge}`:"Not Yet"}
+      </div>
+    </div>`;
+
+    // Tagline
+    html+=`<div style='font-size:12px;color:${t.color};opacity:0.75;font-style:italic;margin-bottom:14px;'>${t.tagline}</div>`;
+
+    // Stats row
+    html+=`<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;'>
+      <div style='background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;'>
+        <div style='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;'>Target</div>
+        <div style='font-size:15px;font-weight:800;color:${t.color};margin-top:3px;'>${$f(t.target)}</div>
+      </div>
+      <div style='background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;'>
+        <div style='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;'>Earned</div>
+        <div style='font-size:15px;font-weight:800;color:#e2e8f0;margin-top:3px;'>${$f(grand)}</div>
+      </div>
+      <div style='background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;'>
+        <div style='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;'>${t.hit?"Exceeded":"Still Need"}</div>
+        <div style='font-size:15px;font-weight:800;color:${t.hit?"#34d399":"#f87171"};margin-top:3px;'>${t.hit?$f(grand-t.target):$f(remaining)}</div>
+      </div>
+    </div>`;
+
+    // Progress bar
+    html+=`<div style='display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:5px;'>
+      <span>Progress to ${t.label}</span><span style='color:${t.color};font-weight:700;'>${t.pct.toFixed(1)}%</span>
+    </div>
+    <div style='background:rgba(0,0,0,0.35);border-radius:8px;height:16px;overflow:hidden;'>
+      <div class='prog-glow' style='width:${t.pct}%;background:linear-gradient(90deg,${t.color}66,${t.color});box-shadow:0 0 10px ${t.color};'></div>
+    </div>`;
+
+    // Achieved banner
+    if(t.hit){
+      html+=`<div style='margin-top:14px;background:linear-gradient(90deg,rgba(52,211,153,0.12),rgba(52,211,153,0.05));border:1px solid #34d39955;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;'>
+        <div style='font-size:22px;'>🎉</div>
+        <div style='font-size:13px;font-weight:700;color:#34d399;'>${t.hoverYes}</div>
+      </div>`;
+    }
+
+    html+="</div>";
+  });
+
+  // Motivational footer
+  html+=`<div style='text-align:center;padding:20px 10px 8px;'>
+    <div style='font-size:12px;color:#475569;font-style:italic;line-height:1.7;'>
+      "Success in this industry is not given — it is earned, call by call,<br>meeting by meeting, client by client."<br>
+      <span style='color:#334155;'>Keep showing up. Your breakthrough is coming. 🌟</span>
+    </div>
+  </div>`;
+
+  return html;
+}
 
 renderAll();
 </script>
