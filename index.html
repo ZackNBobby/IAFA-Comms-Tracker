@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sales Commission Tracker</title>
+<title>Sales Tracker</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
@@ -87,7 +87,6 @@ button,input,select{font-family:inherit;}
 </style>
 </head>
 <body>
-<div class="save-ind" id="saveInd">💾 Saving...</div>
 <div class="header">
   <h1>📊 Sales Commission Tracker</h1>
   <p>Income Financial Consultant · Singapore</p>
@@ -181,28 +180,43 @@ const PROD = {
   "PrimeShield":{terms:[{l:"Yearly",y:35.00,c:4}]},
   "Care Secure":{terms:[{l:"Yearly",y:45.00,c:4}]}
 };
+// Riders that need their own term selection (independent of base plan term)
+const RIDER_OWN_TERMS = {
+  "Disability Accelerator (TCN2)":[
+    {l:"6-9 years",y:13.00,c:3},
+    {l:"10-14 years",y:18.00,c:3},
+    {l:"15-19 years",y:26.00,c:3},
+    {l:"20-24 years",y:41.20,c:3},
+    {l:"25+ years",y:45.50,c:3}
+  ],
+  "Essential Protect (LBV3)":[
+    {l:"5 years",y:12.50,c:4},
+    {l:"6-9 years",y:13.00,c:4},
+    {l:"10-14 years",y:18.00,c:4},
+    {l:"15-19 years",y:26.00,c:4},
+    {l:"20+ years",y:40.00,c:4}
+  ],
+  "Total Protect (TPV1)":[
+    {l:"5 years",y:12.50,c:4},
+    {l:"6-9 years",y:13.00,c:4},
+    {l:"10-14 years",y:18.00,c:4},
+    {l:"15-19 years",y:26.00,c:4},
+    {l:"20+ years",y:40.00,c:4}
+  ]
+};
 const RIDER_DATA = {
-  "Disability Accelerator (TCN2)":{
-    termBased:true,
-    terms:[
-      {l:"6-9 years",y:13.00,c:3},
-      {l:"10-14 years",y:18.00,c:3},
-      {l:"15-19 years",y:26.00,c:3},
-      {l:"20-24 years",y:41.20,c:3},
-      {l:"25+ years",y:45.50,c:3}
-    ]
-  },
-  "Essential Protect (LBV3)":{y:13.00,c:4},
-  "Total Protect (TPV1)":{y:10.20,c:4},
+  "Disability Accelerator (TCN2)":{termBased:true},
+  "Essential Protect (LBV3)":{termBased:true},
+  "Total Protect (TPV1)":{termBased:true},
   "Classic Care Rider":{y:15.00,c:4},
   "Deluxe Care Rider":{y:15.00,c:4}
 };
-// Helper: get rider rate, passing in the base policy term for term-based riders
-function getRiderRate(riderName, baseTerm){
+function getRiderRate(riderName, riderTerm){
   const rd=RIDER_DATA[riderName];
   if(!rd) return null;
   if(rd.termBased){
-    const t=rd.terms.find(t=>t.l===baseTerm);
+    const terms=RIDER_OWN_TERMS[riderName]||[];
+    const t=terms.find(t=>t.l===riderTerm);
     return t?{y:t.y,c:t.c}:null;
   }
   return {y:rd.y,c:rd.c};
@@ -244,9 +258,10 @@ async function delSaleDB(fid){ try{ await deleteDoc(doc(db,COLL,fid)); }catch(e)
 function renderAll(){ renderTabs(); renderPage(); }
 
 function renderTabs(){
-  const tabs=[["log","+ Log Sale"],["dashboard","Dashboard"],["history","All Sales"],["ignite","Ignite 2026"],["trail","Trailblazer 2027"]];
+  const tabs=[["log","Log Sale"],["dashboard","Dashboard"],["history","All Sales"],["ignite","Ignite 2026"],["trail","Trailblazer 2027"]];
+  const icons={log:"➕",dashboard:"📈",history:"📋",ignite:"🔥",trail:"🌍"};
   document.getElementById("tabBar").innerHTML = tabs.map(([k,v])=>
-    "<button class='tab-btn"+(tab===k?" active":"")+"' onclick='setTab(\""+k+"\")'>"+(k==="log"?"➕ ":k==="dashboard"?"📈 ":k==="history"?"📋 ":k==="ignite"?"🔥 ":"🌍 ")+v+"</button>"
+    "<button class='tab-btn"+(tab===k?" active":"")+"' onclick='setTab(\""+k+"\")'>"+icons[k]+" "+v+"</button>"
   ).join("");
 }
 
@@ -356,7 +371,7 @@ function buildPolBlock(b,i){
   const chosen=b.riders.map(r=>r.name).filter(Boolean);
   const bc=selT&&ap?ap*selT.y/100:0;
   const bCr=selT&&ap?ap*selT.c:0;
-  const rC=b.riders.map(r=>{const rd=getRiderRate(r.name,b.term);const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
+  const rC=b.riders.map(r=>{const rd=getRiderRate(r.name,r.riderTerm||b.term);const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
   const rComm=rC.reduce((a,r)=>a+r.comm,0), rCred=rC.reduce((a,r)=>a+r.cred,0);
   const hasR=rC.some(r=>r.name&&r.rp>0);
 
