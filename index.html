@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sales Commission Tracker</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+  button{font-family:inherit;}
+  input,select{font-family:inherit;}
+  .header{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:20px 24px;border-bottom:1px solid #1e40af;}
+  .header h1{font-size:22px;font-weight:700;color:#60a5fa;}
+  .header p{font-size:12px;color:#94a3b8;margin-top:2px;}
+  .tabs{display:flex;background:#1e293b;border-bottom:1px solid #334155;overflow-x:auto;}
+  .tab-btn{padding:12px 16px;border:none;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;background:transparent;color:#94a3b8;border-bottom:2px solid transparent;transition:all 0.2s;}
+  .tab-btn.active{background:#1e40af;color:#fff;border-bottom:2px solid #60a5fa;}
+  .content{padding:20px 24px;max-width:960px;margin:0 auto;}
+  .card{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
+  .card-dark{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
+  .label{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;}
+  .input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
+  .input:disabled{opacity:0.4;cursor:not-allowed;}
+  .select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:14px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .btn-primary{padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
+  .btn-primary:disabled{background:#334155;cursor:not-allowed;}
+  .btn-small{padding:5px 14px;border-radius:6px;border:1px solid #1d4ed8;background:#1e3a5f;color:#93c5fd;font-size:12px;font-weight:600;cursor:pointer;}
+  .btn-danger{background:#7f1d1d;border:none;border-radius:6px;padding:4px 10px;color:#fca5a5;font-size:12px;cursor:pointer;}
+  .btn-rider{padding:4px 12px;border-radius:6px;border:1px solid #4f46e5;background:#1e1b4b;color:#a5b4fc;font-size:11px;font-weight:600;cursor:pointer;}
+  .policy-block{background:#0f172a;border-radius:12px;padding:16px;border:1px solid #1e40af;margin-bottom:12px;}
+  .rider-block{background:#0a1929;border-radius:8px;padding:10px;border:1px solid #4f46e5;margin-bottom:8px;}
+  .preview-box{margin-top:12px;background:#0f2942;border-radius:10px;padding:12px;border:1px solid #1e40af;}
+  .mini-card{text-align:center;background:#0a1929;border-radius:6px;padding:6px 2px;}
+  .mini-card .lbl{font-size:10px;color:#64748b;}
+  .mini-card .val{font-size:13px;font-weight:700;margin-top:1px;}
+  .progress-wrap{background:#0f172a;border-radius:8px;height:14px;overflow:hidden;margin:6px 0;}
+  .progress-bar{height:100%;border-radius:8px;transition:width 0.5s;}
+  .kpi-val{font-size:18px;font-weight:800;margin-top:4px;}
+  .total-comm-card{background:linear-gradient(135deg,#052e16,#14532d,#166534);border-radius:12px;padding:16px;border:1px solid #16a34a;margin-bottom:12px;box-shadow:0 0 20px rgba(22,163,74,0.15);}
+  .payout-card{background:linear-gradient(135deg,#1e3a5f,#0f2942);border-radius:12px;padding:18px;border:1px solid #1e40af;margin-bottom:16px;text-align:center;}
+  .campaign-header{background:linear-gradient(135deg,#1e3a5f,#0f2942);padding:16px 20px;border-bottom:1px solid #1e40af;}
+  .campaign-card{background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;margin-bottom:20px;}
+  .year-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #0d9488;background:linear-gradient(135deg,#0f766e,#134e4a);color:#5eead4;font-size:13px;font-weight:700;cursor:pointer;}
+  .year-dropdown{position:absolute;top:calc(100% + 6px);left:0;z-index:999;background:#1e293b;border:1px solid #0d9488;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:110px;overflow:hidden;}
+  .year-option{display:block;width:100%;padding:9px 16px;border:none;cursor:pointer;font-size:13px;text-align:left;font-family:inherit;}
+  .q-btn{flex:1;min-width:60px;padding:8px 0;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;border:1px solid #334155;background:#1e293b;color:#94a3b8;}
+  .q-btn.active{background:#1d4ed8;color:#fff;border-color:#3b82f6;}
+  .history-item{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
+  .policy-row{background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;margin-bottom:6px;}
+  .rider-tag{background:#1e1b4b;border-radius:4px;padding:1px 8px;font-size:11px;color:#a78bfa;display:inline-block;margin:2px 4px 2px 0;}
+  .badge{background:#0f2942;border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;}
+  .tier-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .saving-indicator{position:fixed;bottom:20px;right:20px;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 16px;font-size:13px;color:#94a3b8;z-index:9999;display:none;}
+  .saving-indicator.show{display:block;}
+  /* Calendar */
+  .cal-wrap{position:relative;}
+  .cal-input-row{display:flex;gap:6px;}
+  .cal-icon-btn{padding:9px 13px;border-radius:8px;border:1px solid #334155;background:#0f172a;cursor:pointer;font-size:16px;color:#60a5fa;transition:background 0.2s;}
+  .cal-icon-btn.open{background:#1d4ed8;color:#fff;}
+  .cal-popup{position:absolute;z-index:999;top:calc(100% + 6px);left:0;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6);min-width:265px;}
+  .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cal-nav-btn{background:#334155;border:none;border-radius:6px;padding:4px 12px;color:#e2e8f0;cursor:pointer;font-size:15px;}
+  .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+  .cal-days-header span{text-align:center;font-size:11px;color:#64748b;font-weight:600;padding:2px 0;}
+  .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .cal-day{padding:6px 2px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:transparent;color:#e2e8f0;font-family:inherit;}
+  .cal-day.empty{cursor:default;color:transparent;}
+  .cal-day.today{color:#60a5fa;outline:1px solid #334155;}
+  .cal-day.selected{background:#1d4ed8!important;color:#fff!important;font-weight:700;}
+  .cal-today-btn{margin-top:8px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<div class="saving-indicator" id="savingIndicator">💾 Saving...</div>
+
+<div class="header">
+  <h1>📊 Sales Commission Tracker</h1>
+  <p>Income Financial Consultant · Singapore</p>
+</div>
+
+<div class="tabs" id="tabBar"></div>
+<div class="content" id="appContent"></div>
+
+<script type="module">
+// ── Firebase ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",
+  authDomain: "zack-comms-tracker-iafa.firebaseapp.com",
+  projectId: "zack-comms-tracker-iafa",
+  storageBucket: "zack-comms-tracker-iafa.firebasestorage.app",
+  messagingSenderId: "889861149236",
+  appId: "1:889861149236:web:8488f5336ab9d2475bb061"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const COLL = "sales";
+
+// ── Data ──
+const PRODUCTS = {
+  "Mortgage Term (MPN2)": { terms: [
+    {label:"3 years",yr1:10.50,credit:3},{label:"4 years",yr1:11.50,credit:3},
+    {label:"5 years",yr1:12.50,credit:3},{label:"6-9 years",yr1:13.00,credit:3},
+    {label:"10-14 years",yr1:18.00,credit:3},{label:"15-19 years",yr1:26.00,credit:3},
+    {label:"20+ years",yr1:40.00,credit:3}]},
+  "Star Term Protect (TAN19)": { riders:["Essential Protect (LBV3)","Total Protect (TPV1)"], terms:[
+    {label:"5 years",yr1:12.50,credit:3},{label:"6-9 years",yr1:13.00,credit:3},
+    {label:"10-14 years",yr1:18.00,credit:3},{label:"15-19 years",yr1:26.00,credit:3},
+    {label:"20-24 years",yr1:40.00,credit:3},{label:"25+ years",yr1:40.00,credit:3}]},
+  "TermLife Solitaire (TBN3)": { riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Total Protect (TPV1)"], terms:[
+    {label:"6-9 years",yr1:13.00,credit:3},{label:"10-14 years",yr1:18.00,credit:3},
+    {label:"15-19 years",yr1:26.00,credit:3},{label:"20-24 years",yr1:41.20,credit:3},
+    {label:"25+ years",yr1:45.50,credit:3}]},
+  "Essential Protect (LBV3)": { terms:[
+    {label:"5 years",yr1:12.50,credit:4},{label:"6-9 years",yr1:13.00,credit:4},
+    {label:"10-14 years",yr1:18.00,credit:4},{label:"15-19 years",yr1:26.00,credit:4},
+    {label:"20+ years",yr1:40.00,credit:4}]},
+  "Complete Life Secure (VQMW)": { terms:[
+    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
+    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
+    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Complete Life Secure - Protection Benefit (VQVW)": { terms:[
+    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
+    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
+    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Total Protect (TPV1)": { terms:[
+    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
+    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
+    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Complete Cancer Care (CBN3)": { terms:[{label:"10 years",yr1:22.00,credit:4}]},
+  "Complete Critical Protect (CCN1)": { terms:[
+    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
+    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Advanced Critical Secure (CSV10)": { terms:[
+    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
+    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
+    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Early Critical Secure (CSV11)": { terms:[
+    {label:"5 years",yr1:10.00,credit:4},{label:"6-9 years",yr1:10.20,credit:4},
+    {label:"10-14 years",yr1:22.00,credit:4},{label:"15-19 years",yr1:33.00,credit:4},
+    {label:"20-24 years",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Cancer Premium Waiver / GIO (WPV10)": { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
+  "Payor Premium Waiver (WPV6)":          { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
+  "Enhanced Payor Premium Waiver (WEV2)": { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
+  "Dread Disease Premium Waiver (WSV2)":  { terms:[{label:"All Terms",yr1:20.00,credit:4}]},
+  "Hospital CashAid (HBV3)":  { terms:[{label:"All Terms",yr1:4.00,credit:4}]},
+  "Lady 360 (LPN)":            { terms:[{label:"All Terms",yr1:4.00,credit:4}]},
+  "Maternity 360 (MBN)":       { terms:[{label:"Single",yr1:5.00,credit:1}]},
+  "Gro Power Saver Pro (RSME)":{ terms:[{label:"3 years",yr1:3.30,credit:0.30}]},
+  "Gro Saver Flex Pro (GSME)": { terms:[{label:"Single",yr1:3.00,credit:1}]},
+  "Gro Cash Flex Pro (GCME)":  { terms:[{label:"Single",yr1:3.00,credit:1}]},
+  "Gro Cash Plus (GDMW)": { terms:[{label:"5 years",yr1:11.50,credit:1},{label:"10 years",yr1:18.30,credit:1}]},
+  "Gro Cash Sure (GCMW)": { terms:[
+    {label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:0.60},{label:"5yr (Policy >25)",yr1:10.00,credit:0.60},
+    {label:"10yr (Policy ≤25)",yr1:18.20,credit:0.60},{label:"10yr (Policy >25)",yr1:22.00,credit:0.60},
+    {label:"15yr (Policy >25)",yr1:33.00,credit:0.60},{label:"20yr (Policy >25)",yr1:44.00,credit:1.00},
+    {label:"25+ years",yr1:55.00,credit:1.00}]},
+  "Savings Protector Pro (SPV3)": { terms:[
+    {label:"1yr (Policy ≤10)",yr1:2.00,credit:4},{label:"2yr (Policy ≤10)",yr1:2.20,credit:4},
+    {label:"3yr (Policy ≤10)",yr1:3.30,credit:4},{label:"4yr (Policy ≤10)",yr1:4.40,credit:4},
+    {label:"5yr (Policy ≤10)",yr1:5.50,credit:4},{label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:4},
+    {label:"5yr (Policy >25)",yr1:10.00,credit:4},{label:"10yr (Policy ≤25)",yr1:18.20,credit:4},
+    {label:"10yr (Policy >25)",yr1:22.00,credit:4},{label:"15yr (Policy ≤25)",yr1:27.20,credit:4},
+    {label:"15yr (Policy >25)",yr1:33.00,credit:4},{label:"20yr (Policy ≤25)",yr1:36.30,credit:4},
+    {label:"20yr (Policy >25)",yr1:44.00,credit:4},{label:"25+ years",yr1:55.00,credit:4}]},
+  "Gro Retire Flex Pro (GRME)": { terms:[
+    {label:"Single",yr1:3.50,credit:1.00},{label:"5yr (Policy ≤10)",yr1:5.50,credit:0.60},
+    {label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:0.60},{label:"5yr (Policy >25)",yr1:10.00,credit:0.60},
+    {label:"10yr (Policy ≤25)",yr1:18.20,credit:0.60},{label:"10yr (Policy >25)",yr1:22.00,credit:0.60},
+    {label:"15yr (Policy ≤25)",yr1:27.20,credit:0.60},{label:"15yr (Policy >25)",yr1:33.00,credit:1.00},
+    {label:"20yr (Policy ≤25)",yr1:36.30,credit:1.00},{label:"20yr (Policy >25)",yr1:44.00,credit:1.00},
+    {label:"25+ years",yr1:55.00,credit:1.00}]},
+  "Gro Retire Flex Pro - Protection Benefit (SPV4)": { terms:[
+    {label:"5yr (Policy ≤10)",yr1:5.50,credit:0.60},{label:"5yr (Policy >10 ≤25)",yr1:9.00,credit:0.60},
+    {label:"5yr (Policy >25)",yr1:10.00,credit:0.60},{label:"10yr (Policy ≤25)",yr1:18.20,credit:0.60},
+    {label:"10yr (Policy >25)",yr1:22.00,credit:0.60},{label:"15yr (Policy ≤25)",yr1:27.20,credit:0.60},
+    {label:"15yr (Policy >25)",yr1:33.00,credit:1.00},{label:"20yr (Policy ≤25)",yr1:36.30,credit:1.00},
+    {label:"20yr (Policy >25)",yr1:44.00,credit:1.00},{label:"25+ years",yr1:55.00,credit:1.00}]},
+  "Gro Annuity Pro (GAMA)":                          { terms:[{label:"Single",yr1:1.00,credit:0}]},
+  "Provenance Solitaire (VPMW)":                     { terms:[{label:"Single",yr1:5.50,credit:1}]},
+  "Provenance Solitaire - Protection Benefit (VPVW)":{ terms:[{label:"Single",yr1:5.50,credit:1}]},
+  "Provenance Disability Accelerator (TSN3)":        { terms:[{label:"Single",yr1:5.50,credit:1}]},
+  "Luxe Plus Solitaire II (LTMW)":  { terms:[{label:"Single",yr1:3.25,credit:1}]},
+  "Wealth Plus Solitaire (LHMWA)":  { terms:[{label:"Single",yr1:3.00,credit:1}]},
+  "AstraLink (VA2)": { terms:[
+    {label:"MIP 10yr",yr1:22.00,credit:4},{label:"MIP 15yr",yr1:33.00,credit:4},
+    {label:"MIP 20yr",yr1:44.00,credit:4},{label:"MIP 25yr",yr1:55.00,credit:4}]},
+  "Invest Flex (VS1)": { terms:[
+    {label:"5yr (All Policy Term)",yr1:3.85,credit:1.50},{label:"10yr (All Policy Term)",yr1:23.95,credit:2.50},
+    {label:"15yr (All Policy Term)",yr1:48.55,credit:3.00},{label:"20yr (All Policy Term)",yr1:52.35,credit:3.00}]},
+  "Invest Flex Vantage (VS2)": { terms:[
+    {label:"5yr (All Policy Term)",yr1:2.60,credit:1.50},{label:"10yr (All Policy Term)",yr1:23.00,credit:2.50},
+    {label:"15yr (All Policy Term)",yr1:44.20,credit:3.00},{label:"20yr (All Policy Term)",yr1:46.00,credit:3.00}]},
+  "Invest Flex TriVantage (VS3)": { terms:[{label:"10yr (All Policy Term)",yr1:11.00,credit:1.50}]},
+  "WealthLink (GL3)": { terms:[{label:"Single",yr1:1.50,credit:0}]},
+  "Enhanced IncomeShield / IncomeShield Standard": { riders:["Classic Care Rider","Deluxe Care Rider"], terms:[{label:"Yearly",yr1:30.00,credit:4}]},
+  "PrimeShield": { terms:[{label:"Yearly",yr1:35.00,credit:4}]},
+  "Care Secure":  { terms:[{label:"Yearly",yr1:45.00,credit:4}]},
+};
+const RIDER_DATA = {
+  "Disability Accelerator (TCN2)":{yr1:13.00,credit:3},
+  "Essential Protect (LBV3)":{yr1:13.00,credit:4},
+  "Total Protect (TPV1)":{yr1:10.20,credit:4},
+  "Classic Care Rider":{yr1:15.00,credit:4},
+  "Deluxe Care Rider":{yr1:15.00,credit:4},
+};
+const QUARTERS={Q1:{months:[0,1,2],label:"Q1 (Jan–Mar)",payout:"April"},Q2:{months:[3,4,5],label:"Q2 (Apr–Jun)",payout:"July"},Q3:{months:[6,7,8],label:"Q3 (Jul–Sep)",payout:"October"},Q4:{months:[9,10,11],label:"Q4 (Oct–Dec)",payout:"January"}};
+const CREDIT_TIERS=[{min:0,max:49999,bonus:0,label:"< 50,000"},{min:50000,max:67999,bonus:10,label:"50,000 – 67,999"},{min:68000,max:96999,bonus:20,label:"68,000 – 96,999"},{min:97000,max:139999,bonus:30,label:"97,000 – 139,999"},{min:140000,max:Infinity,bonus:40,label:"140,000+"}];
+const MONTHS_FULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// ── Helpers ──
+const fmt  = n=>`$${n.toLocaleString("en-SG",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const fmtC = n=>n.toLocaleString("en-SG",{minimumFractionDigits:0,maximumFractionDigits:0});
+const uid  = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+function getQuarter(m){for(const[q,d]of Object.entries(QUARTERS))if(d.months.includes(m))return q;}
+function getCreditTier(c){return CREDIT_TIERS.find(t=>c>=t.min&&c<=t.max)||CREDIT_TIERS[0];}
+function todayStr(){const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;}
+function showSaving(){const el=document.getElementById("savingIndicator");el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2000);}
+
+// ── State ──
+let sales=[];
+let activeTab="log";
+let activeQ="Q1";
+let selectedYear=new Date().getFullYear();
+let policies=[newPolicy()];
+let formDate=todayStr();
+let formClient="";
+let calOpen=false;
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth();
+
+function newPolicy(){return {id:uid(),product:"",term:"",annualPremium:"",riders:[]};}
+function newRider(){return {id:uid(),name:"",premium:""};}
+
+// ── Firebase load ──
+onSnapshot(collection(db, COLL), snapshot=>{
+  sales=[];
+  snapshot.forEach(d=>sales.push({...d.data(),fireId:d.id}));
+  sales.sort((a,b)=>a.date<b.date?1:-1);
+  render();
+});
+
+async function saveSale(saleObj){
+  showSaving();
+  try{ await addDoc(collection(db,COLL), saleObj); }
+  catch(e){ alert("Error saving: "+e.message); }
+}
+async function deleteSale(fireId){
+  showSaving();
+  try{ await deleteDoc(doc(db,COLL,fireId)); }
+  catch(e){ alert("Error deleting: "+e.message); }
+}
+
+// ── Render ──
+function render(){
+  renderTabs();
+  renderContent();
+}
+
+function renderTabs(){
+  const tabs=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"]];
+  document.getElementById("tabBar").innerHTML=tabs.map(([k,v])=>
+    `<button class="tab-btn ${activeTab===k?"active":""}" onclick="switchTab('${k}')">${v}</button>`
+  ).join("");
+}
+
+function renderContent(){
+  const el=document.getElementById("appContent");
+  if(activeTab==="log")      el.innerHTML=renderLog();
+  else if(activeTab==="dashboard") el.innerHTML=renderDashboard();
+  else if(activeTab==="history")   el.innerHTML=renderHistory();
+  else if(activeTab==="ignite")    el.innerHTML=renderIgnite();
+  else if(activeTab==="trail")     el.innerHTML=renderTrail();
+  attachEventListeners();
+}
+
+// ── LOG ──
+function renderLog(){
+  const gt=grandTotals();
+  return `
+  <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;">Log a New Sale</div>
+  <div class="card">
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div>
+        <label class="label">📅 Date of Sale</label>
+        ${renderCalendar()}
+      </div>
+      <div>
+        <label class="label">👤 Client Name</label>
+        <input class="input" id="clientInput" type="text" placeholder="e.g. John Tan" value="${escHtml(formClient)}" oninput="formClient=this.value"/>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:13px;font-weight:700;color:#60a5fa;">📄 Policies (${policies.length})</span>
+      <button class="btn-small" onclick="addPolicy()">+ Add Policy</button>
+    </div>
+    ${policies.map((b,i)=>renderPolicyBlock(b,i)).join("")}
+    ${gt.comm>0?`
+    <div class="preview-box" style="margin-bottom:14px;">
+      <div style="font-size:12px;color:#60a5fa;font-weight:700;margin-bottom:8px;">🧮 Grand Total — All Policies</div>
+      <div class="grid-2">
+        <div class="mini-card" style="padding:10px 4px;"><div class="lbl" style="font-size:11px;">Total Commission</div><div style="font-size:18px;font-weight:800;color:#34d399;margin-top:2px;">${fmt(gt.comm)}</div></div>
+        <div class="mini-card" style="padding:10px 4px;"><div class="lbl" style="font-size:11px;">Total Credits</div><div style="font-size:18px;font-weight:800;color:#60a5fa;margin-top:2px;">${fmtC(gt.cred)} pts</div></div>
+      </div>
+    </div>`:""}
+    <button class="btn-primary" id="addSaleBtn" onclick="handleAddSale()">✅ Add Sale</button>
+  </div>`;
+}
+
+function renderCalendar(){
+  const selDate=formDate?new Date(formDate+"T00:00:00"):null;
+  const disp=selDate?selDate.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"}):"";
+  return `
+  <div class="cal-wrap" id="calWrap">
+    <div class="cal-input-row">
+      <input class="input" type="text" placeholder="YYYY-MM-DD" value="${formDate}" oninput="handleDateTyped(this.value)" style="flex:1;"/>
+      <button class="cal-icon-btn ${calOpen?"open":""}" onclick="toggleCal(event)">📅</button>
+    </div>
+    ${disp?`<div style="font-size:11px;color:#64748b;margin-top:3px;padding-left:2px;">${disp}</div>`:""}
+    ${calOpen?renderCalPopup():""}
+  </div>`;
+}
+
+function renderCalPopup(){
+  const today=new Date();
+  const first=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const selDate=formDate?new Date(formDate+"T00:00:00"):null;
+  let cells="";
+  for(let i=0;i<first;i++) cells+=`<button class="cal-day empty" disabled></button>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const isSel=selDate&&selDate.getFullYear()===calYear&&selDate.getMonth()===calMonth&&selDate.getDate()===d;
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    cells+=`<button class="cal-day${isSel?" selected":isToday?" today":""}" onclick="pickCalDay(${d})">${d}</button>`;
+  }
+  return `
+  <div class="cal-popup" id="calPopup">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calNavMonth(-1)">‹</button>
+      <span style="font-weight:700;font-size:13px;color:#60a5fa;">${MONTHS_FULL[calMonth]} ${calYear}</span>
+      <button class="cal-nav-btn" onclick="calNavMonth(1)">›</button>
+    </div>
+    <div class="cal-days-header">${["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>`<span>${d}</span>`).join("")}</div>
+    <div class="cal-days">${cells}</div>
+    <button class="cal-today-btn" onclick="pickToday()">📌 Today</button>
+  </div>`;
+}
+
+function renderPolicyBlock(b,i){
+  const def=b.product?PRODUCTS[b.product]:null;
+  const terms=def?.terms||[];
+  const avR=def?.riders||[];
+  const selT=terms.find(t=>t.label===b.term);
+  const ap=parseFloat(b.annualPremium)||0;
+  const chosen=b.riders.map(r=>r.name).filter(Boolean);
+  const baseComm=selT&&ap?ap*selT.yr1/100:0;
+  const baseCred=selT&&ap?ap*selT.credit:0;
+  const rCalcs=b.riders.map(r=>{const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.yr1/100:0,credit:rd&&rp?rp*rd.credit:0,yr1:rd?.yr1||0};});
+  const rComm=rCalcs.reduce((a,r)=>a+r.comm,0);
+  const rCred=rCalcs.reduce((a,r)=>a+r.credit,0);
+  const hasRiderVals=rCalcs.some(r=>r.name&&r.rp>0);
+  return `
+  <div class="policy-block">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:13px;font-weight:700;color:#60a5fa;">📋 Policy ${i+1}</span>
+      ${policies.length>1?`<button class="btn-danger" onclick="removePolicy('${b.id}')">✕ Remove</button>`:""}
+    </div>
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div>
+        <label class="label">🏷️ Base Product</label>
+        <select class="select" style="color:${b.product?"#e2e8f0":"#64748b"}" onchange="updatePolicyProduct('${b.id}',this.value)">
+          <option value="">-- Select Product --</option>
+          ${Object.keys(PRODUCTS).map(p=>`<option value="${escHtml(p)}" ${b.product===p?"selected":""}>${escHtml(p)}</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label class="label">📆 Premium Term</label>
+        <select class="select" style="color:${b.term?"#e2e8f0":"#64748b"};opacity:${b.product?1:0.4}" ${!b.product?"disabled":""} onchange="updatePolicyField('${b.id}','term',this.value)">
+          <option value="">-- Select Term --</option>
+          ${terms.map(t=>`<option value="${escHtml(t.label)}" ${b.term===t.label?"selected":""}>${escHtml(t.label)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="label">💰 Annual Premium (SGD)</label>
+      <input class="input" type="number" placeholder="e.g. 12000" value="${b.annualPremium}" oninput="updatePolicyField('${b.id}','annualPremium',this.value)"/>
+    </div>
+    <div style="border-top:1px solid #1e3a5f;padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:700;color:#a78bfa;">🔗 Riders</span>
+        ${avR.length>0&&b.riders.length<avR.length
+          ?`<button class="btn-rider" onclick="addRider('${b.id}')">+ Add Rider</button>`
+          :`<span style="font-size:11px;color:#475569;">${avR.length===0?"No riders for this product":"All riders added"}</span>`}
+      </div>
+      ${b.riders.length===0&&avR.length>0?`<div style="font-size:11px;color:#475569;font-style:italic;">Click "+ Add Rider" to attach riders.</div>`:""}
+      ${b.riders.map((row,ri)=>{
+        const avail=avR.filter(r=>r===row.name||!chosen.includes(r));
+        return `
+        <div class="rider-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;color:#a78bfa;font-weight:600;">Rider ${ri+1}</span>
+            <button class="btn-danger" style="font-size:11px;padding:2px 8px;" onclick="removeRider('${b.id}','${row.id}')">✕</button>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label class="label" style="font-size:11px;">Rider</label>
+              <select class="select" style="font-size:12px;color:${row.name?"#e2e8f0":"#64748b"}" onchange="updateRider('${b.id}','${row.id}','name',this.value)">
+                <option value="">-- Select --</option>
+                ${avail.map(r=>`<option value="${escHtml(r)}" ${row.name===r?"selected":""}>${escHtml(r)}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label class="label" style="font-size:11px;">Annual Premium (SGD)</label>
+              <input class="input" style="font-size:12px;" type="number" value="${row.premium}" placeholder="e.g. 1200" oninput="updateRider('${b.id}','${row.id}','premium',this.value)"/>
+            </div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+    ${selT&&ap>0?`
+    <div class="preview-box">
+      <div style="font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:8px;">⚡ Preview — Policy ${i+1}</div>
+      <div class="grid-3" style="margin-bottom:${hasRiderVals?8:0}px;">
+        <div class="mini-card"><div class="lbl">Base Comm</div><div class="val" style="color:#34d399;">${fmt(baseComm)}</div></div>
+        <div class="mini-card"><div class="lbl">Base Credits</div><div class="val" style="color:#60a5fa;">${fmtC(baseCred)} pts</div></div>
+        <div class="mini-card"><div class="lbl">Comm %</div><div class="val" style="color:#94a3b8;">${selT.yr1}%</div></div>
+      </div>
+      ${rCalcs.filter(r=>r.name&&r.rp>0).map((r,ri)=>`
+        <div style="margin-bottom:6px;">
+          <div style="font-size:10px;color:#64748b;margin-bottom:4px;">Rider ${ri+1}: ${escHtml(r.name)}</div>
+          <div class="grid-3">
+            <div class="mini-card"><div class="lbl">Comm</div><div class="val" style="color:#a78bfa;">${fmt(r.comm)}</div></div>
+            <div class="mini-card"><div class="lbl">Credits</div><div class="val" style="color:#a78bfa;">${fmtC(r.credit)} pts</div></div>
+            <div class="mini-card"><div class="lbl">Comm %</div><div class="val" style="color:#64748b;">${r.yr1}%</div></div>
+          </div>
+        </div>`).join("")}
+      ${hasRiderVals?`
+      <div style="border-top:1px solid #1e40af;padding-top:8px;" class="grid-2">
+        <div class="mini-card"><div class="lbl">Total Comm</div><div class="val" style="color:#34d399;font-size:14px;">${fmt(baseComm+rComm)}</div></div>
+        <div class="mini-card"><div class="lbl">Total Credits</div><div class="val" style="color:#60a5fa;font-size:14px;">${fmtC(baseCred+rCred)} pts</div></div>
+      </div>`:""}
+    </div>`:""}
+  </div>`;
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const yearSales=sales.filter(s=>s.date.startsWith(String(selectedYear)));
+  const qData=getQData(yearSales,activeQ);
+  const nt=CREDIT_TIERS.find(t=>t.min>qData.totalCred);
+  const availYears=[...new Set([new Date().getFullYear(),...sales.map(s=>parseInt(s.date.split("-")[0]))])].sort((a,b)=>b-a);
+  return `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+    <div style="position:relative;" id="yearSelectorWrap">
+      <button class="year-btn" onclick="toggleYearDD()"">📅 ${selectedYear} <span style="font-size:10px;opacity:0.7;">▼</span></button>
+      <div class="year-dropdown" id="yearDD" style="display:none;">
+        ${availYears.map(y=>`<button class="year-option" style="color:${y===selectedYear?"#fff":"#94a3b8"};background:${y===selectedYear?"#0f766e":"transparent"};" onclick="selectYear(${y})">${y}</button>`).join("")}
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex:1;flex-wrap:wrap;">
+      ${Object.keys(QUARTERS).map(q=>`<button class="q-btn ${activeQ===q?"active":""}" onclick="switchQ('${q}')">${q}</button>`).join("")}
+    </div>
+  </div>
+  <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;">${selectedYear} · ${QUARTERS[activeQ].label} · Bonus paid in <span style="color:#60a5fa;font-weight:700;">${QUARTERS[activeQ].payout}</span></div>
+  <div class="grid-2" style="margin-bottom:12px;">
+    <div class="card"><div class="label">💼 Base Commission</div><div class="kpi-val" style="color:#38bdf8;">${fmt(qData.baseComm)}</div></div>
+    <div class="card"><div class="label">🎯 Total Credits</div><div class="kpi-val" style="color:#60a5fa;">${fmtC(qData.totalCred)} pts</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:12px;">
+    <div class="card"><div class="label">🏆 Quarterly Bonus (${qData.tier.bonus}%)</div><div class="kpi-val" style="color:#a78bfa;">${fmt(qData.qb)}</div></div>
+    <div class="card"><div class="label">🎉 Easy Bonus (25%)</div><div class="kpi-val" style="color:${qData.totalComm>=3000?"#f59e0b":"#64748b"};">${qData.totalComm>=3000?fmt(qData.fun):"Not reached ($3k min)"}</div></div>
+  </div>
+  <div class="total-comm-card" style="margin-bottom:16px;">
+    <div style="font-size:12px;color:#86efac;">💰 Total Commission (Base + Riders)</div>
+    <div style="font-size:28px;font-weight:900;color:#34d399;margin-top:4px;letter-spacing:-0.5px;">${fmt(qData.totalComm)}</div>
+  </div>
+  <div class="payout-card">
+    <div style="font-size:13px;color:#94a3b8;">🚀 Total Bonus Payable in ${QUARTERS[activeQ].payout}</div>
+    <div style="font-size:32px;font-weight:900;color:#fbbf24;margin-top:4px;">${fmt(qData.totalBonus)}</div>
+    <div style="font-size:12px;color:#64748b;margin-top:4px;">Easy Bonus ${fmt(qData.fun)} + Quarterly Bonus ${fmt(qData.qb)}</div>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;">📊 Credit Tier Progress</div>
+    ${CREDIT_TIERS.map(t=>{
+      const isA=qData.totalCred>=t.min&&qData.totalCred<=t.max;
+      const isU=qData.totalCred>=t.min;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="tier-dot" style="background:${isA?"#34d399":isU?"#1d4ed8":"#334155"};"></div>
+        <div style="flex:1;font-size:12px;color:${isA?"#e2e8f0":isU?"#94a3b8":"#475569"};">${t.label} credits</div>
+        <div style="font-size:13px;font-weight:700;color:${isA?"#34d399":isU?"#60a5fa":"#475569"};">${t.bonus}% ${isA?"← YOU ARE HERE":""}</div>
+      </div>`;
+    }).join("")}
+    ${nt?`<div style="margin-top:10px;font-size:12px;color:#f59e0b;">⚡ Need <strong>${fmtC(nt.min-qData.totalCred)} more credits</strong> to reach ${nt.bonus}% tier</div>`:""}
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;">🎉 Easy Bonus Progress</div>
+    <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(100,(qData.totalComm/3000)*100)}%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);"></div></div>
+    <div style="font-size:12px;color:#94a3b8;margin-top:6px;">${fmt(qData.totalComm)} / $3,000.00 ${qData.totalComm>=3000?"✅ Unlocked!":`· ${fmt(3000-qData.totalComm)} more to unlock`}</div>
+  </div>`;
+}
+
+function getQData(yearSales,q){
+  const qs=yearSales.filter(s=>s.quarter===q);
+  const totalComm=qs.reduce((a,s)=>a+s.totalComm,0);
+  const baseComm =qs.reduce((a,s)=>a+s.baseComm,0);
+  const totalCred=qs.reduce((a,s)=>a+s.totalCredit,0);
+  const tier=getCreditTier(totalCred);
+  const fun=totalComm>=3000?totalComm*0.25:0;
+  const qb=totalComm*tier.bonus/100;
+  return{qs,totalComm,baseComm,totalCred,tier,fun,qb,totalBonus:fun+qb};
+}
+
+// ── HISTORY ──
+function renderHistory(){
+  return `
+  <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;">📋 All Sales (${sales.length})</div>
+  ${sales.length===0?`<div style="text-align:center;color:#64748b;padding:40px;">No sales logged yet.</div>`
+  :sales.map(s=>`
+  <div class="history-item">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div style="flex:1;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">
+          <span style="font-weight:700;font-size:15px;color:#e2e8f0;">${escHtml(s.clientName)}</span>
+          <span class="badge">${s.quarter}</span>
+          <span style="font-size:11px;color:#64748b;">${new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"})}</span>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
+          <span style="font-size:12px;">Base Comm: <strong style="color:#38bdf8;">${fmt(s.baseComm)}</strong></span>
+          <span style="font-size:12px;">Total Comm: <strong style="color:#34d399;">${fmt(s.totalComm)}</strong></span>
+          <span style="font-size:12px;">Credits: <strong style="color:#60a5fa;">${fmtC(s.totalCredit)}</strong></span>
+          <span style="font-size:12px;color:#64748b;">${s.policies.length} polic${s.policies.length>1?"ies":"y"}</span>
+        </div>
+      </div>
+      <button class="btn-danger" onclick="handleDeleteSale('${s.fireId}')">✕</button>
+    </div>
+    ${s.policies.map((p,i)=>`
+    <div class="policy-row">
+      <div style="font-size:12px;color:#93c5fd;font-weight:600;margin-bottom:4px;">Policy ${i+1}: ${escHtml(p.product)} · ${escHtml(p.term)}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+        <span>Premium: <strong style="color:#e2e8f0;">${fmt(p.annualPremium)}</strong></span>
+        <span>Base Comm: <strong style="color:#38bdf8;">${fmt(p.baseComm)}</strong></span>
+        <span>Total Comm: <strong style="color:#34d399;">${fmt(p.totalComm)}</strong></span>
+        <span>Credits: <strong style="color:#60a5fa;">${fmtC(p.totalCredit)}</strong></span>
+      </div>
+      ${p.riders?.length>0?`<div style="margin-top:4px;">${p.riders.map(r=>`<span class="rider-tag">🔗 ${escHtml(r.name)} · ${fmt(r.premium)}</span>`).join("")}</div>`:""}
+    </div>`).join("")}
+  </div>`).join("")}`;
+}
+
+// ── IGNITE ──
+function renderIgnite(){
+  const ign=sales.filter(s=>{const mo=new Date(s.date+"T00:00:00").getMonth();return s.date.startsWith("2026")&&mo>=0&&mo<=4;});
+  const ignComm=ign.reduce((a,s)=>a+s.baseComm,0);
+  const pct=Math.min(100,(ignComm/30000)*100);
+  return `
+  <div class="campaign-card">
+    <div class="campaign-header">
+      <div style="font-size:18px;font-weight:800;color:#60a5fa;">🔥 Ignite 2026</div>
+      <div style="font-size:13px;color:#94a3b8;margin-top:2px;">✈️ Hangzhou, China 🇨🇳 &nbsp;·&nbsp; 📆 Jan – May 2026</div>
+    </div>
+    <div style="padding:20px;">
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;">
+        Hit <strong style="color:#34d399;">$30,000</strong> in base commissions between January and May 2026 to qualify.<br>
+        <span style="font-size:12px;color:#64748b;">Note: Base commissions only — bonuses do not count.</span>
+      </div>
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="card-dark"><div style="font-size:12px;color:#94a3b8;">Base Comm (Jan–May)</div><div style="font-size:24px;font-weight:900;color:#34d399;margin-top:4px;">${fmt(ignComm)}</div></div>
+        <div class="card-dark"><div style="font-size:12px;color:#94a3b8;">Still Needed</div><div style="font-size:24px;font-weight:900;color:${ignComm>=30000?"#34d399":"#f87171"};margin-top:4px;">${ignComm>=30000?"✅ Qualified!":fmt(30000-ignComm)}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;margin-bottom:4px;"><span>Progress to $30,000</span><span>${pct.toFixed(1)}%</span></div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:linear-gradient(90deg,#34d39988,#34d399);"></div></div>
+      ${ignComm>=30000?`<div style="background:linear-gradient(135deg,#064e3b,#065f46);border-radius:10px;padding:14px;border:1px solid #059669;text-align:center;margin-top:12px;"><div style="font-size:20px;">🎉</div><div style="font-size:14px;font-weight:700;color:#34d399;margin-top:4px;">Congratulations! You're qualified for Hangzhou!</div></div>`:""}
+    </div>
+  </div>`;
+}
+
+// ── TRAILBLAZER ──
+function renderTrail(){
+  const trail=sales.filter(s=>s.date.startsWith("2026"));
+  const trailComm=trail.reduce((a,s)=>a+s.baseComm,0);
+  const tiers=[{tickets:1,target:75000,label:"1 Ticket to South Africa 🎫",color:"#f59e0b"},{tickets:2,target:150000,label:"2 Tickets to South Africa 🎫🎫",color:"#a78bfa"}];
+  return `
+  <div class="campaign-card">
+    <div class="campaign-header">
+      <div style="font-size:18px;font-weight:800;color:#60a5fa;">🌍 Trailblazer 2027</div>
+      <div style="font-size:13px;color:#94a3b8;margin-top:2px;">✈️ South Africa 🇿🇦 &nbsp;·&nbsp; 📆 Jan – Dec 2026 (Full Year)</div>
+    </div>
+    <div style="padding:20px;">
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;line-height:1.6;">
+        Earn your way to South Africa based on full-year 2026 base commissions.<br>
+        <span style="font-size:12px;color:#64748b;">Note: Base commissions only — bonuses do not count.</span>
+      </div>
+      ${tiers.map(tier=>{
+        const q=trailComm>=tier.target;
+        const p=Math.min(100,(trailComm/tier.target)*100);
+        return `
+        <div style="background:#0f172a;border-radius:12px;padding:16px;border:1px solid ${q?"#059669":"#334155"};margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="font-size:14px;font-weight:700;color:${tier.color};">${tier.label}</div>
+            <div style="font-size:13px;font-weight:700;background:${q?"#064e3b":"#1e293b"};color:${q?"#34d399":"#64748b"};padding:3px 10px;border-radius:6px;border:1px solid ${q?"#059669":"#334155"};">${q?"✅ Qualified":"Not Yet"}</div>
+          </div>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div><div style="font-size:11px;color:#64748b;">Target</div><div style="font-size:16px;font-weight:700;color:#e2e8f0;">${fmt(tier.target)}</div></div>
+            <div><div style="font-size:11px;color:#64748b;">${q?"Exceeded by":"Still Needed"}</div><div style="font-size:16px;font-weight:700;color:${q?"#34d399":"#f87171"};">${q?fmt(trailComm-tier.target):fmt(tier.target-trailComm)}</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:4px;"><span>${fmt(trailComm)} earned</span><span>${p.toFixed(1)}%</span></div>
+          <div class="progress-wrap"><div class="progress-bar" style="width:${p}%;background:linear-gradient(90deg,${tier.color}88,${tier.color});"></div></div>
+        </div>`;
+      }).join("")}
+      <div class="card-dark">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Total Base Comm (Full Year 2026)</div>
+        <div style="font-size:28px;font-weight:900;color:#60a5fa;">${fmt(trailComm)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Computed ──
+function grandTotals(){
+  let comm=0,cred=0;
+  for(const b of policies){
+    const def=PRODUCTS[b.product];if(!def)continue;
+    const t=def.terms.find(t=>t.label===b.term);if(!t)continue;
+    const ap=parseFloat(b.annualPremium)||0;
+    comm+=ap*t.yr1/100;cred+=ap*t.credit;
+    for(const r of b.riders){const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.yr1/100;cred+=rp*rd.credit;}}
+  }
+  return{comm,cred};
+}
+
+// ── Event handlers ──
+function attachEventListeners(){
+  // Close calendar on outside click
+  document.addEventListener("mousedown", function handler(e){
+    const wrap=document.getElementById("calWrap");
+    if(calOpen && wrap && !wrap.contains(e.target)){
+      calOpen=false;
+      renderContent();
+    }
+    // Close year dropdown
+    const yw=document.getElementById("yearSelectorWrap");
+    const yd=document.getElementById("yearDD");
+    if(yd && yw && !yw.contains(e.target)) yd.style.display="none";
+  },{once:true});
+}
+
+function escHtml(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+window.switchTab=t=>{activeTab=t;render();};
+window.switchQ=q=>{activeQ=q;renderContent();};
+window.selectYear=y=>{selectedYear=y;renderContent();};
+window.toggleYearDD=()=>{const d=document.getElementById("yearDD");if(d)d.style.display=d.style.display==="none"?"block":"none";};
+
+window.toggleCal=e=>{e.stopPropagation();calOpen=!calOpen;const inp=document.getElementById("calWrap")?.querySelector("input");if(inp){calYear=formDate?parseInt(formDate.split("-")[0]):new Date().getFullYear();calMonth=formDate?parseInt(formDate.split("-")[1])-1:new Date().getMonth();}renderContent();};
+window.calNavMonth=dir=>{calMonth+=dir;if(calMonth<0){calMonth=11;calYear--;}else if(calMonth>11){calMonth=0;calYear++;}renderContent();};
+window.pickCalDay=d=>{const s=`${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;formDate=s;calOpen=false;renderContent();};
+window.pickToday=()=>{formDate=todayStr();calOpen=false;const t=new Date();calYear=t.getFullYear();calMonth=t.getMonth();renderContent();};
+window.handleDateTyped=v=>{formDate=v;if(/^\d{4}-\d{2}-\d{2}$/.test(v)){const dt=new Date(v+"T00:00:00");if(!isNaN(dt)){calYear=dt.getFullYear();calMonth=dt.getMonth();}}renderContent();};
+
+window.addPolicy=()=>{policies.push(newPolicy());renderContent();};
+window.removePolicy=id=>{policies=policies.filter(p=>p.id!==id);renderContent();};
+window.updatePolicyProduct=(id,val)=>{policies=policies.map(p=>p.id===id?{...p,product:val,term:"",annualPremium:"",riders:[]}:p);renderContent();};
+window.updatePolicyField=(id,f,v)=>{policies=policies.map(p=>p.id===id?{...p,[f]:v}:p);renderContent();};
+window.addRider=id=>{
+  policies=policies.map(p=>{
+    if(p.id!==id)return p;
+    const def=PRODUCTS[p.product];if(!def?.riders)return p;
+    const chosen=p.riders.map(r=>r.name).filter(Boolean);
+    const next=def.riders.find(r=>!chosen.includes(r));
+    if(next===undefined)return p;
+    return{...p,riders:[...p.riders,{...newRider(),name:next||""}]};
+  });
+  renderContent();
+};
+window.removeRider=(pid,rid)=>{policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.filter(r=>r.id!==rid)}:p);renderContent();};
+window.updateRider=(pid,rid,f,v)=>{policies=policies.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p);renderContent();};
+
+window.handleAddSale=async()=>{
+  if(!formClient||!formDate||!policies.some(b=>b.product&&b.term&&b.annualPremium))return;
+  const mo=new Date(formDate+"T00:00:00").getMonth();
+  const saved=policies.filter(b=>b.product&&b.term&&b.annualPremium).map(b=>{
+    const def=PRODUCTS[b.product];const t=def.terms.find(t=>t.label===b.term);
+    const ap=parseFloat(b.annualPremium)||0;
+    const baseComm=ap*t.yr1/100,baseCred=ap*t.credit;
+    const riders=b.riders.filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{
+      const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;
+      return{name:r.name,premium:rp,commPct:rd.yr1,comm:rp*rd.yr1/100,credit:rp*rd.credit};
+    });
+    const rC=riders.reduce((a,r)=>a+r.comm,0),rCr=riders.reduce((a,r)=>a+r.credit,0);
+    return{product:b.product,term:b.term,annualPremium:ap,commPct:t.yr1,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
+  });
+  const saleObj={date:formDate,clientName:formClient,policies:saved,
+    totalComm:saved.reduce((a,p)=>a+p.totalComm,0),
+    baseComm:saved.reduce((a,p)=>a+p.baseComm,0),
+    totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),
+    quarter:getQuarter(mo),month:mo,
+  };
+  await saveSale(saleObj);
+  formClient="";policies=[newPolicy()];renderContent();
+};
+
+window.handleDeleteSale=async id=>{ if(confirm("Delete this sale?")) await deleteSale(id); };
+
+render();
+</script>
+</body>
+</html>
