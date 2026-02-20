@@ -242,7 +242,7 @@ let calOpen=false, calY=new Date().getFullYear(), calM=new Date().getMonth();
 let srch={};  // pid -> {open, query}
 
 function newPol(){ return {id:uid(),product:"",term:"",ap:"",riders:[]}; }
-function newRider(){ return {id:uid(),name:"",premium:""}; }
+function newRider(){ return {id:uid(),name:"",premium:"",riderTerm:""}; }
 
 // ── Firebase ──
 onSnapshot(collection(db,COLL), snap=>{
@@ -371,7 +371,11 @@ function buildPolBlock(b,i){
   const chosen=b.riders.map(r=>r.name).filter(Boolean);
   const bc=selT&&ap?ap*selT.y/100:0;
   const bCr=selT&&ap?ap*selT.c:0;
-  const rC=b.riders.map(r=>{const rd=getRiderRate(r.name,r.riderTerm||b.term);const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
+  const rC=b.riders.map(r=>{
+    const rd=getRiderRate(r.name, r.riderTerm||"");
+    const rp=parseFloat(r.premium)||0;
+    return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};
+  });
   const rComm=rC.reduce((a,r)=>a+r.comm,0), rCred=rC.reduce((a,r)=>a+r.cred,0);
   const hasR=rC.some(r=>r.name&&r.rp>0);
 
@@ -716,7 +720,16 @@ window.addRider=id=>{
   renderLog(); attachAll();
 };
 window.remRider=(pid,rid)=>{ pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.filter(r=>r.id!==rid)}:p); renderLog(); attachAll(); };
-window.updRider=(pid,rid,f,v)=>{ pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p); renderLog(); attachAll(); };
+window.updRider=(pid,rid,f,v)=>{
+  pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>{
+    if(r.id!==rid) return r;
+    const updated={...r,[f]:v};
+    // If rider name changed, reset riderTerm
+    if(f==="name") updated.riderTerm="";
+    return updated;
+  })}:p);
+  renderLog(); attachAll();
+};
 
 window.doAddSale=async()=>{
   const ci=document.getElementById("clientInp");
