@@ -89,7 +89,6 @@ button,input,select{font-family:inherit;}
 </head>
 <body>
 <div class="save-ind" id="saveInd">💾 Saving...</div>
-<canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999;display:none;"></canvas>
 <div class="header">
   <h1>📊 Sales Commission Tracker</h1>
   <p>Income Financial Consultant · Singapore</p>
@@ -552,34 +551,7 @@ function renderTrail(){
   +"</div></div>";
 }
 
-// ── Confetti ──
-function launchConfetti(){
-  const cv=document.getElementById("confetti");
-  cv.style.display="block"; cv.width=window.innerWidth; cv.height=window.innerHeight;
-  const ctx=cv.getContext("2d");
-  const cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
-  const pieces=Array.from({length:180},()=>({
-    x:Math.random()*cv.width, y:-10-Math.random()*200,
-    w:8+Math.random()*8, h:5+Math.random()*5,
-    color:cols[Math.floor(Math.random()*cols.length)],
-    angle:Math.random()*360, spin:(-1+Math.random()*2)*4,
-    vx:(-1+Math.random()*2)*3, vy:3+Math.random()*5, op:1
-  }));
-  let fr=0;
-  function draw(){
-    ctx.clearRect(0,0,cv.width,cv.height);
-    pieces.forEach(p=>{
-      ctx.save(); ctx.globalAlpha=p.op; ctx.translate(p.x,p.y); ctx.rotate(p.angle*Math.PI/180);
-      ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
-      p.x+=p.vx; p.y+=p.vy; p.angle+=p.spin; p.vy+=0.07;
-      if(fr>80) p.op-=0.018;
-    });
-    fr++;
-    if(fr<140) requestAnimationFrame(draw);
-    else{ ctx.clearRect(0,0,cv.width,cv.height); cv.style.display="none"; }
-  }
-  draw();
-}
+
 
 // ── Attach event listeners ──
 function attachAll(){
