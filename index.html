@@ -182,12 +182,31 @@ const PROD = {
   "Care Secure":{terms:[{l:"Yearly",y:45.00,c:4}]}
 };
 const RIDER_DATA = {
-  "Disability Accelerator (TCN2)":{y:13.00,c:3},
+  "Disability Accelerator (TCN2)":{
+    termBased:true,
+    terms:[
+      {l:"6-9 years",y:13.00,c:3},
+      {l:"10-14 years",y:18.00,c:3},
+      {l:"15-19 years",y:26.00,c:3},
+      {l:"20-24 years",y:41.20,c:3},
+      {l:"25+ years",y:45.50,c:3}
+    ]
+  },
   "Essential Protect (LBV3)":{y:13.00,c:4},
   "Total Protect (TPV1)":{y:10.20,c:4},
   "Classic Care Rider":{y:15.00,c:4},
   "Deluxe Care Rider":{y:15.00,c:4}
 };
+// Helper: get rider rate, passing in the base policy term for term-based riders
+function getRiderRate(riderName, baseTerm){
+  const rd=RIDER_DATA[riderName];
+  if(!rd) return null;
+  if(rd.termBased){
+    const t=rd.terms.find(t=>t.l===baseTerm);
+    return t?{y:t.y,c:t.c}:null;
+  }
+  return {y:rd.y,c:rd.c};
+}
 const QS = {Q1:{months:[0,1,2],label:"Q1 (Jan-Mar)",payout:"April"},Q2:{months:[3,4,5],label:"Q2 (Apr-Jun)",payout:"July"},Q3:{months:[6,7,8],label:"Q3 (Jul-Sep)",payout:"October"},Q4:{months:[9,10,11],label:"Q4 (Oct-Dec)",payout:"January"}};
 const TIERS = [{min:0,max:49999,bonus:0,label:"< 50,000"},{min:50000,max:67999,bonus:10,label:"50,000 - 67,999"},{min:68000,max:96999,bonus:20,label:"68,000 - 96,999"},{min:97000,max:139999,bonus:30,label:"97,000 - 139,999"},{min:140000,max:Infinity,bonus:40,label:"140,000+"}];
 const MTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -337,7 +356,7 @@ function buildPolBlock(b,i){
   const chosen=b.riders.map(r=>r.name).filter(Boolean);
   const bc=selT&&ap?ap*selT.y/100:0;
   const bCr=selT&&ap?ap*selT.c:0;
-  const rC=b.riders.map(r=>{const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
+  const rC=b.riders.map(r=>{const rd=getRiderRate(r.name,b.term);const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
   const rComm=rC.reduce((a,r)=>a+r.comm,0), rCred=rC.reduce((a,r)=>a+r.cred,0);
   const hasR=rC.some(r=>r.name&&r.rp>0);
 
@@ -412,7 +431,7 @@ function grandTot(){
     const t=def.terms.find(t=>t.l===b.term); if(!t) continue;
     const ap=parseFloat(b.ap)||0;
     comm+=ap*t.y/100; cred+=ap*t.c;
-    for(const r of b.riders){const rd=RIDER_DATA[r.name];const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.y/100;cred+=rp*rd.c;}}
+    for(const r of b.riders){const rd=getRiderRate(r.name,b.term);const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.y/100;cred+=rp*rd.c;}}
   }
   return {comm,cred};
 }
@@ -433,11 +452,18 @@ function renderDash(){
   +"<div style='font-size:32px;font-weight:900;color:#fff;margin-top:4px;letter-spacing:-0.5px;'>"+$f(qd.tm)+"</div>"
   +"<div style='font-size:12px;color:#fdba74;margin-top:4px;'>Q"+activeQ.slice(1)+" · "+selYear+"</div>"
   +"</div>"
+  // Bonuses side by side
   +"<div class='g2' style='margin-bottom:12px;'>"
-  +"<div class='card'><div class='lbl'>🎯 Total Credits</div><div class='kpi' style='color:#60a5fa;'>"+$c(qd.tc)+" pts</div></div>"
   +"<div class='card'><div class='lbl'>🏆 Quarterly Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;'>"+$f(qd.qb)+"</div></div>"
+  +"<div class='card'><div class='lbl'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3,000 min)")+"</div></div>"
   +"</div>"
-  +"<div class='card' style='margin-bottom:12px;'><div class='lbl'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3,000 minimum)")+"</div></div>"
+  // Credits — full width with teal background + coin icon
+  +"<div style='background:linear-gradient(135deg,#0f3460,#1a4a7a,#1e5f8a);border-radius:12px;padding:16px;border:1px solid #2563eb;margin-bottom:12px;display:flex;align-items:center;gap:16px;'>"
+  +"<div style='font-size:36px;line-height:1;'>🪙</div>"
+  +"<div><div style='font-size:12px;color:#93c5fd;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;'>Total Credits Earned</div>"
+  +"<div style='font-size:30px;font-weight:900;color:#60a5fa;margin-top:2px;'>"+$c(qd.tc)+" <span style='font-size:16px;font-weight:600;color:#3b82f6;'>pts</span></div>"
+  +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Resets every quarter</div></div>"
+  +"</div>"
   +"<div class='pay-card'>"
   +"<div style='font-size:13px;color:#94a3b8;'>🚀 Total Bonus Payable in "+QS[activeQ].payout+"</div>"
   +"<div style='font-size:32px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div>"
@@ -687,8 +713,8 @@ window.doAddSale=async()=>{
     const ap=parseFloat(b.ap)||0;
     const baseComm=ap*t.y/100, baseCred=ap*t.c;
     const riders=b.riders.filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{
-      const rd=RIDER_DATA[r.name]; const rp=parseFloat(r.premium)||0;
-      return {name:r.name,premium:rp,commPct:rd.y,comm:rp*rd.y/100,credit:rp*rd.c};
+      const rd=getRiderRate(r.name,b.term); const rp=parseFloat(r.premium)||0;
+      return {name:r.name,premium:rp,commPct:rd?rd.y:0,comm:rd?rp*rd.y/100:0,credit:rd?rp*rd.c:0};
     });
     const rC=riders.reduce((a,r)=>a+r.comm,0), rCr=riders.reduce((a,r)=>a+r.credit,0);
     return {product:b.product,term:b.term,annualPremium:ap,commPct:t.y,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
