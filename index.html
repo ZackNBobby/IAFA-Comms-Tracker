@@ -169,6 +169,26 @@ function getBending(saleDate,allSales){
   return{factor:0.7,label:"Base (0.70)",tier:"base",credits:pqCredits};
 }
 
+// ── Live bending: always computed from latest sales, never stored ──
+// For a FWD sale on saleDate, check previous quarter's Income credits
+function getLiveBending(saleDate){
+  return getBending(saleDate, sales); // sales is always the latest snapshot
+}
+
+// Compute live commission for a stored FWD sale
+function liveFWDComm(s){
+  const rate=getFWDRate(s.term);
+  const bend=getLiveBending(s.date);
+  return{
+    commission: s.annualPremium*(rate.y1/100)*bend.factor,
+    commRate: rate.y1,
+    bendFactor: bend.factor,
+    bendLabel: bend.label,
+    bendTier: bend.tier,
+    bendCredits: bend.credits
+  };
+}
+
 // Payout = sale month + 2, return "Mon YYYY"
 function getPayoutMonth(saleDate){
   const d=new Date(saleDate+"T00:00:00");
@@ -383,10 +403,12 @@ function grandTot(){
 function renderFWD(){
   const termOpts=[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,"25+"].map(t=>`<option value="${t}"${fwdForm.term==t?" selected":""}>${t} years</option>`).join("");
 
+  // Enrich each FWD sale with live-calculated bending + commission
+  const liveFwd=fwdSales.map(s=>({...s,...liveFWDComm(s)}));
+
   // Build payout timeline for selYear
-  // Group fwdSales by payout month
   const payoutMap={};
-  fwdSales.forEach(s=>{
+  liveFwd.forEach(s=>{
     const{mo,yr}=getPayoutMoYear(s.date);
     if(yr===selYear){
       if(!payoutMap[mo])payoutMap[mo]=[];
@@ -438,8 +460,8 @@ function renderFWD(){
     </div>`;
   }
 
-  // Quarter totals
-  const yrFwd=fwdSales.filter(s=>s.date.startsWith(String(selYear)));
+  // Quarter totals — use live data
+  const yrFwd=liveFwd.filter(s=>s.date.startsWith(String(selYear)));
   const qTotals=Object.keys(QS).map(q=>{const qs=yrFwd.filter(s=>s.quarter===q);return{q,total:qs.reduce((a,s)=>a+s.commission,0),count:qs.length};});
   const grandFwd=yrFwd.reduce((a,s)=>a+s.commission,0);
 
@@ -514,11 +536,11 @@ function renderFWD(){
     <button class='btn-pri' style='background:linear-gradient(135deg,#065f46,#059669);' onclick='doAddFWDSale()'>✅ Add FWD Sale</button>
   </div>
 
-  <!-- Sales History -->
-  <div style='font-size:14px;font-weight:700;color:#34d399;margin:16px 0 10px;'>📋 FWD Sales History (${fwdSales.length})</div>
-  ${fwdSales.length===0
+  <!-- Sales History — live bending -->
+  <div style='font-size:14px;font-weight:700;color:#34d399;margin:16px 0 10px;'>📋 FWD Sales History (${liveFwd.length})</div>
+  ${liveFwd.length===0
     ?`<div style='text-align:center;color:#475569;padding:30px;background:#071510;border-radius:10px;border:1px solid #166534;'>No FWD sales logged yet.</div>`
-    :fwdSales.map(s=>{
+    :liveFwd.map(s=>{
       const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
       const bendCls=s.bendTier==="high"?"bend-high":s.bendTier==="mid"?"bend-mid":"bend-base";
       return `<div class='fwd-sale-item'>
@@ -572,9 +594,9 @@ function renderDash(){
   const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
   const qd=getQD(ys,activeQ);
   const nt=TIERS.find(t=>t.min>qd.tc);
-  const fwdQ=fwdSales.filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
+  const fwdQ=fwdSales.map(s=>({...s,...liveFWDComm(s)})).filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
   const fwdQTotal=fwdQ.reduce((a,s)=>a+s.commission,0);
-  const fwdYrTotal=fwdSales.filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
+  const fwdYrTotal=fwdSales.map(s=>({...s,...liveFWDComm(s)})).filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
 
   return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
   +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
