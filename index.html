@@ -59,6 +59,7 @@ button,input,select{font-family:inherit;}
 .hist-item{background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:12px;}
 .pol-row{background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;margin-bottom:6px;}
 .badge{background:#0f2942;border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;}
+.badge-fwd{background:#0f2a1e;border-radius:4px;padding:2px 8px;font-size:11px;color:#34d399;}
 .t-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .cal-wrap{position:relative;}
 .cal-row{display:flex;gap:6px;}
@@ -77,12 +78,10 @@ button,input,select{font-family:inherit;}
 .cal-day.today{color:#60a5fa;outline:1px solid #334155;}
 .cal-day.selected{background:#1d4ed8!important;color:#fff!important;font-weight:700;}
 .cal-tod{margin-top:8px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#60a5fa;font-size:12px;cursor:pointer;font-weight:600;font-family:inherit;}
-/* Searchable dropdown */
 .srch-wrap{position:relative;}
 .srch-inp{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #3b82f6;background:#0f172a;color:#e2e8f0;font-size:14px;outline:none;transition:background 0.18s;}
 .srch-inp:hover{background:#1a2540;}
 .srch-list{position:absolute;z-index:9999;top:calc(100% + 4px);left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:10px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
-/* Category headers — vibrant & distinct */
 .srch-cat{padding:6px 12px;font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;cursor:default;border-left:4px solid;}
 .cat-trad{background:#1e3a8a;color:#93c5fd;border-color:#3b82f6;}
 .cat-ilp{background:#4c1d95;color:#d8b4fe;border-color:#a855f7;}
@@ -94,6 +93,13 @@ button,input,select{font-family:inherit;}
 .srch-ph{color:#64748b;}
 .val-err{color:#f87171;font-size:12px;font-weight:600;margin-top:8px;margin-bottom:8px;display:none;text-align:center;}
 .val-err.show{display:block;}
+/* FWD card style */
+.fwd-card{background:linear-gradient(135deg,#0a1f14,#0d2b1a,#0f3320);border-radius:12px;padding:16px;border:1px solid #166534;margin-bottom:12px;}
+.fwd-sale-item{background:linear-gradient(135deg,#071510,#0a1f14);border-radius:10px;padding:14px;border:1px solid #166534;margin-bottom:10px;}
+.bending-badge{display:inline-block;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;}
+.bend-base{background:#1c2a1c;color:#86efac;border:1px solid #166534;}
+.bend-mid{background:#1c2516;color:#fde68a;border:1px solid #d97706;}
+.bend-high{background:#1c1a10;color:#fca5a5;border:1px solid #dc2626;}
 /* MDRT */
 @keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
 @keyframes riseIn{0%{opacity:0;transform:translateY(18px);}100%{opacity:1;transform:translateY(0);}}
@@ -132,114 +138,103 @@ import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "ht
 const FB={apiKey:"AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",authDomain:"zack-comms-tracker-iafa.firebaseapp.com",projectId:"zack-comms-tracker-iafa",storageBucket:"zack-comms-tracker-iafa.firebasestorage.app",messagingSenderId:"889861149236",appId:"1:889861149236:web:8488f5336ab9d2475bb061"};
 const db=getFirestore(initializeApp(FB));
 const COLL="sales";
+const COLL_FWD="fwd_sales";
 
-// ── Waiver rider terms (shared by WPV10, WPV6, WEV2, WSV2) ──
+// ── FWD Future First commission table ──
+const FWD_RATES={
+  5:{y1:30,y2:16,y3:5.5,y4:2.2,y5:1,y6:0,renewal:5},
+  6:{y1:35,y2:18.5,y3:6,y4:2.2,y5:1,y6:1,renewal:5},
+  7:{y1:40,y2:21,y3:7,y4:2.5,y5:1.2,y6:1.2,renewal:5},
+  8:{y1:45,y2:24.5,y3:7.5,y4:3,y5:1.4,y6:1.4,renewal:5},
+  9:{y1:50,y2:27,y3:9,y4:3,y5:1.6,y6:1.6,renewal:5},
+  10:{y1:55,y2:29,y3:9.5,y4:3.5,y5:1.8,y6:1.8,renewal:5},
+  11:{y1:59,y2:31,y3:10,y4:4.5,y5:1.9,y6:1.9,renewal:5},
+  12:{y1:63,y2:32.5,y3:11,y4:5,y5:2,y6:2,renewal:5},
+  13:{y1:65,y2:33.8,y3:11.2,y4:5.2,y5:2,y6:2,renewal:5},
+  14:{y1:67.5,y2:34.5,y3:11.3,y4:5.4,y5:2.1,y6:2.1,renewal:5},
+  15:{y1:68,y2:34.8,y3:11.4,y4:5.5,y5:2.2,y6:2.2,renewal:5},
+  16:{y1:68.5,y2:35.3,y3:11.5,y4:5.5,y5:2.3,y6:2.3,renewal:5},
+  17:{y1:69,y2:35.8,y3:11.5,y4:5.6,y5:2.4,y6:2.4,renewal:5},
+  18:{y1:70,y2:36,y3:11.5,y4:5.6,y5:2.4,y6:2.4,renewal:5},
+  19:{y1:70.5,y2:36.2,y3:11.7,y4:5.7,y5:2.4,y6:2.4,renewal:5},
+  20:{y1:71,y2:36.5,y3:12,y4:5.8,y5:2.5,y6:2.5,renewal:5},
+  21:{y1:71.5,y2:37,y3:12.1,y4:5.9,y5:2.5,y6:2.5,renewal:5},
+  22:{y1:72,y2:37.5,y3:12.2,y4:5.9,y5:2.5,y6:2.5,renewal:5},
+  23:{y1:72.5,y2:37.7,y3:12.3,y4:6,y5:2.6,y6:2.6,renewal:5},
+  24:{y1:73.5,y2:37.8,y3:12.4,y4:6.3,y5:2.6,y6:2.6,renewal:5},
+  25:{y1:74,y2:38,y3:12.5,y4:6.5,y5:2.6,y6:2.6,renewal:5}
+};
+
+// Get FWD rate for a term (25+ uses 25)
+function getFWDRate(term){
+  const t=Math.min(parseInt(term)||5,25);
+  return FWD_RATES[Math.max(t,5)]||FWD_RATES[5];
+}
+
+// Bending factor based on PREVIOUS quarter credits
+function getBending(saleDate,allSales){
+  const dt=new Date(saleDate+"T00:00:00");
+  const yr=dt.getFullYear(),mo=dt.getMonth();
+  // Determine previous quarter
+  let pqMos,pqYr=yr;
+  if(mo<=2){pqMos=[9,10,11];pqYr=yr-1;}
+  else if(mo<=5){pqMos=[0,1,2];}
+  else if(mo<=8){pqMos=[3,4,5];}
+  else{pqMos=[6,7,8];}
+  // Sum credits from previous quarter (Income sales only)
+  const pqCredits=allSales
+    .filter(s=>{
+      const sd=new Date(s.date+"T00:00:00");
+      return sd.getFullYear()===pqYr && pqMos.includes(sd.getMonth());
+    })
+    .reduce((a,s)=>a+s.totalCredit,0);
+  if(pqCredits>=140000)return{factor:0.8,label:"High (0.80)",tier:"high",credits:pqCredits};
+  if(pqCredits>=97000)return{factor:0.75,label:"Mid (0.75)",tier:"mid",credits:pqCredits};
+  return{factor:0.7,label:"Base (0.70)",tier:"base",credits:pqCredits};
+}
+
+// Expected payout date = sale date + 2 months
+function getPayoutDate(saleDate){
+  const d=new Date(saleDate+"T00:00:00");
+  d.setMonth(d.getMonth()+2);
+  return d.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+// ── Waiver rider terms ──
 const WAIVER_TERMS=[
   {l:"2 years",y:7.50,c:4},{l:"3 years",y:8.00,c:4},{l:"4 years",y:8.50,c:4},
   {l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.50,c:4},{l:"10-14 years",y:22.00,c:4},
   {l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}
 ];
-
-// ── Rider term table ──
 const RIDER_TERMS={
-  // Term-based riders
-  "Disability Accelerator (TCN2)":[
-    {l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},
-    {l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}
-  ],
-  "Essential Protect (LBV3)":[
-    {l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},
-    {l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}
-  ],
-  "Total Protect (TPV1)":[
-    {l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},
-    {l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}
-  ],
-  "Advanced Critical Secure (CSV10)":[
-    {l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},
-    {l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}
-  ],
-  "Early Critical Secure (CSV11)":[
-    {l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},
-    {l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}
-  ],
-  // Waiver riders — all share the same structure
+  "Disability Accelerator (TCN2)":[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}],
+  "Essential Protect (LBV3)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],
+  "Total Protect (TPV1)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],
+  "Advanced Critical Secure (CSV10)":[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}],
+  "Early Critical Secure (CSV11)":[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}],
   "Cancer Premium Waiver / GIO (WPV10)":WAIVER_TERMS,
   "Payor Premium Waiver (WPV6)":WAIVER_TERMS,
   "Enhanced Payor Premium Waiver (WEV2)":WAIVER_TERMS,
   "Dread Disease Premium Waiver (WSV2)":WAIVER_TERMS,
-  // Hospital / Lady — All Terms, 20% flat
   "Hospital CashAid (HBV3)":[{l:"All Terms",y:20.00,c:4}],
   "Lady 360 (LPN)":[{l:"All Terms",y:20.00,c:4}],
-  // Maternity — Single, 5%
   "Maternity 360 (MBN)":[{l:"Single",y:5.00,c:1}],
-  // IncomeShield riders
   "Classic Care Rider (ISEPL)":[{l:"Yearly",y:15.00,c:4}],
   "Deluxe Care Rider (ISEPH)":[{l:"Yearly",y:15.00,c:4}]
 };
+function getRiderRate(n,t){const terms=RIDER_TERMS[n];if(!terms)return null;if(terms.length===1)return{y:terms[0].y,c:terms[0].c};const f=terms.find(x=>x.l===t);return f?{y:f.y,c:f.c}:null;}
 
-function getRiderRate(n,t){
-  const terms=RIDER_TERMS[n];if(!terms)return null;
-  if(terms.length===1)return{y:terms[0].y,c:terms[0].c};
-  const f=terms.find(x=>x.l===t);return f?{y:f.y,c:f.c}:null;
-}
-
-// ── Categories for searchable dropdown — alphabetical within each ──
 const CATS=[
-  {label:"Traditional Life Insurance",hCls:"srch-cat cat-trad",iCls:"srch-item",products:[
-    "Complete Cancer Care (CBN3)",
-    "Complete Critical Protect (CCN1)",
-    "Complete Life Secure (VQMW)",
-    "Complete Life Secure - Protection Benefit (VQVW)",
-    "Essential Protect (LBV3)",
-    "Gro Annuity Pro (GAMA)",
-    "Gro Cash Flex Pro (GCME)",
-    "Gro Cash Plus (GDMW)",
-    "Gro Cash Sure (GCMW)",
-    "Gro Power Saver Pro (RSME)",
-    "Gro Retire Flex Pro (GRME)",
-    "Gro Retire Flex Pro - Protection Benefit (SPV4)",
-    "Gro Saver Flex Pro (GSME)",
-    "Luxe Plus Solitaire II (LTMW)",
-    "Mortgage Term (MPN2)",
-    "Provenance Disability Accelerator (TSN3)",
-    "Provenance Solitaire (VPMW)",
-    "Provenance Solitaire - Protection Benefit (VPVW)",
-    "Savings Protector Pro (SPV3)",
-    "Star Term Protect (TAN19)",
-    "TermLife Solitaire (TBN4)",
-    "Total Protect (TPV1)",
-    "Wealth Plus Solitaire (LHMWA)"
-  ]},
-  {label:"Investment Linked Insurance",hCls:"srch-cat cat-ilp",iCls:"srch-item",products:[
-    "AstraLink (VA2)",
-    "Invest Flex (VS1)",
-    "Invest Flex TriVantage (VS3)",
-    "Invest Flex Vantage (VS2)",
-    "WealthLink (GL3)"
-  ]},
-  {label:"Health Insurance",hCls:"srch-cat cat-health",iCls:"srch-item",products:[
-    "Care Secure",
-    "Enhanced IncomeShield / IncomeShield Standard (ISEP)",
-    "PrimeShield"
-  ]}
+  {label:"Traditional Life Insurance",hCls:"srch-cat cat-trad",iCls:"srch-item",products:["Complete Cancer Care (CBN3)","Complete Critical Protect (CCN1)","Complete Life Secure (VQMW)","Complete Life Secure - Protection Benefit (VQVW)","Essential Protect (LBV3)","Gro Annuity Pro (GAMA)","Gro Cash Flex Pro (GCME)","Gro Cash Plus (GDMW)","Gro Cash Sure (GCMW)","Gro Power Saver Pro (RSME)","Gro Retire Flex Pro (GRME)","Gro Retire Flex Pro - Protection Benefit (SPV4)","Gro Saver Flex Pro (GSME)","Luxe Plus Solitaire II (LTMW)","Mortgage Term (MPN2)","Provenance Disability Accelerator (TSN3)","Provenance Solitaire (VPMW)","Provenance Solitaire - Protection Benefit (VPVW)","Savings Protector Pro (SPV3)","Star Term Protect (TAN19)","TermLife Solitaire (TBN4)","Total Protect (TPV1)","Wealth Plus Solitaire (LHMWA)"]},
+  {label:"Investment Linked Insurance",hCls:"srch-cat cat-ilp",iCls:"srch-item",products:["AstraLink (VA2)","Invest Flex (VS1)","Invest Flex TriVantage (VS3)","Invest Flex Vantage (VS2)","WealthLink (GL3)"]},
+  {label:"Health Insurance",hCls:"srch-cat cat-health",iCls:"srch-item",products:["Care Secure","Enhanced IncomeShield / IncomeShield Standard (ISEP)","PrimeShield"]}
 ];
 
-// ── Products ──
 const PROD={
-  // ── Traditional Life ──
   "Complete Cancer Care (CBN3)":{terms:[{l:"10 years",y:22.00,c:4}]},
-  "Complete Critical Protect (CCN1)":{
-    riders:["Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]
-  },
-  "Complete Life Secure (VQMW)":{
-    riders:["Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)","Hospital CashAid (HBV3)","Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]
-  },
-  "Complete Life Secure - Protection Benefit (VQVW)":{
-    terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]
-  },
+  "Complete Critical Protect (CCN1)":{riders:["Dread Disease Premium Waiver (WSV2)"],terms:[{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Complete Life Secure (VQMW)":{riders:["Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)","Hospital CashAid (HBV3)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
+  "Complete Life Secure - Protection Benefit (VQVW)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
   "Essential Protect (LBV3)":{terms:[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}]},
   "Gro Annuity Pro (GAMA)":{terms:[{l:"Single",y:1.00,c:0}]},
   "Gro Cash Flex Pro (GCME)":{terms:[{l:"Single",y:3.00,c:1}]},
@@ -255,37 +250,17 @@ const PROD={
   "Provenance Solitaire (VPMW)":{terms:[{l:"Single",y:5.50,c:1}]},
   "Provenance Solitaire - Protection Benefit (VPVW)":{terms:[{l:"Single",y:5.50,c:1}]},
   "Savings Protector Pro (SPV3)":{terms:[{l:"1yr (Policy <=10)",y:2.00,c:4},{l:"2yr (Policy <=10)",y:2.20,c:4},{l:"3yr (Policy <=10)",y:3.30,c:4},{l:"4yr (Policy <=10)",y:4.40,c:4},{l:"5yr (Policy <=10)",y:5.50,c:4},{l:"5yr (Policy >10 <=25)",y:9.00,c:4},{l:"5yr (Policy >25)",y:10.00,c:4},{l:"10yr (Policy <=25)",y:18.20,c:4},{l:"10yr (Policy >25)",y:22.00,c:4},{l:"15yr (Policy <=25)",y:27.20,c:4},{l:"15yr (Policy >25)",y:33.00,c:4},{l:"20yr (Policy <=25)",y:36.30,c:4},{l:"20yr (Policy >25)",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},
-  "Star Term Protect (TAN19)":{
-    riders:["Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:40.00,c:3},{l:"25+ years",y:40.00,c:3}]
-  },
-  "TermLife Solitaire (TBN4)":{
-    riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}]
-  },
+  "Star Term Protect (TAN19)":{riders:["Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:40.00,c:3},{l:"25+ years",y:40.00,c:3}]},
+  "TermLife Solitaire (TBN4)":{riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}]},
   "Total Protect (TPV1)":{terms:[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}]},
   "Wealth Plus Solitaire (LHMWA)":{terms:[{l:"Single",y:3.00,c:1}]},
-  // ── ILP ──
   "AstraLink (VA2)":{terms:[{l:"MIP 10yr",y:22.00,c:4},{l:"MIP 15yr",y:33.00,c:4},{l:"MIP 20yr",y:44.00,c:4},{l:"MIP 25yr",y:55.00,c:4}]},
-  "Invest Flex (VS1)":{
-    riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"5yr (All Policy Term)",y:3.85,c:1.50},{l:"10yr (All Policy Term)",y:23.95,c:2.50},{l:"15yr (All Policy Term)",y:48.55,c:3.00},{l:"20yr (All Policy Term)",y:52.35,c:3.00}]
-  },
-  "Invest Flex TriVantage (VS3)":{
-    riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"10yr (All Policy Term)",y:11.00,c:1.50}]
-  },
-  "Invest Flex Vantage (VS2)":{
-    riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],
-    terms:[{l:"5yr (All Policy Term)",y:2.60,c:1.50},{l:"10yr (All Policy Term)",y:23.00,c:2.50},{l:"15yr (All Policy Term)",y:44.20,c:3.00},{l:"20yr (All Policy Term)",y:46.00,c:3.00}]
-  },
+  "Invest Flex (VS1)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5yr (All Policy Term)",y:3.85,c:1.50},{l:"10yr (All Policy Term)",y:23.95,c:2.50},{l:"15yr (All Policy Term)",y:48.55,c:3.00},{l:"20yr (All Policy Term)",y:52.35,c:3.00}]},
+  "Invest Flex TriVantage (VS3)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"10yr (All Policy Term)",y:11.00,c:1.50}]},
+  "Invest Flex Vantage (VS2)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5yr (All Policy Term)",y:2.60,c:1.50},{l:"10yr (All Policy Term)",y:23.00,c:2.50},{l:"15yr (All Policy Term)",y:44.20,c:3.00},{l:"20yr (All Policy Term)",y:46.00,c:3.00}]},
   "WealthLink (GL3)":{terms:[{l:"Single",y:1.50,c:0}]},
-  // ── Health ──
   "Care Secure":{terms:[{l:"Yearly",y:45.00,c:4}]},
-  "Enhanced IncomeShield / IncomeShield Standard (ISEP)":{
-    riders:["Classic Care Rider (ISEPL)","Deluxe Care Rider (ISEPH)"],
-    terms:[{l:"Yearly",y:30.00,c:4}]
-  },
+  "Enhanced IncomeShield / IncomeShield Standard (ISEP)":{riders:["Classic Care Rider (ISEPL)","Deluxe Care Rider (ISEPH)"],terms:[{l:"Yearly",y:30.00,c:4}]},
   "PrimeShield":{terms:[{l:"Yearly",y:35.00,c:4}]}
 };
 
@@ -313,15 +288,17 @@ function getYearTotals(yr){
     const tier=getTier(tc);
     const eb=tm>=3000?tm*0.25:0;
     const qb=tm*tier.bonus/100;
-    totalComm+=tm; totalBaseComm+=bc; totalBonus+=eb+qb;
+    totalComm+=tm;totalBaseComm+=bc;totalBonus+=eb+qb;
   });
   return{totalComm,totalBaseComm,totalBonus,grand:totalComm+totalBonus};
 }
 
-let sales=[],tab="log",activeQ="Q1",selYear=new Date().getFullYear();
+let sales=[],fwdSales=[],tab="log",activeQ="Q1",selYear=new Date().getFullYear();
 let pols=[newPol()],fDate=todayStr(),fClient="";
 let calOpen=false,calY=new Date().getFullYear(),calM=new Date().getMonth();
 let srch={};
+// FWD log form state
+let fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date().getFullYear(),calM:new Date().getMonth()};
 
 function newPol(){return{id:uid(),product:"",term:"",ap:"",riders:[]};}
 function newRider(){return{id:uid(),name:"",riderTerm:"",premium:""};}
@@ -332,13 +309,23 @@ onSnapshot(collection(db,COLL),snap=>{
   sales.sort((a,b)=>a.date<b.date?1:-1);
   renderAll();
 });
+
+onSnapshot(collection(db,COLL_FWD),snap=>{
+  fwdSales=[];
+  snap.forEach(d=>fwdSales.push({...d.data(),fid:d.id}));
+  fwdSales.sort((a,b)=>a.date<b.date?1:-1);
+  renderAll();
+});
+
 async function addSaleDB(obj){try{await addDoc(collection(db,COLL),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delSaleDB(fid){try{await deleteDoc(doc(db,COLL,fid));}catch(e){alert("Delete error: "+e.message);}}
+async function addFWDSaleDB(obj){try{await addDoc(collection(db,COLL_FWD),obj);}catch(e){alert("Save error: "+e.message);}}
+async function delFWDSaleDB(fid){try{await deleteDoc(doc(db,COLL_FWD,fid));}catch(e){alert("Delete error: "+e.message);}}
 
 function renderAll(){renderTabs();renderPage();}
 
 function renderTabs(){
-  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"],["mdrt","🏆 MDRT / COT / TOT"]];
+  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"],["mdrt","🏆 MDRT / COT / TOT"]];
   document.getElementById("tabBar").innerHTML=TABS.map(([k,v])=>`<button class="tab-btn${tab===k?" active":""}" onclick="setTab('${k}')">${v}</button>`).join("");
 }
 
@@ -347,6 +334,7 @@ function renderPage(){
   if(tab==="log"){if(!document.getElementById("logShell"))el.innerHTML="<div id='logShell'></div>";renderLog();}
   else if(tab==="dashboard")el.innerHTML=renderDash();
   else if(tab==="history")el.innerHTML=renderHist();
+  else if(tab==="fwd")el.innerHTML=renderFWD();
   else if(tab==="ignite")el.innerHTML=renderIgnite();
   else if(tab==="trail")el.innerHTML=renderTrail();
   else if(tab==="mdrt")el.innerHTML=renderMDRT();
@@ -378,38 +366,52 @@ function buildLog(){
   +"</div>";
 }
 
-function buildCal(){
-  const sd=fDate?new Date(fDate+"T00:00:00"):null;
+function buildCal(prefix=""){
+  const dateVal=prefix?fwdForm.date:fDate;
+  const open=prefix?fwdForm.calOpen:calOpen;
+  const cY=prefix?fwdForm.calY:calY;
+  const cM=prefix?fwdForm.calM:calM;
+  const sd=dateVal?new Date(dateVal+"T00:00:00"):null;
   const disp=sd?sd.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"}):"";
-  return "<div class='cal-wrap' id='calWrap'>"
-  +"<div class='cal-row'><input class='inp' id='dateInp' type='text' placeholder='YYYY-MM-DD' value='"+fDate+"' style='flex:1;'/>"
-  +"<button class='cal-ico"+(calOpen?" open":"")+"' id='calIco'>📅</button></div>"
+  const id=prefix?"fwdDateInp":"dateInp";
+  const icoId=prefix?"fwdCalIco":"calIco";
+  const wrapId=prefix?"fwdCalWrap":"calWrap";
+  return "<div class='cal-wrap' id='"+wrapId+"'>"
+  +"<div class='cal-row'><input class='inp' id='"+id+"' type='text' placeholder='YYYY-MM-DD' value='"+dateVal+"' style='flex:1;'/>"
+  +"<button class='cal-ico"+(open?" open":"")+"' id='"+icoId+"'>📅</button></div>"
   +(disp?"<div style='font-size:11px;color:#64748b;margin-top:3px;'>"+disp+"</div>":"")
-  +(calOpen?buildCalPop():"")+"</div>";
+  +(open?buildCalPop(prefix):"")+"</div>";
 }
 
-function buildCalPop(){
+function buildCalPop(prefix=""){
+  const cY=prefix?fwdForm.calY:calY;
+  const cM=prefix?fwdForm.calM:calM;
+  const dateVal=prefix?fwdForm.date:fDate;
   const today=new Date();
-  const first=new Date(calY,calM,1).getDay();
-  const dim=new Date(calY,calM+1,0).getDate();
-  const sd=fDate?new Date(fDate+"T00:00:00"):null;
+  const first=new Date(cY,cM,1).getDay();
+  const dim=new Date(cY,cM+1,0).getDate();
+  const sd=dateVal?new Date(dateVal+"T00:00:00"):null;
   let cells="";
   for(let i=0;i<first;i++)cells+="<button class='cal-day empty' disabled></button>";
   for(let d=1;d<=dim;d++){
-    const isSel=sd&&sd.getFullYear()===calY&&sd.getMonth()===calM&&sd.getDate()===d;
-    const isTod=today.getFullYear()===calY&&today.getMonth()===calM&&today.getDate()===d;
-    cells+="<button class='cal-day"+(isSel?" selected":isTod?" today":"")+"' onclick='pickDay("+d+")'>"+d+"</button>";
+    const isSel=sd&&sd.getFullYear()===cY&&sd.getMonth()===cM&&sd.getDate()===d;
+    const isTod=today.getFullYear()===cY&&today.getMonth()===cM&&today.getDate()===d;
+    const fn=prefix?`fwdPickDay(${d})`:`pickDay(${d})`;
+    cells+="<button class='cal-day"+(isSel?" selected":isTod?" today":"")+"' onclick='"+fn+"'>"+d+"</button>";
   }
-  const yOpts=yearList().map(y=>"<option value='"+y+"'"+(y===calY?" selected":"")+">"+y+"</option>").join("");
-  return "<div class='cal-pop' id='calPop'>"
-  +"<div class='cal-nav'><button class='cal-nb' onclick='navM(-1)'>&#8249;</button>"
+  const navFn=prefix?"fwdNavM":"navM";
+  const jumpFn=prefix?"fwdJumpY":"jumpY";
+  const todFn=prefix?"fwdPickToday":"pickToday";
+  const yOpts=yearList().map(y=>"<option value='"+y+"'"+(y===cY?" selected":"")+">"+y+"</option>").join("");
+  return "<div class='cal-pop'>"
+  +"<div class='cal-nav'><button class='cal-nb' onclick='"+navFn+"(-1)'>&#8249;</button>"
   +"<div style='display:flex;align-items:center;gap:6px;'>"
-  +"<span style='font-weight:700;font-size:13px;color:#60a5fa;'>"+MTHS[calM]+"</span>"
-  +"<select class='cal-ysel' onchange='jumpY(parseInt(this.value))'>"+yOpts+"</select></div>"
-  +"<button class='cal-nb' onclick='navM(1)'>&#8250;</button></div>"
+  +"<span style='font-weight:700;font-size:13px;color:#60a5fa;'>"+MTHS[cM]+"</span>"
+  +"<select class='cal-ysel' onchange='"+jumpFn+"(parseInt(this.value))'>"+yOpts+"</select></div>"
+  +"<button class='cal-nb' onclick='"+navFn+"(1)'>&#8250;</button></div>"
   +"<div class='cal-dh'>"+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>"<span>"+d+"</span>").join("")+"</div>"
   +"<div class='cal-days'>"+cells+"</div>"
-  +"<button class='cal-tod' onclick='pickToday()'>📌 Today</button>"
+  +"<button class='cal-tod' onclick='"+todFn+"()'>📌 Today</button>"
   +"</div>";
 }
 
@@ -440,7 +442,6 @@ function buildPolBlock(b,i){
   const bc=selT&&ap?ap*selT.y/100:0,bCr=selT&&ap?ap*selT.c:0;
   const rComm=rC.reduce((a,r)=>a+r.comm,0),rCred=rC.reduce((a,r)=>a+r.cred,0);
   const hasR=rC.some(r=>r.name&&r.rp>0);
-
   let html="<div class='pol-block'>"
   +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>"
   +"<span style='font-size:13px;font-weight:700;color:#60a5fa;'>📋 Policy "+(i+1)+"</span>"
@@ -455,7 +456,6 @@ function buildPolBlock(b,i){
   +"</select></div></div>"
   +"<div style='margin-bottom:12px;'><label class='lbl'>💰 Annual Premium (SGD)</label>"
   +"<input class='inp pp-inp' id='ap-"+b.id+"' type='number' data-pid='"+b.id+"' placeholder='e.g. 12000' value='"+esc(b.ap)+"'/></div>";
-
   html+="<div style='border-top:1px solid #1e3a5f;padding-top:12px;'>"
   +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>"
   +"<span style='font-size:12px;font-weight:700;color:#a78bfa;'>🔗 Riders</span>"
@@ -464,7 +464,6 @@ function buildPolBlock(b,i){
     :"<span style='font-size:11px;color:#475569;'>"+(avR.length===0?"No riders for this product":"All riders added")+"</span>")
   +"</div>"
   +(b.riders.length===0&&avR.length>0?"<div style='font-size:11px;color:#475569;font-style:italic;margin-bottom:8px;'>Click \"+ Add Rider\" to attach riders.</div>":"");
-
   b.riders.forEach((row,ri)=>{
     const avail=avR.filter(r=>r===row.name||!chosen.includes(r));
     const rTerms=RIDER_TERMS[row.name]||null;
@@ -492,7 +491,6 @@ function buildPolBlock(b,i){
     html+="</div>";
   });
   html+="</div>";
-
   if(selT&&ap>0){
     html+="<div class='prev-box'><div style='font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:8px;'>⚡ Preview — Policy "+(i+1)+"</div>"
     +"<div class='g3' style='margin-bottom:"+(hasR?8:0)+"px;'>"
@@ -532,20 +530,156 @@ function grandTot(){
   return{comm,cred};
 }
 
+// ── FWD Tab ──
+function renderFWD(){
+  const termOpts=[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,"25+"].map(t=>`<option value="${t}"${fwdForm.term==t?" selected":""}>${t} years</option>`).join("");
+  // Preview calculation
+  let previewHtml="";
+  const ap=parseFloat(fwdForm.ap)||0;
+  const termVal=parseInt(fwdForm.term)||0;
+  if(ap>0&&termVal>=5){
+    const rate=getFWDRate(termVal);
+    const bend=getBending(fwdForm.date,sales);
+    const comm=ap*(rate.y1/100)*bend.factor;
+    const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
+    previewHtml=`<div style='background:#071510;border-radius:10px;padding:12px;border:1px solid #166534;margin-bottom:14px;'>
+      <div style='font-size:11px;color:#34d399;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
+      <div class='g3' style='margin-bottom:8px;'>
+        <div class='mc'><div class='ml'>Year 1 Comm %</div><div class='mv' style='color:#34d399;'>${rate.y1}%</div></div>
+        <div class='mc'><div class='ml'>Bending Factor</div><div class='mv'><span class='bending-badge ${bendCls}'>${bend.label}</span></div></div>
+        <div class='mc'><div class='ml'>Est. Year 1 Comm</div><div class='mv' style='color:#34d399;font-size:15px;'>${$f(comm)}</div></div>
+      </div>
+      <div style='font-size:11px;color:#475569;'>Based on prev quarter credits: <span style='color:#94a3b8;font-weight:600;'>${$c(bend.credits)} pts</span>
+      · Payout expected: <span style='color:#34d399;font-weight:600;'>${getPayoutDate(fwdForm.date)}</span></div>
+    </div>`;
+  }
+
+  // FWD sales by quarter for selected year
+  const yrFwd=fwdSales.filter(s=>s.date.startsWith(String(selYear)));
+  const qTotals=Object.keys(QS).map(q=>{
+    const qs=yrFwd.filter(s=>s.quarter===q);
+    const total=qs.reduce((a,s)=>a+s.commission,0);
+    return{q,total,count:qs.length};
+  });
+  const grandFwd=yrFwd.reduce((a,s)=>a+s.commission,0);
+
+  return `<div style='font-size:16px;font-weight:700;margin-bottom:16px;color:#34d399;'>🏢 3rd Party Sales — FWD</div>
+  <div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>
+    <div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 ${selYear} <span style='font-size:10px;opacity:0.7;'>▼</span></button>
+    <div class='yr-dd' id='yrDD' style='display:none;'>${yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")}</div></div>
+  </div>
+
+  <!-- Summary cards -->
+  <div style='background:linear-gradient(135deg,#071510,#0a1f14,#0d2b1a);border-radius:12px;padding:18px;border:1px solid #166534;margin-bottom:12px;text-align:center;box-shadow:0 0 20px rgba(52,211,153,0.1);'>
+    <div style='font-size:12px;color:#86efac;font-weight:600;letter-spacing:0.04em;'>🏢 FWD — Total Commission Earned (${selYear})</div>
+    <div style='font-size:32px;font-weight:900;color:#34d399;margin-top:6px;'>${$f(grandFwd)}</div>
+    <div style='font-size:11px;color:#475569;margin-top:4px;'>${yrFwd.length} sale${yrFwd.length!==1?"s":""} logged · FWD Future First</div>
+  </div>
+  <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;'>
+    ${qTotals.map(qt=>`<div style='background:#071510;border-radius:10px;padding:12px;border:1px solid ${qt.total>0?"#166534":"#1e293b"};text-align:center;'>
+      <div style='font-size:11px;color:#475569;font-weight:700;'>${qt.q}</div>
+      <div style='font-size:15px;font-weight:800;color:${qt.total>0?"#34d399":"#334155"};margin-top:4px;'>${qt.total>0?$f(qt.total):"—"}</div>
+      <div style='font-size:10px;color:#475569;margin-top:2px;'>${qt.count} sale${qt.count!==1?"s":""}</div>
+    </div>`).join("")}
+  </div>
+
+  <!-- Log FWD Sale -->
+  <div class='fwd-card'>
+    <div style='font-size:14px;font-weight:700;color:#34d399;margin-bottom:14px;'>➕ Log FWD Future First Sale</div>
+    <div class='g2' style='margin-bottom:12px;'>
+      <div><label class='lbl'>📅 Date of Sale</label>${buildCal("fwd")}</div>
+      <div><label class='lbl'>👤 Client Name</label><input class='inp' id='fwdClientInp' type='text' placeholder='e.g. Jane Lim' value='${esc(fwdForm.client)}' style='border-color:#166534;'/></div>
+    </div>
+    <div class='g2' style='margin-bottom:12px;'>
+      <div><label class='lbl'>📆 Policy Term (years)</label>
+        <select class='sel' id='fwdTermSel' style='border-color:#166534;' onchange='updFWDForm("term",this.value)'>
+          <option value=''>-- Select Term --</option>${termOpts}
+        </select>
+      </div>
+      <div><label class='lbl'>💰 Annual Premium (SGD)</label>
+        <input class='inp' id='fwdApInp' type='number' placeholder='e.g. 5000' value='${esc(fwdForm.ap)}' style='border-color:#166534;'/>
+      </div>
+    </div>
+    ${previewHtml}
+    <div class='val-err' id='fwdValErr'>⚠️ Please fill in all required fields.</div>
+    <button class='btn-pri' style='background:linear-gradient(135deg,#065f46,#059669);' onclick='doAddFWDSale()'>✅ Add FWD Sale</button>
+  </div>
+
+  <!-- FWD Sales History -->
+  <div style='font-size:14px;font-weight:700;color:#34d399;margin-bottom:12px;margin-top:8px;'>📋 FWD Sales History (${fwdSales.length})</div>
+  ${fwdSales.length===0
+    ?"<div style='text-align:center;color:#475569;padding:30px;background:#071510;border-radius:10px;border:1px solid #166534;'>No FWD sales logged yet.</div>"
+    :fwdSales.map(s=>{
+      const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+      const bendCls=s.bendTier==="high"?"bend-high":s.bendTier==="mid"?"bend-mid":"bend-base";
+      return `<div class='fwd-sale-item'>
+        <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;'>
+          <div>
+            <div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;'>
+              <span style='font-weight:700;font-size:15px;color:#e2e8f0;'>${esc(s.clientName)}</span>
+              <span class='badge-fwd'>FWD</span>
+              <span class='badge'>${s.quarter}</span>
+              <span style='font-size:11px;color:#64748b;'>${dt}</span>
+            </div>
+            <div style='font-size:12px;color:#64748b;'>FWD Future First · ${s.term} year term · AP: <strong style='color:#e2e8f0;'>${$f(s.annualPremium)}</strong></div>
+          </div>
+          <button class='btn-del' onclick='doDelFWDSale("${s.fid}")'>✕</button>
+        </div>
+        <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;'>
+          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'>
+            <div style='font-size:10px;color:#64748b;'>Year 1 Comm</div>
+            <div style='font-size:14px;font-weight:800;color:#34d399;margin-top:2px;'>${$f(s.commission)}</div>
+          </div>
+          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'>
+            <div style='font-size:10px;color:#64748b;'>Comm %</div>
+            <div style='font-size:14px;font-weight:800;color:#86efac;margin-top:2px;'>${s.commRate}%</div>
+          </div>
+          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'>
+            <div style='font-size:10px;color:#64748b;'>Bending</div>
+            <div style='margin-top:4px;'><span class='bending-badge ${bendCls}'>${s.bendLabel}</span></div>
+          </div>
+          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'>
+            <div style='font-size:10px;color:#64748b;'>Payout Date</div>
+            <div style='font-size:11px;font-weight:700;color:#34d399;margin-top:4px;'>${s.payoutDate}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join("")}`;
+}
+
+// ── Dashboard with 3rd party column ──
 function renderDash(){
   const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
   const qd=getQD(ys,activeQ);
   const nt=TIERS.find(t=>t.min>qd.tc);
+  // FWD for this quarter/year
+  const fwdQ=fwdSales.filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
+  const fwdQTotal=fwdQ.reduce((a,s)=>a+s.commission,0);
+  const fwdYrTotal=fwdSales.filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
+
   return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
   +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
-  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
+  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")+"</div></div>"
   +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
   +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
-  +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:18px;border:1px solid #f97316;margin-bottom:12px;box-shadow:0 0 24px rgba(249,115,22,0.2);text-align:center;'>"
-  +"<div style='font-size:12px;color:#fed7aa;'>💼 Total Commission Earned (Base + Riders)</div>"
-  +"<div style='font-size:32px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div>"
-  +"<div style='font-size:12px;color:#fdba74;margin-top:4px;'>"+QS[activeQ].label+" · "+selYear+"</div>"
+
+  // Income + 3rd Party side by side
+  +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;'>"
+  // Income commission card
+  +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:18px;border:1px solid #f97316;box-shadow:0 0 24px rgba(249,115,22,0.2);text-align:center;'>"
+  +"<div style='font-size:11px;color:#fed7aa;'>🏢 Income Commission</div>"
+  +"<div style='font-size:26px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div>"
+  +"<div style='font-size:11px;color:#fdba74;margin-top:4px;'>"+QS[activeQ].label+"</div>"
   +"</div>"
+  // FWD 3rd party card
+  +"<div style='background:linear-gradient(135deg,#071510,#0a2218,#0d2b1a);border-radius:12px;padding:18px;border:1px solid #166534;box-shadow:0 0 20px rgba(52,211,153,0.12);text-align:center;'>"
+  +"<div style='font-size:11px;color:#86efac;'>🏢 FWD Commission</div>"
+  +"<div style='font-size:26px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(fwdQTotal)+"</div>"
+  +"<div style='font-size:11px;color:#475569;margin-top:4px;'>"+QS[activeQ].label+" · "+fwdQ.length+" sale"+(fwdQ.length!==1?"s":"")+"</div>"
+  +(fwdYrTotal>0?"<div style='font-size:10px;color:#166534;margin-top:4px;border-top:1px solid #166534;padding-top:4px;'>Full "+selYear+": <span style='color:#34d399;font-weight:700;'>"+$f(fwdYrTotal)+"</span></div>":"")
+  +"</div>"
+  +"</div>"
+
   +"<div class='g2' style='margin-bottom:12px;'>"
   +"<div class='dash-stat-card'><div class='lbl' style='text-align:center;'>🏆 Quarterly Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;'>"+$f(qd.qb)+"</div></div>"
   +"<div class='dash-stat-card'><div class='lbl' style='text-align:center;'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#64748b")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached ($3,000 min)")+"</div></div>"
@@ -612,21 +746,15 @@ function renderHist(){
       +"<span>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span></div>"
       +(p.riders&&p.riders.length>0
         ?"<div style='display:flex;flex-direction:column;gap:5px;'>"
-        +p.riders.map(r=>
-          "<div style='background:#0f172a;border-radius:8px;padding:7px 12px;border:1px solid #4f46e5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;'>"
+        +p.riders.map(r=>"<div style='background:#0f172a;border-radius:8px;padding:7px 12px;border:1px solid #4f46e5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;'>"
           +"<span style='font-size:11px;color:#a78bfa;font-weight:700;'>🔗 "+esc(r.name)+"</span>"
           +(r.commPct?"<span style='font-size:10px;color:#64748b;'>("+r.commPct+"%)</span>":"")
-          +"<span style='font-size:11px;color:#64748b;'>·</span>"
           +"<span style='font-size:11px;'>Premium: <strong style='color:#e2e8f0;'>"+$f(r.premium)+"</strong></span>"
-          +"<span style='font-size:11px;color:#64748b;'>·</span>"
           +"<span style='font-size:11px;'>Comm: <strong style='color:#a78bfa;'>"+$f(r.comm)+"</strong></span>"
-          +"<span style='font-size:11px;color:#64748b;'>·</span>"
           +"<span style='font-size:11px;'>Credits: <strong style='color:#a78bfa;'>"+$c(r.credit)+" pts</strong></span>"
-          +"</div>"
-        ).join("")+"</div>"
+          +"</div>").join("")+"</div>"
         :"")
-      +"</div>"
-    ).join("")+"</div>";
+      +"</div>").join("")+"</div>";
   }).join(""));
 }
 
@@ -678,39 +806,16 @@ function renderMDRT(){
   const MDRT_T=75800,COT_T=MDRT_T*3,TOT_T=COT_T*2;
   const{totalComm,totalBonus,grand}=getYearTotals(selYear);
   const hitMDRT=grand>=MDRT_T,hitCOT=grand>=COT_T,hitTOT=grand>=TOT_T;
-  const pMDRT=Math.min(100,(grand/MDRT_T)*100);
-  const pCOT=Math.min(100,(grand/COT_T)*100);
-  const pTOT=Math.min(100,(grand/TOT_T)*100);
-
+  const pMDRT=Math.min(100,(grand/MDRT_T)*100),pCOT=Math.min(100,(grand/COT_T)*100),pTOT=Math.min(100,(grand/TOT_T)*100);
   const TDATA=[
-    {key:"mdrt",label:"MDRT",full:"Million Dollar Round Table",target:MDRT_T,hit:hitMDRT,pct:pMDRT,
-     icon:"🥇",iconCls:"gold-bob",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",
-     grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",border:"#f59e0b",stars:"⭐",
-     tagline:"\"Every legend starts with a single step forward.\"",
-     hoverNo:"💪 You're laying the foundation of greatness. Every policy you write brings MDRT closer — don't stop now!",
-     hoverYes:"🏅 MDRT unlocked! You've crossed the threshold that only the top advisers in the world reach. Stand tall!",
-     badge:"MDRT Member"},
-    {key:"cot",label:"COT",full:"Court of the Table",target:COT_T,hit:hitCOT,pct:pCOT,
-     icon:"💎",iconCls:"diamond-bob",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",
-     grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",border:"#38bdf8",stars:"⭐⭐",
-     tagline:"\"Most never try. You chose to go further.\"",
-     hoverNo:"🚀 COT demands 3x the effort — and you're chasing it anyway. That separates you from the rest. Grind on!",
-     hoverYes:"💎 Court of the Table achieved! Less than 4% of MDRT members ever get here. You are genuinely elite.",
-     badge:"COT Member"},
-    {key:"tot",label:"TOT",full:"Top of the Table",target:TOT_T,hit:hitTOT,pct:pTOT,
-     icon:"👑",iconCls:"crown-bob",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",
-     grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",border:"#a78bfa",stars:"⭐⭐⭐",
-     tagline:"\"The summit is reserved for the relentless.\"",
-     hoverNo:"🔥 TOT is the pinnacle of the entire profession. The rarest of the rare. Stay relentless — legends are made here.",
-     hoverYes:"👑 TOP OF THE TABLE. You are in the top 1% of the top 1% of financial advisers on the planet. LEGENDARY.",
-     badge:"TOT Member"}
+    {key:"mdrt",label:"MDRT",full:"Million Dollar Round Table",target:MDRT_T,hit:hitMDRT,pct:pMDRT,icon:"🥇",iconCls:"gold-bob",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",border:"#f59e0b",stars:"⭐",tagline:"\"Every legend starts with a single step forward.\"",hoverNo:"💪 You're laying the foundation of greatness. Every policy you write brings MDRT closer — don't stop now!",hoverYes:"🏅 MDRT unlocked! You've crossed the threshold that only the top advisers in the world reach. Stand tall!",badge:"MDRT Member"},
+    {key:"cot",label:"COT",full:"Court of the Table",target:COT_T,hit:hitCOT,pct:pCOT,icon:"💎",iconCls:"diamond-bob",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",border:"#38bdf8",stars:"⭐⭐",tagline:"\"Most never try. You chose to go further.\"",hoverNo:"🚀 COT demands 3x the effort — and you're chasing it anyway. That separates you from the rest. Grind on!",hoverYes:"💎 Court of the Table achieved! Less than 4% of MDRT members ever get here. You are genuinely elite.",badge:"COT Member"},
+    {key:"tot",label:"TOT",full:"Top of the Table",target:TOT_T,hit:hitTOT,pct:pTOT,icon:"👑",iconCls:"crown-bob",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",border:"#a78bfa",stars:"⭐⭐⭐",tagline:"\"The summit is reserved for the relentless.\"",hoverNo:"🔥 TOT is the pinnacle of the entire profession. The rarest of the rare. Stay relentless — legends are made here.",hoverYes:"👑 TOP OF THE TABLE. You are in the top 1% of the top 1% of financial advisers on the planet. LEGENDARY.",badge:"TOT Member"}
   ];
-
   let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
     <div style="position:relative;" id="yrWrap"><button class="yr-btn" onclick="togYrDD()">📅 ${selYear} <span style="font-size:10px;opacity:0.7;">▼</span></button>
     <div class="yr-dd" id="yrDD" style="display:none;">${yearList().map(y=>`<button class="yr-opt" style="color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};" onclick="selYr(${y})">${y}</button>`).join("")}</div></div>
     <div style="font-size:13px;color:#94a3b8;">Full Year ${selYear} · Commissions + All Bonuses</div></div>`;
-
   html+=`<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:16px 20px;border:1px solid #334155;margin-bottom:22px;">
     <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">💰 ${selYear} Total Eligible Earnings (Comm + Bonuses)</div>
     <div style="font-size:30px;font-weight:900;color:#e2e8f0;">${$f(grand)}</div>
@@ -718,7 +823,6 @@ function renderMDRT(){
       <div style="font-size:12px;color:#64748b;">Commission: <span style="color:#34d399;font-weight:700;">${$f(totalComm)}</span></div>
       <div style="font-size:12px;color:#64748b;">Bonuses: <span style="color:#f59e0b;font-weight:700;">${$f(totalBonus)}</span></div>
     </div></div>`;
-
   TDATA.forEach((t,i)=>{
     const remaining=Math.max(0,t.target-grand);
     const glowCSS=t.hit?`box-shadow:0 0 28px ${t.glow};`:"";
@@ -727,49 +831,26 @@ function renderMDRT(){
     html+=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
       <div style="font-size:38px;line-height:1;"><span class="${t.iconCls}">${t.icon}</span></div>
       <div style="flex:1;">
-        <div class="mdrt-hoverable">
-          <div class="${t.shimmer}" style="font-size:22px;font-weight:900;">${t.label} ${t.stars}</div>
-          <div class="mdrt-tip">${t.hit?t.hoverYes:t.hoverNo}</div>
-        </div>
+        <div class="mdrt-hoverable"><div class="${t.shimmer}" style="font-size:22px;font-weight:900;">${t.label} ${t.stars}</div>
+        <div class="mdrt-tip">${t.hit?t.hoverYes:t.hoverNo}</div></div>
         <div style="font-size:11px;color:${t.color};opacity:0.85;margin-top:2px;font-weight:600;">${t.full}</div>
       </div>
       <div style="background:${t.hit?"rgba(52,211,153,0.15)":"rgba(100,116,139,0.12)"};border:1px solid ${t.hit?"#34d399":"#475569"};border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:${t.hit?"#34d399":"#64748b"};white-space:nowrap;">
-        ${t.hit?`✅ ${t.badge}`:"Not Yet"}
-      </div></div>`;
+        ${t.hit?`✅ ${t.badge}`:"Not Yet"}</div></div>`;
     html+=`<div style="font-size:12px;color:${t.color};opacity:0.7;font-style:italic;margin-bottom:14px;">${t.tagline}</div>`;
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Target</div>
-        <div style="font-size:14px;font-weight:800;color:${t.color};margin-top:3px;">${$f(t.target)}</div>
-      </div>
-      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Earned</div>
-        <div style="font-size:14px;font-weight:800;color:#e2e8f0;margin-top:3px;">${$f(grand)}</div>
-      </div>
-      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${t.hit?"Exceeded":"Still Need"}</div>
-        <div style="font-size:14px;font-weight:800;color:${t.hit?"#34d399":"#f87171"};margin-top:3px;">${t.hit?$f(grand-t.target):$f(remaining)}</div>
-      </div></div>`;
-    html+=`<div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:5px;">
-      <span>Progress to ${t.label}</span><span style="color:${t.color};font-weight:700;">${t.pct.toFixed(1)}%</span></div>
-    <div style="background:rgba(0,0,0,0.35);border-radius:8px;height:16px;overflow:hidden;">
-      <div style="width:${t.pct}%;height:100%;border-radius:8px;background:linear-gradient(90deg,${t.color}66,${t.color});box-shadow:0 0 10px ${t.color};transition:width 0.8s ease;"></div>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Target</div><div style="font-size:14px;font-weight:800;color:${t.color};margin-top:3px;">${$f(t.target)}</div></div>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Earned</div><div style="font-size:14px;font-weight:800;color:#e2e8f0;margin-top:3px;">${$f(grand)}</div></div>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px;text-align:center;"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">${t.hit?"Exceeded":"Still Need"}</div><div style="font-size:14px;font-weight:800;color:${t.hit?"#34d399":"#f87171"};margin-top:3px;">${t.hit?$f(grand-t.target):$f(remaining)}</div></div>
     </div>`;
-    html+=`<div class="mdrt-hover-msg" style="background:${t.hit?"rgba(52,211,153,0.08)":"rgba(0,0,0,0.25)"};border-color:${t.hit?"#34d39966":t.color+"55"};color:${t.hit?"#34d399":t.color};">
-      ${t.hit?t.hoverYes:t.hoverNo}</div>`;
-    if(t.hit){
-      html+=`<div style="margin-top:14px;background:linear-gradient(90deg,rgba(52,211,153,0.1),rgba(52,211,153,0.04));border:1px solid #34d39955;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
-        <div style="font-size:22px;">🎉</div>
-        <div style="font-size:13px;font-weight:700;color:#34d399;line-height:1.5;">${t.hoverYes}</div></div>`;
-    }
+    html+=`<div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:5px;"><span>Progress to ${t.label}</span><span style="color:${t.color};font-weight:700;">${t.pct.toFixed(1)}%</span></div>
+    <div style="background:rgba(0,0,0,0.35);border-radius:8px;height:16px;overflow:hidden;">
+      <div style="width:${t.pct}%;height:100%;border-radius:8px;background:linear-gradient(90deg,${t.color}66,${t.color});box-shadow:0 0 10px ${t.color};transition:width 0.8s ease;"></div></div>`;
+    html+=`<div class="mdrt-hover-msg" style="background:${t.hit?"rgba(52,211,153,0.08)":"rgba(0,0,0,0.25)"};border-color:${t.hit?"#34d39966":t.color+"55"};color:${t.hit?"#34d399":t.color};">${t.hit?t.hoverYes:t.hoverNo}</div>`;
+    if(t.hit)html+=`<div style="margin-top:14px;background:linear-gradient(90deg,rgba(52,211,153,0.1),rgba(52,211,153,0.04));border:1px solid #34d39955;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;"><div style="font-size:22px;">🎉</div><div style="font-size:13px;font-weight:700;color:#34d399;line-height:1.5;">${t.hoverYes}</div></div>`;
     html+="</div>";
   });
-
-  html+=`<div style="text-align:center;padding:18px 10px 6px;">
-    <div style="font-size:12px;color:#94a3b8;font-style:italic;line-height:1.8;">
-      "Success in this industry is not given — it is earned,<br>call by call, meeting by meeting, client by client."<br>
-      <span style="color:#60a5fa;font-weight:600;">Keep showing up. Your breakthrough is coming. 🌟</span>
-    </div></div>`;
+  html+=`<div style="text-align:center;padding:18px 10px 6px;"><div style="font-size:12px;color:#94a3b8;font-style:italic;line-height:1.8;">"Success in this industry is not given — it is earned,<br>call by call, meeting by meeting, client by client."<br><span style="color:#60a5fa;font-weight:600;">Keep showing up. Your breakthrough is coming. 🌟</span></div></div>`;
   return html;
 }
 
@@ -780,38 +861,32 @@ function launchConfetti(){
   const cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
   const pieces=Array.from({length:180},()=>({x:Math.random()*cv.width,y:-10-Math.random()*200,w:8+Math.random()*8,h:5+Math.random()*5,color:cols[Math.floor(Math.random()*cols.length)],angle:Math.random()*360,spin:(-1+Math.random()*2)*4,vx:(-1+Math.random()*2)*3,vy:3+Math.random()*5,op:1}));
   let fr=0;
-  function draw(){
-    ctx.clearRect(0,0,cv.width,cv.height);
-    pieces.forEach(p=>{ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;if(fr>80)p.op-=0.018;});
-    fr++;
-    if(fr<140)requestAnimationFrame(draw);
-    else{ctx.clearRect(0,0,cv.width,cv.height);cv.style.display="none";}
-  }
+  function draw(){ctx.clearRect(0,0,cv.width,cv.height);pieces.forEach(p=>{ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;if(fr>80)p.op-=0.018;});fr++;if(fr<140)requestAnimationFrame(draw);else{ctx.clearRect(0,0,cv.width,cv.height);cv.style.display="none";}}
   draw();
 }
 
-function flashField(el){
-  if(!el)return;
-  el.classList.remove("field-error");
-  void el.offsetWidth;
-  el.classList.add("field-error");
-  setTimeout(()=>el.classList.remove("field-error"),1400);
-}
+function flashField(el){if(!el)return;el.classList.remove("field-error");void el.offsetWidth;el.classList.add("field-error");setTimeout(()=>el.classList.remove("field-error"),1400);}
 
 function attachAll(){
+  // Income form
   const ci=document.getElementById("clientInp");
   if(ci)ci.addEventListener("input",e=>{fClient=e.target.value;});
   const di=document.getElementById("dateInp");
-  if(di)di.addEventListener("input",e=>{
-    fDate=e.target.value;
-    if(/^\d{4}-\d{2}-\d{2}$/.test(fDate)){const dt=new Date(fDate+"T00:00:00");if(!isNaN(dt)){calY=dt.getFullYear();calM=dt.getMonth();}renderLog();attachAll();}
-  });
+  if(di)di.addEventListener("input",e=>{fDate=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(fDate)){const dt=new Date(fDate+"T00:00:00");if(!isNaN(dt)){calY=dt.getFullYear();calM=dt.getMonth();}}renderLog();attachAll();});
   const ci2=document.getElementById("calIco");
-  if(ci2)ci2.addEventListener("click",e=>{
-    e.stopPropagation();calOpen=!calOpen;
-    if(calOpen&&fDate){calY=parseInt(fDate.split("-")[0]);calM=parseInt(fDate.split("-")[1])-1;}
-    renderLog();attachAll();
-  });
+  if(ci2)ci2.addEventListener("click",e=>{e.stopPropagation();calOpen=!calOpen;if(calOpen&&fDate){calY=parseInt(fDate.split("-")[0]);calM=parseInt(fDate.split("-")[1])-1;}renderLog();attachAll();});
+  // FWD form
+  const fwdCli=document.getElementById("fwdClientInp");
+  if(fwdCli)fwdCli.addEventListener("input",e=>{fwdForm.client=e.target.value;});
+  const fwdAp=document.getElementById("fwdApInp");
+  if(fwdAp)fwdAp.addEventListener("input",e=>{fwdForm.ap=e.target.value;renderPage();});
+  const fwdTerm=document.getElementById("fwdTermSel");
+  if(fwdTerm)fwdTerm.addEventListener("change",e=>{fwdForm.term=e.target.value;renderPage();});
+  const fwdDateInp=document.getElementById("fwdDateInp");
+  if(fwdDateInp)fwdDateInp.addEventListener("input",e=>{fwdForm.date=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(fwdForm.date)){const dt=new Date(fwdForm.date+"T00:00:00");if(!isNaN(dt)){fwdForm.calY=dt.getFullYear();fwdForm.calM=dt.getMonth();}}renderPage();});
+  const fwdCalIco=document.getElementById("fwdCalIco");
+  if(fwdCalIco)fwdCalIco.addEventListener("click",e=>{e.stopPropagation();fwdForm.calOpen=!fwdForm.calOpen;if(fwdForm.calOpen&&fwdForm.date){fwdForm.calY=parseInt(fwdForm.date.split("-")[0]);fwdForm.calM=parseInt(fwdForm.date.split("-")[1])-1;}renderPage();});
+
   document.querySelectorAll(".pp-inp").forEach(inp=>{
     inp.addEventListener("input",e=>{const pid=e.target.dataset.pid;pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);});
     inp.addEventListener("blur",e=>{const pid=e.target.dataset.pid;pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);renderLog();attachAll();});
@@ -823,6 +898,8 @@ function attachAll(){
   document.addEventListener("mousedown",function h(e){
     const cw=document.getElementById("calWrap");
     if(calOpen&&cw&&!cw.contains(e.target)){calOpen=false;renderLog();attachAll();}
+    const fwdCW=document.getElementById("fwdCalWrap");
+    if(fwdForm.calOpen&&fwdCW&&!fwdCW.contains(e.target)){fwdForm.calOpen=false;renderPage();}
     let changed=false;
     Object.keys(srch).forEach(pid=>{if(srch[pid]&&srch[pid].open){const el=document.getElementById("srch-"+pid);if(el&&!el.contains(e.target)){srch[pid]={open:false,query:""};changed=true;}}});
     if(changed){renderLog();attachAll();}
@@ -831,8 +908,7 @@ function attachAll(){
   },{once:true});
 }
 
-// ── Keyboard shortcuts 1-6 ──
-const TAB_KEYS=["log","dashboard","history","ignite","trail","mdrt"];
+const TAB_KEYS=["log","dashboard","history","fwd","ignite","trail","mdrt"];
 document.addEventListener("keydown",e=>{
   const tag=document.activeElement.tagName;
   if(tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA")return;
@@ -848,6 +924,11 @@ window.navM=dir=>{calM+=dir;if(calM<0){calM=11;calY--;}else if(calM>11){calM=0;c
 window.jumpY=y=>{calY=y;renderLog();attachAll();};
 window.pickDay=d=>{fDate=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");calOpen=false;renderLog();attachAll();};
 window.pickToday=()=>{fDate=todayStr();calOpen=false;const t=new Date();calY=t.getFullYear();calM=t.getMonth();renderLog();attachAll();};
+window.fwdNavM=dir=>{fwdForm.calM+=dir;if(fwdForm.calM<0){fwdForm.calM=11;fwdForm.calY--;}else if(fwdForm.calM>11){fwdForm.calM=0;fwdForm.calY++;}renderPage();};
+window.fwdJumpY=y=>{fwdForm.calY=y;renderPage();};
+window.fwdPickDay=d=>{fwdForm.date=fwdForm.calY+"-"+String(fwdForm.calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");fwdForm.calOpen=false;renderPage();};
+window.fwdPickToday=()=>{fwdForm.date=todayStr();fwdForm.calOpen=false;const t=new Date();fwdForm.calY=t.getFullYear();fwdForm.calM=t.getMonth();renderPage();};
+window.updFWDForm=(f,v)=>{fwdForm[f]=v;renderPage();};
 window.srchOpen=pid=>{srch[pid]={open:true,query:""};renderLog();attachAll();setTimeout(()=>document.getElementById("sinp-"+pid)?.focus(),30);};
 window.srchType=(pid,val)=>{srch[pid]={open:true,query:val};renderLog();attachAll();setTimeout(()=>{const i=document.getElementById("sinp-"+pid);if(i){i.focus();i.setSelectionRange(val.length,val.length);}},10);};
 window.srchPick=(pid,val)=>{srch[pid]={open:false,query:""};pols=pols.map(p=>p.id===pid?{...p,product:val,term:"",ap:"",riders:[]}:p);renderLog();attachAll();};
@@ -869,7 +950,6 @@ window.addRider=id=>{
 window.remRider=(pid,rid)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.filter(r=>r.id!==rid)}:p);renderLog();attachAll();};
 window.updRiderName=(pid,rid,val)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,name:val,riderTerm:""}:r)}:p);renderLog();attachAll();};
 window.updRiderTerm=(pid,rid,val)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,riderTerm:val}:r)}:p);renderLog();attachAll();};
-window.updRider=(pid,rid,f,v)=>{pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,[f]:v}:r)}:p);renderLog();attachAll();};
 
 window.doAddSale=async()=>{
   const ci=document.getElementById("clientInp");
@@ -900,7 +980,39 @@ window.doAddSale=async()=>{
   tab="dashboard";
   renderAll();
 };
+
+window.doAddFWDSale=async()=>{
+  const cli=document.getElementById("fwdClientInp");
+  if(cli)fwdForm.client=cli.value.trim();
+  const apEl=document.getElementById("fwdApInp");
+  if(apEl)fwdForm.ap=apEl.value;
+  let hasErr=false;
+  if(!fwdForm.client){flashField(document.getElementById("fwdClientInp"));hasErr=true;}
+  if(!fwdForm.term){flashField(document.getElementById("fwdTermSel"));hasErr=true;}
+  if(!fwdForm.ap||parseFloat(fwdForm.ap)<=0){flashField(document.getElementById("fwdApInp"));hasErr=true;}
+  if(hasErr){const err=document.getElementById("fwdValErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;}
+  const ap=parseFloat(fwdForm.ap);
+  const termNum=parseInt(fwdForm.term);
+  const rate=getFWDRate(termNum);
+  const bend=getBending(fwdForm.date,sales);
+  const comm=ap*(rate.y1/100)*bend.factor;
+  const mo=new Date(fwdForm.date+"T00:00:00").getMonth();
+  const obj={
+    date:fwdForm.date,clientName:fwdForm.client,term:termNum,
+    annualPremium:ap,commRate:rate.y1,commission:comm,
+    bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits,
+    payoutDate:getPayoutDate(fwdForm.date),
+    quarter:getQ(mo),month:mo,
+    company:"FWD",product:"FWD Future First"
+  };
+  await addFWDSaleDB(obj);
+  launchConfetti();
+  fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date().getFullYear(),calM:new Date().getMonth()};
+  renderAll();
+};
+
 window.doDelSale=async id=>{if(confirm("Delete this sale?"))await delSaleDB(id);};
+window.doDelFWDSale=async id=>{if(confirm("Delete this FWD sale?"))await delFWDSaleDB(id);};
 
 renderAll();
 </script>
