@@ -620,13 +620,102 @@ function renderDash(){
 function getQD(ys,q){const qs=ys.filter(s=>s.quarter===q);const tm=qs.reduce((a,s)=>a+s.totalComm,0),bc=qs.reduce((a,s)=>a+s.baseComm,0),tc=qs.reduce((a,s)=>a+s.totalCredit,0),tier=getTier(tc),eb=tm>=3000?tm*0.25:0,qb=tm*tier.bonus/100;return{tm,bc,tc,tier,eb,qb,tb:eb+qb};}
 
 function renderHist(){
-  return "<div style='font-size:16px;font-weight:700;margin-bottom:16px;color:#60a5fa;'>📋 All Sales ("+sales.length+")</div>"
-  +(sales.length===0?"<div style='text-align:center;color:#64748b;padding:40px;'>No sales logged yet.</div>"
-  :sales.map(s=>{
-    const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
-    return "<div class='hist-item'><div style='display:flex;justify-content:space-between;align-items:flex-start;'><div style='flex:1;'><div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;'><span style='font-weight:700;font-size:15px;'>"+esc(s.clientName)+"</span><span class='badge'>"+s.quarter+"</span><span style='font-size:11px;color:#64748b;'>"+dt+"</span></div><div style='display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;'><span style='font-size:12px;'>Base Comm: <strong style='color:#38bdf8;'>"+$f(s.baseComm)+"</strong></span><span style='font-size:12px;'>Total Comm: <strong style='color:#34d399;'>"+$f(s.totalComm)+"</strong></span><span style='font-size:12px;'>Credits: <strong style='color:#60a5fa;'>"+$c(s.totalCredit)+"</strong></span><span style='font-size:12px;color:#64748b;'>"+s.policies.length+" polic"+(s.policies.length>1?"ies":"y")+"</span></div></div><button class='btn-del' onclick='doDelSale(\""+s.fid+"\")'>✕</button></div>"
-    +s.policies.map((p,pi)=>"<div class='pol-row'><div style='font-size:12px;color:#93c5fd;font-weight:600;margin-bottom:4px;'>Policy "+(pi+1)+": "+esc(p.product)+" · "+esc(p.term)+"</div><div style='display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin-bottom:6px;'><span>Premium: <strong style='color:#e2e8f0;'>"+$f(p.annualPremium)+"</strong></span><span>Base Comm: <strong style='color:#38bdf8;'>"+$f(p.baseComm)+"</strong></span><span>Total Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span><span>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span></div>"+(p.riders&&p.riders.length>0?"<div style='display:flex;flex-direction:column;gap:5px;'>"+p.riders.map(r=>"<div style='background:#0f172a;border-radius:8px;padding:7px 12px;border:1px solid #4f46e5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;'><span style='font-size:11px;color:#a78bfa;font-weight:700;'>🔗 "+esc(r.name)+"</span>"+(r.commPct?"<span style='font-size:10px;color:#64748b;'>("+r.commPct+"%)</span>":"")+"<span style='font-size:11px;'>Premium: <strong style='color:#e2e8f0;'>"+$f(r.premium)+"</strong></span><span style='font-size:11px;'>Comm: <strong style='color:#a78bfa;'>"+$f(r.comm)+"</strong></span><span style='font-size:11px;'>Credits: <strong style='color:#a78bfa;'>"+$c(r.credit)+" pts</strong></span></div>").join("")+"</div>":"")+"</div>").join("")+"</div>";
-  }).join(""));
+  const yrSales=sales.filter(s=>s.date.startsWith(String(selYear)));
+  const totalComm=yrSales.reduce((a,s)=>a+s.totalComm,0);
+  const totalCred=yrSales.reduce((a,s)=>a+s.totalCredit,0);
+
+  // Year selector + summary
+  let html="<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+  +"<div style='font-size:16px;font-weight:700;color:#60a5fa;'>📋 All Sales</div>"
+  +"<div style='position:relative;margin-left:auto;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
+  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
+  +"</div>";
+
+  // Year summary strip
+  html+="<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;'>"
+  +"<div style='background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;text-align:center;'><div style='font-size:11px;color:#64748b;'>Total Sales</div><div style='font-size:18px;font-weight:800;color:#e2e8f0;margin-top:3px;'>"+yrSales.length+"</div></div>"
+  +"<div style='background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;text-align:center;'><div style='font-size:11px;color:#64748b;'>Total Commission</div><div style='font-size:18px;font-weight:800;color:#34d399;margin-top:3px;'>"+$f(totalComm)+"</div></div>"
+  +"<div style='background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;text-align:center;'><div style='font-size:11px;color:#64748b;'>Total Credits</div><div style='font-size:18px;font-weight:800;color:#60a5fa;margin-top:3px;'>"+$c(totalCred)+"</div></div>"
+  +"</div>";
+
+  if(yrSales.length===0){
+    return html+"<div style='text-align:center;color:#64748b;padding:40px;background:#1e293b;border-radius:12px;border:1px solid #334155;'>No sales logged for "+selYear+".</div>";
+  }
+
+  // Render each quarter as a section
+  Object.keys(QS).forEach(q=>{
+    const qs=yrSales.filter(s=>s.quarter===q).sort((a,b)=>a.date<b.date?1:-1);
+    const qComm=qs.reduce((a,s)=>a+s.totalComm,0);
+    const qCred=qs.reduce((a,s)=>a+s.totalCredit,0);
+
+    // Quarter header — always show, grey out if empty
+    const hasData=qs.length>0;
+    html+="<div style='margin-bottom:20px;'>"
+    // Quarter title bar
+    +"<div style='display:flex;align-items:center;justify-content:space-between;background:"+(hasData?"linear-gradient(135deg,#1e3a5f,#0f2942)":"#1a2030")+";border-radius:10px 10px "+(hasData?"0 0":"10px 10px")+";padding:12px 16px;border:1px solid "+(hasData?"#1e40af":"#2a3550")+";'>"
+    +"<div style='display:flex;align-items:center;gap:10px;'>"
+    +"<span style='font-size:15px;font-weight:800;color:"+(hasData?"#60a5fa":"#475569")+";'>"+q+"</span>"
+    +"<span style='font-size:12px;color:"+(hasData?"#94a3b8":"#374151")+";'>"+QS[q].label+"</span>"
+    +"<span style='background:"+(hasData?"#0f2942":"#111827")+";border-radius:20px;padding:2px 10px;font-size:11px;color:"+(hasData?"#60a5fa":"#374151")+";font-weight:700;'>"+qs.length+" sale"+(qs.length!==1?"s":"")+"</span>"
+    +"</div>"
+    +(hasData
+      ?"<div style='display:flex;gap:16px;'>"
+      +"<span style='font-size:12px;color:#94a3b8;'>Comm: <strong style='color:#34d399;'>"+$f(qComm)+"</strong></span>"
+      +"<span style='font-size:12px;color:#94a3b8;'>Credits: <strong style='color:#60a5fa;'>"+$c(qCred)+"</strong></span>"
+      +"</div>"
+      :"<span style='font-size:12px;color:#374151;font-style:italic;'>No sales</span>")
+    +"</div>";
+
+    if(hasData){
+      html+="<div style='border:1px solid #1e40af;border-top:none;border-radius:0 0 10px 10px;overflow:hidden;'>";
+      qs.forEach((s,si)=>{
+        const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+        const isLast=si===qs.length-1;
+        html+="<div style='background:"+(si%2===0?"#0f172a":"#111827")+";padding:14px 16px;"+(isLast?"":"border-bottom:1px solid #1e293b;")+";'>"
+        // Client row
+        +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>"
+        +"<div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap;'>"
+        +"<span style='font-weight:700;font-size:14px;color:#e2e8f0;'>👤 "+esc(s.clientName)+"</span>"
+        +"<span style='font-size:11px;color:#64748b;background:#1e293b;padding:2px 8px;border-radius:4px;'>📅 "+dt+"</span>"
+        +"<span style='font-size:11px;color:#64748b;'>"+s.policies.length+" polic"+(s.policies.length>1?"ies":"y")+"</span>"
+        +"</div>"
+        +"<div style='display:flex;align-items:center;gap:10px;'>"
+        +"<div style='text-align:right;'>"
+        +"<div style='font-size:11px;color:#64748b;'>Total Comm</div>"
+        +"<div style='font-size:15px;font-weight:800;color:#34d399;'>"+$f(s.totalComm)+"</div>"
+        +"</div>"
+        +"<button class='btn-del' onclick='doDelSale(\""+s.fid+"\")'>✕</button>"
+        +"</div></div>"
+        // Policy rows
+        +s.policies.map((p,pi)=>{
+          return "<div style='background:#0a1929;border-radius:8px;padding:10px 12px;margin-bottom:"+(pi<s.policies.length-1?"6px":"0")+"px;border-left:3px solid #1e40af;'>"
+          +"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;'>"
+          +"<span style='font-size:12px;font-weight:700;color:#93c5fd;'>📋 "+esc(p.product)+"</span>"
+          +"<span style='font-size:11px;color:#475569;background:#0f172a;padding:2px 8px;border-radius:4px;'>"+esc(p.term)+"</span>"
+          +"</div>"
+          +"<div style='display:flex;gap:12px;flex-wrap:wrap;font-size:11px;'>"
+          +"<span>AP: <strong style='color:#e2e8f0;'>"+$f(p.annualPremium)+"</strong></span>"
+          +"<span>Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
+          +"<span>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span>"
+          +"</div>"
+          +(p.riders&&p.riders.length>0
+            ?"<div style='margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;'>"
+            +p.riders.map(r=>"<div style='background:#0f172a;border-radius:6px;padding:4px 10px;border:1px solid #4f46e5;display:flex;align-items:center;gap:6px;'>"
+              +"<span style='font-size:10px;color:#a78bfa;font-weight:700;'>🔗 "+esc(r.name)+"</span>"
+              +"<span style='font-size:10px;color:#64748b;'>"+$f(r.premium)+"</span>"
+              +"<span style='font-size:10px;color:#a78bfa;'>→ "+$f(r.comm)+"</span>"
+              +"</div>").join("")+"</div>"
+            :"")
+          +"</div>";
+        }).join("")
+        +"</div>";
+      });
+      html+="</div>";
+    }
+    html+="</div>";
+  });
+
+  return html;
 }
 
 function renderIgnite(){
