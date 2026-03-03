@@ -291,7 +291,7 @@ function renderTabs(){
 function renderPage(){
   const el=document.getElementById("app");
   if(tab==="log"){if(!document.getElementById("logShell"))el.innerHTML="<div id='logShell'></div>";renderLog();}
-  else if(tab==="dashboard")el.innerHTML=renderDash();
+  else if(tab==="dashboard")el.innerHTML=renderDashFull();
   else if(tab==="history")el.innerHTML=renderHist();
   else if(tab==="fwd")el.innerHTML=renderFWD();
   else if(tab==="ignite")el.innerHTML=renderIgnite();
@@ -877,11 +877,9 @@ function renderIgnite(){return`<div style='font-size:16px;font-weight:700;color:
 function renderTrail(){return`<div style='font-size:16px;font-weight:700;color:#8b5cf6;margin-bottom:16px;'>🌏 Trail Campaign</div><div class='card' style='color:#64748b;text-align:center;padding:40px;'>Trail campaign tracking coming soon.</div>`;}
 function renderMDRT(){return`<div style='font-size:16px;font-weight:700;color:#eab308;margin-bottom:16px;'>🏆 MDRT Progress</div><div class='card' style='color:#64748b;text-align:center;padding:40px;'>MDRT milestone tracker coming soon.</div>`;}
 
-// ── Override renderDash to include Income timeline ──
-const _renderDashOrig=renderDash;
-// Patch dashboard to include income timeline
+// ── Dashboard with Income timeline combined ──
 function renderDashFull(){
-  return _renderDashOrig()+renderIncomeTimeline();
+  return renderDash()+renderIncomeTimeline();
 }
 
 // ── Attach event listeners (called after every render) ──
@@ -1059,20 +1057,6 @@ function launchConfetti(){
     if(frame<150)requestAnimationFrame(draw);else document.body.removeChild(canvas);
   }
   draw();
-}
-
-// Patch renderPage to use full dashboard with income timeline
-const _origRenderPage=renderPage;
-function renderPage(){
-  const el=document.getElementById("app");
-  if(tab==="log"){if(!document.getElementById("logShell"))el.innerHTML="<div id='logShell'></div>";renderLog();}
-  else if(tab==="dashboard")el.innerHTML=renderDashFull();
-  else if(tab==="history")el.innerHTML=renderHist();
-  else if(tab==="fwd")el.innerHTML=renderFWD();
-  else if(tab==="ignite")el.innerHTML=renderIgnite();
-  else if(tab==="trail")el.innerHTML=renderTrail();
-  else if(tab==="mdrt")el.innerHTML=renderMDRT();
-  attachListeners();
 }
 
 renderAll();
