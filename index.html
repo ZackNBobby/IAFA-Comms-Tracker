@@ -614,13 +614,77 @@ function renderDash(){
   +TIERS.map(t=>{const isA=qd.tc>=t.min&&qd.tc<=t.max,isU=qd.tc>=t.min;return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'><div class='t-dot' style='background:"+(isA?"#34d399":isU?"#1d4ed8":"#334155")+";'></div><div style='flex:1;font-size:12px;color:"+(isA?"#e2e8f0":isU?"#94a3b8":"#475569")+";'>"+t.label+" credits</div><div style='font-size:13px;font-weight:700;color:"+(isA?"#34d399":isU?"#60a5fa":"#475569")+";'>"+t.bonus+"% "+(isA?"← YOU ARE HERE":"")+"</div></div>";}).join("")
   +(nt?"<div style='margin-top:10px;font-size:12px;color:#f59e0b;'>⚡ Need <strong>"+$c(nt.min-qd.tc)+" more credits</strong> to reach "+nt.bonus+"% tier</div>":"")
   +"</div>"
-  +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div><div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>"+renderIncomeTimeline();
+  +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div><div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>"
+  +renderQtrSummary(ys)
+  +renderIncomeTimeline();
 }
 
 function getQD(ys,q){const qs=ys.filter(s=>s.quarter===q);const tm=qs.reduce((a,s)=>a+s.totalComm,0),bc=qs.reduce((a,s)=>a+s.baseComm,0),tc=qs.reduce((a,s)=>a+s.totalCredit,0),tier=getTier(tc),eb=tm>=3000?tm*0.25:0,qb=tm*tier.bonus/100;return{tm,bc,tc,tier,eb,qb,tb:eb+qb};}
 
+// ── Quarterly Breakdown Table ──
+function renderQtrSummary(ys){
+  const rows=Object.keys(QS).map(q=>{
+    const d=getQD(ys,q);
+    return{q,tm:d.tm,qb:d.qb,eb:d.eb,tb:d.tb,grand:d.tm+d.tb,tc:d.tc,bonusPct:d.tier.bonus,cnt:ys.filter(s=>s.quarter===q).length};
+  });
+  const totComm=rows.reduce((a,r)=>a+r.tm,0);
+  const totQB=rows.reduce((a,r)=>a+r.qb,0);
+  const totEB=rows.reduce((a,r)=>a+r.eb,0);
+  const totGrand=rows.reduce((a,r)=>a+r.grand,0);
 
-const BONUS_MO={3:{q:"Q1",srcMos:[0,1,2],srcYrOffset:0},6:{q:"Q2",srcMos:[3,4,5],srcYrOffset:0},9:{q:"Q3",srcMos:[6,7,8],srcYrOffset:0},0:{q:"Q4",srcMos:[9,10,11],srcYrOffset:-1}};
+  let h="<div class='card' style='margin-bottom:4px;'>"
+    +"<div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>📋 Quarterly Breakdown — "+selYear+"</div>"
+    // Column headers
+    +"<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;padding:0 2px;margin-bottom:4px;'>"
+    +"<div></div>"
+    +"<div style='font-size:10px;color:#64748b;font-weight:700;text-align:right;'>Commission</div>"
+    +"<div style='font-size:10px;color:#64748b;font-weight:700;text-align:right;'>Qtr Bonus</div>"
+    +"<div style='font-size:10px;color:#64748b;font-weight:700;text-align:right;'>Easy Bonus</div>"
+    +"<div style='font-size:10px;color:#60a5fa;font-weight:700;text-align:right;'>Grand Total</div>"
+    +"</div>";
+
+  rows.forEach(r=>{
+    const isActive=r.q===activeQ;
+    const isEmpty=r.cnt===0;
+    h+="<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;align-items:center;"
+      +"background:"+(isActive?"#0f2942":isEmpty?"transparent":"#0f172a")+";"
+      +"border-radius:8px;padding:8px 4px;margin-bottom:4px;"
+      +"border:1px solid "+(isActive?"#1e40af":isEmpty?"transparent":"#1e293b")+";'>"
+      // Q label
+      +"<div style='font-size:12px;font-weight:800;color:"+(isActive?"#60a5fa":"#64748b")+";'>"
+        +r.q+(isActive?"<div style='font-size:9px;color:#3b82f6;'>active</div>":"")
+        +(isEmpty?"":"<div style='font-size:9px;color:#475569;font-weight:400;'>"+r.cnt+" sale"+(r.cnt!==1?"s":"")+"</div>")
+      +"</div>"
+      // Commission
+      +"<div style='text-align:right;'><div style='font-size:13px;font-weight:700;color:"+(r.tm>0?"#e2e8f0":"#334155")+";'>"+$f(r.tm)+"</div></div>"
+      // Quarterly bonus
+      +"<div style='text-align:right;'>"
+        +"<div style='font-size:13px;font-weight:700;color:"+(r.qb>0?"#a78bfa":"#334155")+";'>"+$f(r.qb)+"</div>"
+        +(r.tm>0?"<div style='font-size:10px;color:#475569;'>"+r.bonusPct+"%</div>":"")
+      +"</div>"
+      // Easy bonus
+      +"<div style='text-align:right;'>"
+        +"<div style='font-size:13px;font-weight:700;color:"+(r.eb>0?"#f59e0b":"#334155")+";'>"+$f(r.eb)+"</div>"
+        +(r.tm>0&&r.tm<3000?"<div style='font-size:10px;color:#475569;'>"+$f(3000-r.tm)+" more</div>":"")
+        +(r.eb>0?"<div style='font-size:10px;color:#475569;'>25%</div>":"")
+      +"</div>"
+      // Grand total
+      +"<div style='text-align:right;'><div style='font-size:14px;font-weight:800;color:"+(r.grand>0?"#34d399":"#334155")+";'>"+$f(r.grand)+"</div></div>"
+    +"</div>";
+  });
+
+  // Totals footer
+  h+="<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;align-items:center;"
+    +"background:linear-gradient(135deg,#0f2942,#0a1f3a);border-radius:8px;padding:9px 4px;margin-top:2px;border:1px solid #1e40af;'>"
+    +"<div style='font-size:10px;font-weight:900;color:#93c5fd;letter-spacing:0.05em;'>YEAR<br/>TOTAL</div>"
+    +"<div style='text-align:right;font-size:13px;font-weight:800;color:#e2e8f0;'>"+$f(totComm)+"</div>"
+    +"<div style='text-align:right;font-size:13px;font-weight:800;color:#a78bfa;'>"+$f(totQB)+"</div>"
+    +"<div style='text-align:right;font-size:13px;font-weight:800;color:#f59e0b;'>"+$f(totEB)+"</div>"
+    +"<div style='text-align:right;font-size:15px;font-weight:900;color:#34d399;'>"+$f(totGrand)+"</div>"
+  +"</div>"
+  +"</div>";
+  return h;
+}{3:{q:"Q1",srcMos:[0,1,2],srcYrOffset:0},6:{q:"Q2",srcMos:[3,4,5],srcYrOffset:0},9:{q:"Q3",srcMos:[6,7,8],srcYrOffset:0},0:{q:"Q4",srcMos:[9,10,11],srcYrOffset:-1}};
 let incSelMonth=null;
 function renderIncomeTimeline(){
   const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
