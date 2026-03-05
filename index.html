@@ -676,7 +676,7 @@ function renderQtrSummary(ys){
   // Totals footer
   h+="<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;align-items:center;"
     +"background:linear-gradient(135deg,#0f2942,#0a1f3a);border-radius:8px;padding:9px 4px;margin-top:2px;border:1px solid #1e40af;'>"
-    +"<div style='font-size:10px;font-weight:900;color:#93c5fd;letter-spacing:0.05em;'>YEAR<br/>TOTAL</div>"
+    +"<div style='font-size:10px;font-weight:900;color:#93c5fd;letter-spacing:0.05em;'>YEAR TOTAL</div>"
     +"<div style='text-align:right;font-size:13px;font-weight:800;color:#e2e8f0;'>"+$f(totComm)+"</div>"
     +"<div style='text-align:right;font-size:13px;font-weight:800;color:#a78bfa;'>"+$f(totQB)+"</div>"
     +"<div style='text-align:right;font-size:13px;font-weight:800;color:#f59e0b;'>"+$f(totEB)+"</div>"
@@ -684,7 +684,9 @@ function renderQtrSummary(ys){
   +"</div>"
   +"</div>";
   return h;
-}{3:{q:"Q1",srcMos:[0,1,2],srcYrOffset:0},6:{q:"Q2",srcMos:[3,4,5],srcYrOffset:0},9:{q:"Q3",srcMos:[6,7,8],srcYrOffset:0},0:{q:"Q4",srcMos:[9,10,11],srcYrOffset:-1}};
+}
+
+const BONUS_MO={3:{q:"Q1",srcMos:[0,1,2],srcYrOffset:0},6:{q:"Q2",srcMos:[3,4,5],srcYrOffset:0},9:{q:"Q3",srcMos:[6,7,8],srcYrOffset:0},0:{q:"Q4",srcMos:[9,10,11],srcYrOffset:-1}};
 let incSelMonth=null;
 function renderIncomeTimeline(){
   const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
