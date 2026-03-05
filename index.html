@@ -997,9 +997,12 @@ window.doAddFWDSale=async()=>{
   const rate=getFWDRate(termNum),bend=getBending(fwdForm.date,sales);
   const comm=ap*(rate.y1/100)*0.8*bend.factor;
   const mo=new Date(fwdForm.date+"T00:00:00").getMonth();
-  const obj={date:fwdForm.date,clientName:fwdForm.client,term:termNum,annualPremium:ap,commRate:rate.y1,commission:comm,bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits,payoutMonth:getPayoutMonth(fwdForm.date),quarter:getQ(mo),month:mo,company:"FWD",product:"FWD Future First"};
-  await addFWDSaleDB(obj);launchConfetti();
-  fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date().getFullYear(),calM:new Date().getMonth()};
+  const obj={date:fwdForm.date,clientName:fwdForm.client,term:termNum,annualPremium:ap,commRate:rate.y1,commission:comm,bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits,payoutMonth:getPayo
+utMonth(fwdForm.date),quarter:getQ(mo),month:m
+o,company:"FWD",product:"FWD Future First"};
+  await addFWDSaleDB(obj);launchConfetti();.9k
+ 
+ fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date().getFullYear(),calM:new Date().getMonth()};
   renderAll();
 };
 
@@ -1010,3 +1013,6 @@ renderAll();
 </script>
 </body>
 </html>
+
+
+
