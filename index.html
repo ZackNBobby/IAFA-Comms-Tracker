@@ -199,13 +199,13 @@ function liveFWDComm(s){
 // Payout = sale month + 1, return "Mon YYYY"
 function getPayoutMonth(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+1);
+  d.setDate(1); d.setMonth(d.getMonth()+1);
   return d.toLocaleDateString("en-SG",{month:"short",year:"numeric"});
 }
-// Returns {moIdx, year} for payout
+// Returns {mo, yr} for payout - setDate(1) first to avoid end-of-month overflow
 function getPayoutMoYear(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+1);
+  d.setDate(1); d.setMonth(d.getMonth()+1);
   return{mo:d.getMonth(),yr:d.getFullYear()};
 }
 
@@ -600,7 +600,7 @@ function updateFWDPreview(){
 // Income payout = sale month + 1 (same logic as FWD)
 function getIncomePayoutMoYear(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+1);
+  d.setDate(1); d.setMonth(d.getMonth()+1);
   return{mo:d.getMonth(),yr:d.getFullYear()};
 }
 
