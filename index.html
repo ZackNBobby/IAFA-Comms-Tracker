@@ -560,7 +560,7 @@ function renderFWD(){
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Year 1 Comm</div><div style='font-size:14px;font-weight:800;color:#34d399;margin-top:2px;'>${$f(s.commission)}</div></div>
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Comm %</div><div style='font-size:14px;font-weight:800;color:#86efac;margin-top:2px;'>${s.commRate}%</div></div>
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Bending</div><div style='margin-top:4px;'><span class='bending-badge ${bendCls}'>${s.bendLabel}</span></div></div>
-          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#34d399;margin-top:4px;'>${s.payoutMonth}</div></div>
+          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#34d399;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
         </div>
       </div>`;
     }).join("")}`;
