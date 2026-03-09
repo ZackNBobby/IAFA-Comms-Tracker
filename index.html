@@ -180,7 +180,7 @@ function liveFWDComm(s){
   const rate=getFWDRate(s.term);
   const bend=getLiveBending(s.date);
   return{
-    commission: s.annualPremium*(rate.y1/100)*0.8*bend.factor,
+    commission: s.annualPremium*(rate.y1/100)*bend.factor,
     commRate: rate.y1,
     bendFactor: bend.factor,
     bendLabel: bend.label,
@@ -192,13 +192,13 @@ function liveFWDComm(s){
 // Payout = sale month + 2, return "Mon YYYY"
 function getPayoutMonth(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+1);
+  d.setMonth(d.getMonth()+2);
   return d.toLocaleDateString("en-SG",{month:"short",year:"numeric"});
 }
 // Returns {moIdx, year} for payout
 function getPayoutMoYear(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+1);
+  d.setMonth(d.getMonth()+2);
   return{mo:d.getMonth(),yr:d.getFullYear()};
 }
 
@@ -472,7 +472,7 @@ function renderFWD(){
   if(ap>0&&termVal>=5){
     const rate=getFWDRate(termVal);
     const bend=getBending(fwdForm.date,sales);
-    const comm=ap*(rate.y1/100)*0.8*bend.factor;
+    const comm=ap*(rate.y1/100)*bend.factor;
     const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
     previewHtml=`<div id='fwdPreview' style='background:#071510;border-radius:10px;padding:12px;border:1px solid #166534;margin-bottom:14px;'>
       <div style='font-size:11px;color:#34d399;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
@@ -559,7 +559,7 @@ function renderFWD(){
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Year 1 Comm</div><div style='font-size:14px;font-weight:800;color:#34d399;margin-top:2px;'>${$f(s.commission)}</div></div>
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Comm %</div><div style='font-size:14px;font-weight:800;color:#86efac;margin-top:2px;'>${s.commRate}%</div></div>
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Bending</div><div style='margin-top:4px;'><span class='bending-badge ${bendCls}'>${s.bendLabel}</span></div></div>
-          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#34d399;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
+          <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#34d399;margin-top:4px;'>${s.payoutMonth}</div></div>
         </div>
       </div>`;
     }).join("")}`;
@@ -574,7 +574,7 @@ function updateFWDPreview(){
   if(ap>0&&termVal>=5){
     const rate=getFWDRate(termVal);
     const bend=getBending(fwdForm.date,sales);
-    const comm=ap*(rate.y1/100)*0.8*bend.factor;
+    const comm=ap*(rate.y1/100)*bend.factor;
     const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
     el.innerHTML=`<div style='font-size:11px;color:#34d399;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
       <div class='g3' style='margin-bottom:8px;'>
@@ -614,142 +614,10 @@ function renderDash(){
   +TIERS.map(t=>{const isA=qd.tc>=t.min&&qd.tc<=t.max,isU=qd.tc>=t.min;return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'><div class='t-dot' style='background:"+(isA?"#34d399":isU?"#1d4ed8":"#334155")+";'></div><div style='flex:1;font-size:12px;color:"+(isA?"#e2e8f0":isU?"#94a3b8":"#475569")+";'>"+t.label+" credits</div><div style='font-size:13px;font-weight:700;color:"+(isA?"#34d399":isU?"#60a5fa":"#475569")+";'>"+t.bonus+"% "+(isA?"← YOU ARE HERE":"")+"</div></div>";}).join("")
   +(nt?"<div style='margin-top:10px;font-size:12px;color:#f59e0b;'>⚡ Need <strong>"+$c(nt.min-qd.tc)+" more credits</strong> to reach "+nt.bonus+"% tier</div>":"")
   +"</div>"
-  +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div><div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>"
-  +renderQtrSummary(ys)
-  +renderIncomeTimeline();
+  +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div><div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>";
 }
 
 function getQD(ys,q){const qs=ys.filter(s=>s.quarter===q);const tm=qs.reduce((a,s)=>a+s.totalComm,0),bc=qs.reduce((a,s)=>a+s.baseComm,0),tc=qs.reduce((a,s)=>a+s.totalCredit,0),tier=getTier(tc),eb=tm>=3000?tm*0.25:0,qb=tm*tier.bonus/100;return{tm,bc,tc,tier,eb,qb,tb:eb+qb};}
-
-// ── Quarterly Breakdown Table ──
-function renderQtrSummary(ys){
-  const rows=Object.keys(QS).map(q=>{
-    const d=getQD(ys,q);
-    return{q,tm:d.tm,qb:d.qb,eb:d.eb,tb:d.tb,grand:d.tm+d.tb,tc:d.tc,bonusPct:d.tier.bonus,cnt:ys.filter(s=>s.quarter===q).length};
-  });
-  const totComm=rows.reduce((a,r)=>a+r.tm,0);
-  const totQB=rows.reduce((a,r)=>a+r.qb,0);
-  const totEB=rows.reduce((a,r)=>a+r.eb,0);
-  const totGrand=rows.reduce((a,r)=>a+r.grand,0);
-
-  let h="<div class='card' style='margin-bottom:4px;'>"
-    +"<div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>📋 Quarterly Breakdown — "+selYear+"</div>"
-    // Column headers
-    +"<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;padding:0 2px;margin-bottom:4px;'>"
-    +"<div></div>"
-    +"<div style='font-size:10px;color:#64748b;font-weight:700;text-align:right;'>Commission</div>"
-    +"<div style='font-size:10px;color:#64748b;font-weight:700;text-align:right;'>Qtr Bonus</div>"
-    +"<div style='font-size:10px;color:#64748b;font-weight:700;text-align:right;'>Easy Bonus</div>"
-    +"<div style='font-size:10px;color:#60a5fa;font-weight:700;text-align:right;'>Grand Total</div>"
-    +"</div>";
-
-  rows.forEach(r=>{
-    const isActive=r.q===activeQ;
-    const isEmpty=r.cnt===0;
-    h+="<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;align-items:center;"
-      +"background:"+(isActive?"#0f2942":isEmpty?"transparent":"#0f172a")+";"
-      +"border-radius:8px;padding:8px 4px;margin-bottom:4px;"
-      +"border:1px solid "+(isActive?"#1e40af":isEmpty?"transparent":"#1e293b")+";'>"
-      // Q label
-      +"<div style='font-size:12px;font-weight:800;color:"+(isActive?"#60a5fa":"#64748b")+";'>"
-        +r.q+(isActive?"<div style='font-size:9px;color:#3b82f6;'>active</div>":"")
-        +(isEmpty?"":"<div style='font-size:9px;color:#475569;font-weight:400;'>"+r.cnt+" sale"+(r.cnt!==1?"s":"")+"</div>")
-      +"</div>"
-      // Commission
-      +"<div style='text-align:right;'><div style='font-size:13px;font-weight:700;color:"+(r.tm>0?"#e2e8f0":"#334155")+";'>"+$f(r.tm)+"</div></div>"
-      // Quarterly bonus
-      +"<div style='text-align:right;'>"
-        +"<div style='font-size:13px;font-weight:700;color:"+(r.qb>0?"#a78bfa":"#334155")+";'>"+$f(r.qb)+"</div>"
-        +(r.tm>0?"<div style='font-size:10px;color:#475569;'>"+r.bonusPct+"%</div>":"")
-      +"</div>"
-      // Easy bonus
-      +"<div style='text-align:right;'>"
-        +"<div style='font-size:13px;font-weight:700;color:"+(r.eb>0?"#f59e0b":"#334155")+";'>"+$f(r.eb)+"</div>"
-        +(r.tm>0&&r.tm<3000?"<div style='font-size:10px;color:#475569;'>"+$f(3000-r.tm)+" more</div>":"")
-        +(r.eb>0?"<div style='font-size:10px;color:#475569;'>25%</div>":"")
-      +"</div>"
-      // Grand total
-      +"<div style='text-align:right;'><div style='font-size:14px;font-weight:800;color:"+(r.grand>0?"#34d399":"#334155")+";'>"+$f(r.grand)+"</div></div>"
-    +"</div>";
-  });
-
-  // Totals footer
-  h+="<div style='display:grid;grid-template-columns:48px 1fr 1fr 1fr 1fr;gap:4px;align-items:center;"
-    +"background:linear-gradient(135deg,#0f2942,#0a1f3a);border-radius:8px;padding:9px 4px;margin-top:2px;border:1px solid #1e40af;'>"
-    +"<div style='font-size:10px;font-weight:900;color:#93c5fd;letter-spacing:0.05em;'>YEAR TOTAL</div>"
-    +"<div style='text-align:right;font-size:13px;font-weight:800;color:#e2e8f0;'>"+$f(totComm)+"</div>"
-    +"<div style='text-align:right;font-size:13px;font-weight:800;color:#a78bfa;'>"+$f(totQB)+"</div>"
-    +"<div style='text-align:right;font-size:13px;font-weight:800;color:#f59e0b;'>"+$f(totEB)+"</div>"
-    +"<div style='text-align:right;font-size:15px;font-weight:900;color:#34d399;'>"+$f(totGrand)+"</div>"
-  +"</div>"
-  +"</div>";
-  return h;
-}
-
-const BONUS_MO={3:{q:"Q1",srcMos:[0,1,2],srcYrOffset:0},6:{q:"Q2",srcMos:[3,4,5],srcYrOffset:0},9:{q:"Q3",srcMos:[6,7,8],srcYrOffset:0},0:{q:"Q4",srcMos:[9,10,11],srcYrOffset:-1}};
-let incSelMonth=null;
-function renderIncomeTimeline(){
-  const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const ML=["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const payMap={};
-  for(let i=0;i<12;i++)payMap[i]={comm:0,sales:[]};
-  sales.forEach(function(s){
-    if(!s.date)return;
-    var sy=parseInt(s.date.slice(0,4)),sm=parseInt(s.date.slice(5,7))-1;
-    var pm=(sm+1)%12,py=sm===11?sy+1:sy;
-    if(py===selYear){payMap[pm].comm+=(s.totalComm||0);payMap[pm].sales.push(s);}
-  });
-  const bMap={};
-  Object.entries(BONUS_MO).forEach(function(entry){
-    var moStr=entry[0],cfg=entry[1];
-    var mo=parseInt(moStr),srcYr=selYear+cfg.srcYrOffset;
-    var ss=sales.filter(function(s){if(!s.date)return false;var yr=parseInt(s.date.slice(0,4)),m=parseInt(s.date.slice(5,7))-1;return yr===srcYr&&cfg.srcMos.includes(m);});
-    var tc=ss.reduce(function(a,s){return a+(s.totalCredit||0);},0),tm=ss.reduce(function(a,s){return a+(s.totalComm||0);},0);
-    var tier=getTier(tc),bp=tier.bonus,ba=bp>0?tm*(bp/100)+(tm>=3000?tm*0.25:0):0;
-    bMap[mo]={q:cfg.q,bp:bp,ba:ba,tc:tc,tm:tm,srcYr:srcYr};
-  });
-  var g="<div style='display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px;'>";
-  for(var i=0;i<12;i++){
-    var ib=BONUS_MO.hasOwnProperty(i),hc=payMap[i].comm>0,hb=ib&&bMap[i].ba>0,tot=payMap[i].comm+(hb?bMap[i].ba:0),ia=incSelMonth===i;
-    var bg="#0f172a",bdr="#1e293b";
-    if(ia){bg="#0f1e3d";bdr="#3b82f6";}else if(hb){bg="#1a1200";bdr="#d97706";}else if(hc){bg="#0a0f2a";bdr="#1e3a5f";}
-    g+="<div onclick='incSelMo("+i+")' style='background:"+bg+";border:1px solid "+bdr+";border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;'>"
-     +"<div style='font-size:11px;font-weight:700;color:"+(hb?"#fde68a":hc?"#93c5fd":"#475569")+";'>"+MS[i]+(ib?" &#11088;":"")+"</div>"
-     +"<div style='font-size:12px;font-weight:800;color:"+(tot>0?(hb?"#fbbf24":"#60a5fa"):"#334155")+";margin-top:3px;'>"+(tot>0?"$"+Number(tot).toLocaleString("en-SG",{maximumFractionDigits:0}):"&mdash;")+"</div>"
-     +(tot>0?"<div style='font-size:10px;color:#475569;margin-top:2px;'>"+payMap[i].sales.length+" sale"+(payMap[i].sales.length!==1?"s":"")+"</div>":"")
-     +"</div>";
-  }
-  g+="</div>";
-  var det="";
-  if(incSelMonth!==null){
-    var mo=incSelMonth,md=payMap[mo],ib2=BONUS_MO.hasOwnProperty(mo),bd2=ib2?bMap[mo]:null,hb2=bd2&&bd2.ba>0,tot2=md.comm+(hb2?bd2.ba:0),src=ML[(mo+11)%12];
-    det="<div style='background:#0a1929;border-radius:10px;padding:14px;border:1px solid "+(hb2?"#d97706":"#1e40af")+";margin-bottom:12px;'>"
-      +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'>"
-      +"<div style='font-size:14px;font-weight:700;color:"+(hb2?"#fbbf24":"#60a5fa")+";'>&#128176; "+ML[mo]+" "+selYear+" Payout</div>"
-      +"<div style='font-size:20px;font-weight:900;color:"+(hb2?"#fbbf24":"#60a5fa")+";'>"+$f(tot2)+"</div></div>"
-      +(md.sales.length>0
-        ?"<div style='font-size:12px;font-weight:700;color:#93c5fd;margin-bottom:6px;'>Commissions from "+src+" policies:</div>"
-         +md.sales.map(function(s){var dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});return"<div style='background:#0f172a;border-radius:8px;padding:9px 12px;border:1px solid #1e3a5f;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;'><div><div style='font-weight:700;font-size:13px;'>"+esc(s.clientName)+"</div><div style='font-size:11px;color:#475569;'>"+dt+" &middot; "+(s.policies||[]).length+" polic"+((s.policies||[]).length===1?"y":"ies")+"</div></div><div style='font-weight:800;color:#60a5fa;'>"+$f(s.totalComm||0)+"</div></div>";}).join("")
-         +"<div style='background:#0f1e3d;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:"+(hb2?"12px":"0")+";'><span style='color:#93c5fd;'>Subtotal</span><span style='color:#60a5fa;'>"+$f(md.comm)+"</span></div>"
-        :"<div style='font-size:13px;color:#475569;margin-bottom:"+(hb2?"12px":"4px")+";'>No commissions in "+ML[mo]+".</div>")
-      +(hb2
-        ?"<div style='display:flex;align-items:center;gap:8px;margin:10px 0 8px;'><div style='flex:1;height:1px;background:#d97706;'></div><div style='font-size:10px;font-weight:800;color:#fbbf24;text-transform:uppercase;'>&#11088; "+bd2.q+" Bonus</div><div style='flex:1;height:1px;background:#d97706;'></div></div>"
-         +"<div style='background:#1a1200;border-radius:8px;padding:10px 12px;border:1px solid #d97706;margin-bottom:8px;'>"
-         +"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;'>"
-         +"<div><div style='font-size:12px;font-weight:700;color:#fde68a;'>"+bd2.q+" Bonus ("+bd2.bp+"% quarterly"+(bd2.tm>=3000?"+25% easy":"")+")</div>"
-         +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>"+$c(bd2.tc)+" credits &middot; Base: "+$f(bd2.tm)+" &middot; "+bd2.q+" "+bd2.srcYr+"</div></div>"
-         +"<div style='font-weight:800;color:#fbbf24;font-size:16px;'>"+$f(bd2.ba)+"</div></div></div>"
-         +"<div style='background:#1f1500;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;font-size:13px;font-weight:700;border:1px solid #f59e0b;'>"
-         +"<span style='color:#fde68a;'>&#127881; Total for "+ML[mo]+"</span><span style='color:#fbbf24;'>"+$f(tot2)+"</span></div>"
-        :"")
-      +"</div>";
-  }
-  return "<div style='margin-top:20px;border-top:1px solid #334155;padding-top:20px;'>"
-    +"<div style='font-size:14px;font-weight:700;color:#60a5fa;margin-bottom:4px;'>&#128197; Income Payout Timeline &mdash; "+selYear+"</div>"
-    +"<div style='font-size:11px;color:#475569;margin-bottom:10px;'>Monthly commission (policy month+1) &middot; &#11088; = bonus month (Apr/Jul/Oct/Jan)</div>"
-    +g+det+"</div>";
-}
-window.incSelMo=function(i){incSelMonth=incSelMonth===i?null:i;renderPage();};
 
 function renderHist(){
   const yrSales=sales.filter(s=>s.date.startsWith(String(selYear)));
@@ -995,7 +863,7 @@ window.doAddFWDSale=async()=>{
   if(hasErr){const err=document.getElementById("fwdValErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;}
   const ap=parseFloat(fwdForm.ap),termNum=parseInt(fwdForm.term);
   const rate=getFWDRate(termNum),bend=getBending(fwdForm.date,sales);
-  const comm=ap*(rate.y1/100)*0.8*bend.factor;
+  const comm=ap*(rate.y1/100)*bend.factor;
   const mo=new Date(fwdForm.date+"T00:00:00").getMonth();
   const obj={date:fwdForm.date,clientName:fwdForm.client,term:termNum,annualPremium:ap,commRate:rate.y1,commission:comm,bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits,payoutMonth:getPayoutMonth(fwdForm.date),quarter:getQ(mo),month:mo,company:"FWD",product:"FWD Future First"};
   await addFWDSaleDB(obj);launchConfetti();
@@ -1010,4 +878,3 @@ renderAll();
 </script>
 </body>
 </html>
-
