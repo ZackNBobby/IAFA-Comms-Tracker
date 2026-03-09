@@ -704,9 +704,87 @@ function renderDash(){
   +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")+"</div></div>"
   +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
   +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
-  // Income payout timeline
+  // ── Combined monthly chart data ──
+  // For each month: Income payout (from prev month sales) + FWD payout + bonuses
+  const combinedMonths=MTHS_S.map((m,i)=>{
+    const incData=incomePayMap[i]||{comm:0,count:0};
+    const fwdData=fwdPayMap[i]||{comm:0,count:0};
+    const bonusQ=BONUS_MO_MAP[i]||null;
+    const bonusAmt=bonusQ?getQBonus(ys,bonusQ):0;
+    const total=incData.comm+fwdData.comm+bonusAmt;
+    return{m,i,income:incData.comm,fwd:fwdData.comm,bonus:bonusAmt,total};
+  });
+  const chartMax=Math.max(...combinedMonths.map(d=>d.total),1);
+  const curMo=new Date().getMonth(),curYr=new Date().getFullYear();
+
+  const combinedChartHtml="<div style='background:#1e293b;border-radius:14px;padding:18px;border:1px solid #334155;margin-bottom:20px;'>"
+  +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;'>"
+  +"<div style='font-size:13px;font-weight:700;color:#e2e8f0;'>💰 "+selYear+" Combined Monthly Payout</div>"
+  +"<div style='display:flex;gap:12px;flex-wrap:wrap;'>"
+  +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:#f97316;'></div>Income</div>"
+  +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:#34d399;'></div>FWD</div>"
+  +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:#f59e0b;'></div>Bonus</div>"
+  +"</div></div>"
+  // Bar chart
+  +"<div style='display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:flex-end;height:130px;margin-bottom:8px;'>"
+  +combinedMonths.map(d=>{
+    const isCur=d.i===curMo&&selYear===curYr;
+    const hasAmt=d.total>0;
+    const incH=d.total>0?Math.max(4,Math.round((d.income/chartMax)*110)):0;
+    const fwdH=d.total>0?Math.max(d.fwd>0?4:0,Math.round((d.fwd/chartMax)*110)):0;
+    const bonH=d.total>0?Math.max(d.bonus>0?4:0,Math.round((d.bonus/chartMax)*110)):0;
+    return "<div style='display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:1px;'>"
+    // stacked bar: bonus on top, then FWD, then Income at bottom
+    +(bonH>0?"<div style='width:100%;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#fbbf24,#f59e0b);height:"+bonH+"px;transition:height 0.6s ease;'></div>":"")
+    +(fwdH>0?"<div style='width:100%;background:linear-gradient(180deg,#34d399,#059669);height:"+fwdH+"px;"+(bonH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
+    +(incH>0?"<div style='width:100%;background:linear-gradient(180deg,#fb923c,#ea580c);height:"+incH+"px;"+(fwdH===0&&bonH===0?"border-radius:3px 3px 0 0;":"")+(hasAmt?"":"border-radius:3px;")+"transition:height 0.6s ease;'></div>":"")
+    +(!hasAmt?"<div style='width:100%;height:3px;background:#1e293b;border-radius:2px;'></div>":"")
+    +"<div style='font-size:9px;color:"+(isCur?"#60a5fa":"#475569")+";font-weight:"+(isCur?"700":"400")+";margin-top:4px;'>"+d.m+"</div>"
+    +"</div>";
+  }).join("")
+  +"</div>"
+  // Monthly breakdown table
+  +"<div style='border-top:1px solid #334155;padding-top:14px;margin-top:4px;'>"
+  +"<div style='font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:10px;'>Monthly Breakdown</div>"
+  +"<div style='overflow-x:auto;'><table style='width:100%;border-collapse:collapse;font-size:11px;'>"
+  +"<thead><tr style='background:#0f172a;'>"
+  +"<th style='padding:6px 8px;text-align:left;color:#475569;border-bottom:1px solid #1e293b;'>Month</th>"
+  +"<th style='padding:6px 8px;text-align:right;color:#f97316;border-bottom:1px solid #1e293b;'>Income</th>"
+  +"<th style='padding:6px 8px;text-align:right;color:#34d399;border-bottom:1px solid #1e293b;'>FWD</th>"
+  +"<th style='padding:6px 8px;text-align:right;color:#f59e0b;border-bottom:1px solid #1e293b;'>Bonus</th>"
+  +"<th style='padding:6px 8px;text-align:right;color:#e2e8f0;border-bottom:1px solid #1e293b;font-weight:800;'>Total</th>"
+  +"</tr></thead><tbody>"
+  +combinedMonths.map(d=>{
+    const isCur=d.i===curMo&&selYear===curYr;
+    const hasAmt=d.total>0;
+    const isBonusMo=BONUS_MO_MAP[d.i]!==undefined;
+    return "<tr style='border-bottom:1px solid #1e293b;"+(isCur?"background:#0f2942;":"")+"'>"
+    +"<td style='padding:7px 8px;font-weight:"+(isCur?"700":"500")+";color:"+(isCur?"#60a5fa":"#94a3b8")+";'>"
+    +MTHS[d.i].slice(0,3)+(isCur?" ◀":"")+(isBonusMo?" <span style='color:#d97706;font-size:9px;'>★</span>":"")
+    +"</td>"
+    +"<td style='padding:7px 8px;text-align:right;color:"+(d.income>0?"#f97316":"#334155")+";font-weight:"+(d.income>0?"600":"400")+"'>"+(d.income>0?$f(d.income):"—")+"</td>"
+    +"<td style='padding:7px 8px;text-align:right;color:"+(d.fwd>0?"#34d399":"#334155")+";font-weight:"+(d.fwd>0?"600":"400")+"'>"+(d.fwd>0?$f(d.fwd):"—")+"</td>"
+    +"<td style='padding:7px 8px;text-align:right;color:"+(d.bonus>0?"#f59e0b":"#334155")+";font-weight:"+(d.bonus>0?"600":"400")+"'>"+(d.bonus>0?$f(d.bonus):"—")+"</td>"
+    +"<td style='padding:7px 8px;text-align:right;font-weight:800;font-size:12px;color:"+(hasAmt?"#ffffff":"#334155")+"'>"+(hasAmt?$f(d.total):"—")+"</td>"
+    +"</tr>";
+  }).join("")
+  // Grand total row
+  +"<tr style='background:#0f172a;border-top:2px solid #334155;'>"
+  +"<td style='padding:8px 8px;font-weight:800;color:#e2e8f0;font-size:12px;'>Full Year</td>"
+  +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#f97316;'>"+$f(combinedMonths.reduce((a,d)=>a+d.income,0))+"</td>"
+  +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#34d399;'>"+$f(combinedMonths.reduce((a,d)=>a+d.fwd,0))+"</td>"
+  +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#f59e0b;'>"+$f(combinedMonths.reduce((a,d)=>a+d.bonus,0))+"</td>"
+  +"<td style='padding:8px 8px;text-align:right;font-weight:900;font-size:13px;color:#60a5fa;'>"+$f(combinedMonths.reduce((a,d)=>a+d.total,0))+"</td>"
+  +"</tr>"
+  +"</tbody></table></div></div></div>";
+
+  return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+  +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
+  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
+  +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
+  +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
+  +combinedChartHtml
   +incomeTimelineHtml
-  // Quarterly breakdown table
   +qTableHtml
   +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;'>"
   +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:18px;border:1px solid #f97316;box-shadow:0 0 24px rgba(249,115,22,0.2);text-align:center;'><div style='font-size:11px;color:#fed7aa;'>🏢 Income Commission</div><div style='font-size:26px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div><div style='font-size:11px;color:#fdba74;margin-top:4px;'>"+QS[activeQ].label+"</div></div>"
