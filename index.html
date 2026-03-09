@@ -722,7 +722,7 @@ function renderDash(){
   +"<div style='display:flex;gap:12px;flex-wrap:wrap;'>"
   +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:#f97316;'></div>Income</div>"
   +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:#34d399;'></div>FWD</div>"
-  +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:#f59e0b;'></div>Bonus</div>"
+  +"<div style='display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;'><div style='width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#a78bfa,#3b82f6);'></div>Bonus</div>"
   +"</div></div>"
   // Bar chart — with hover tooltip
   +"<div style='display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:flex-end;height:130px;margin-bottom:8px;'>"
@@ -736,13 +736,13 @@ function renderDash(){
     const tipLines=[]
     if(d.income>0)tipLines.push("<span style='color:#fb923c;'>Income:</span> "+$f(d.income));
     if(d.fwd>0)tipLines.push("<span style='color:#34d399;'>FWD:</span> "+$f(d.fwd));
-    if(d.bonus>0)tipLines.push("<span style='color:#fbbf24;'>Bonus:</span> "+$f(d.bonus));
+    if(d.bonus>0)tipLines.push("<span style='color:#a78bfa;'>Bonus:</span> "+$f(d.bonus));
     if(hasAmt)tipLines.push("<span style='color:#e2e8f0;font-weight:800;'>Total: "+$f(d.total)+"</span>");
     const tip=hasAmt?"<div class='bar-tip'>"+tipLines.join("<br>")+"</div>":"";
     return "<div class='bar-col"+(isCur?" bar-cur":"")+"'>"
     +tip
     // stacked bar segments: bonus on top, FWD middle, Income at bottom
-    +(bonH>0?"<div style='width:100%;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#fbbf24,#f59e0b);height:"+bonH+"px;transition:height 0.6s ease;'></div>":"")
+    +(bonH>0?"<div style='width:100%;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#a78bfa,#3b82f6);height:"+bonH+"px;transition:height 0.6s ease;box-shadow:0 0 8px rgba(167,139,250,0.5);'></div>":"")
     +(fwdH>0?"<div style='width:100%;background:linear-gradient(180deg,#34d399,#059669);height:"+fwdH+"px;"+(bonH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
     +(incH>0?"<div style='width:100%;background:linear-gradient(180deg,#fb923c,#ea580c);height:"+incH+"px;"+(fwdH===0&&bonH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
     +(!hasAmt?"<div style='width:100%;height:3px;background:#334155;border-radius:2px;'></div>":"")
@@ -758,7 +758,7 @@ function renderDash(){
   +"<th style='padding:6px 8px;text-align:left;color:#475569;border-bottom:1px solid #1e293b;'>Month</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#f97316;border-bottom:1px solid #1e293b;'>Income</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#34d399;border-bottom:1px solid #1e293b;'>FWD</th>"
-  +"<th style='padding:6px 8px;text-align:right;color:#f59e0b;border-bottom:1px solid #1e293b;'>Bonus</th>"
+  +"<th style='padding:6px 8px;text-align:right;color:#a78bfa;border-bottom:1px solid #1e293b;'>Bonus</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#e2e8f0;border-bottom:1px solid #1e293b;font-weight:800;'>Total</th>"
   +"</tr></thead><tbody>"
   +combinedMonths.map(d=>{
@@ -771,7 +771,7 @@ function renderDash(){
     +"</td>"
     +"<td style='padding:7px 8px;text-align:right;color:"+(d.income>0?"#f97316":"#334155")+";font-weight:"+(d.income>0?"600":"400")+"'>"+(d.income>0?$f(d.income):"—")+"</td>"
     +"<td style='padding:7px 8px;text-align:right;color:"+(d.fwd>0?"#34d399":"#334155")+";font-weight:"+(d.fwd>0?"600":"400")+"'>"+(d.fwd>0?$f(d.fwd):"—")+"</td>"
-    +"<td style='padding:7px 8px;text-align:right;color:"+(d.bonus>0?"#f59e0b":"#334155")+";font-weight:"+(d.bonus>0?"600":"400")+"'>"+(d.bonus>0?$f(d.bonus):"—")+"</td>"
+    +"<td style='padding:7px 8px;text-align:right;color:"+(d.bonus>0?"#a78bfa":"#334155")+";font-weight:"+(d.bonus>0?"600":"400")+"'>"+(d.bonus>0?$f(d.bonus):"—")+"</td>"
     +"<td style='padding:7px 8px;text-align:right;font-weight:800;font-size:12px;color:"+(hasAmt?"#ffffff":"#334155")+"'>"+(hasAmt?$f(d.total):"—")+"</td>"
     +"</tr>";
   }).join("")
@@ -780,7 +780,7 @@ function renderDash(){
   +"<td style='padding:8px 8px;font-weight:800;color:#e2e8f0;font-size:12px;'>Full Year</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#f97316;'>"+$f(combinedMonths.reduce((a,d)=>a+d.income,0))+"</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#34d399;'>"+$f(combinedMonths.reduce((a,d)=>a+d.fwd,0))+"</td>"
-  +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#f59e0b;'>"+$f(combinedMonths.reduce((a,d)=>a+d.bonus,0))+"</td>"
+  +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#a78bfa;'>"+$f(combinedMonths.reduce((a,d)=>a+d.bonus,0))+"</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:900;font-size:13px;color:#60a5fa;'>"+$f(combinedMonths.reduce((a,d)=>a+d.total,0))+"</td>"
   +"</tr>"
   +"</tbody></table></div></div></div>";
