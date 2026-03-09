@@ -176,11 +176,12 @@ function getLiveBending(saleDate){
 }
 
 // Compute live commission for a stored FWD sale
+// Formula: AP × 0.8 (Income keeps 20%) × (FWD comm rate for term) × bending
 function liveFWDComm(s){
   const rate=getFWDRate(s.term);
   const bend=getLiveBending(s.date);
   return{
-    commission: s.annualPremium*(rate.y1/100)*bend.factor,
+    commission: s.annualPremium*0.8*(rate.y1/100)*bend.factor,
     commRate: rate.y1,
     bendFactor: bend.factor,
     bendLabel: bend.label,
@@ -189,16 +190,16 @@ function liveFWDComm(s){
   };
 }
 
-// Payout = sale month + 2, return "Mon YYYY"
+// Payout = sale month + 1, return "Mon YYYY"
 function getPayoutMonth(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+2);
+  d.setMonth(d.getMonth()+1);
   return d.toLocaleDateString("en-SG",{month:"short",year:"numeric"});
 }
 // Returns {moIdx, year} for payout
 function getPayoutMoYear(saleDate){
   const d=new Date(saleDate+"T00:00:00");
-  d.setMonth(d.getMonth()+2);
+  d.setMonth(d.getMonth()+1);
   return{mo:d.getMonth(),yr:d.getFullYear()};
 }
 
@@ -472,7 +473,7 @@ function renderFWD(){
   if(ap>0&&termVal>=5){
     const rate=getFWDRate(termVal);
     const bend=getBending(fwdForm.date,sales);
-    const comm=ap*(rate.y1/100)*bend.factor;
+    const comm=ap*0.8*(rate.y1/100)*bend.factor;
     const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
     previewHtml=`<div id='fwdPreview' style='background:#071510;border-radius:10px;padding:12px;border:1px solid #166534;margin-bottom:14px;'>
       <div style='font-size:11px;color:#34d399;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
@@ -574,7 +575,7 @@ function updateFWDPreview(){
   if(ap>0&&termVal>=5){
     const rate=getFWDRate(termVal);
     const bend=getBending(fwdForm.date,sales);
-    const comm=ap*(rate.y1/100)*bend.factor;
+    const comm=ap*0.8*(rate.y1/100)*bend.factor;
     const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
     el.innerHTML=`<div style='font-size:11px;color:#34d399;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
       <div class='g3' style='margin-bottom:8px;'>
@@ -590,19 +591,123 @@ function updateFWDPreview(){
   }
 }
 
+// Income payout = sale month + 1 (same logic as FWD)
+function getIncomePayoutMoYear(saleDate){
+  const d=new Date(saleDate+"T00:00:00");
+  d.setMonth(d.getMonth()+1);
+  return{mo:d.getMonth(),yr:d.getFullYear()};
+}
+
+// Bonus month lookup: Jan=Q4, Apr=Q1, Jul=Q2, Oct=Q3
+// Returns bonus amount for a given payout month index (0=Jan,3=Apr,6=Jul,9=Oct)
+const BONUS_MO_MAP={0:"Q4",3:"Q1",6:"Q2",9:"Q3"};
+function getQBonus(ys,q){
+  const qd=getQD(ys,q);
+  return qd.qb+qd.eb;
+}
+
 function renderDash(){
   const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
   const qd=getQD(ys,activeQ);
   const nt=TIERS.find(t=>t.min>qd.tc);
-  const fwdQ=fwdSales.map(s=>({...s,...liveFWDComm(s)})).filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
+  const liveFwdAll=fwdSales.map(s=>({...s,...liveFWDComm(s)}));
+  const fwdQ=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
   const fwdQTotal=fwdQ.reduce((a,s)=>a+s.commission,0);
-  const fwdYrTotal=fwdSales.map(s=>({...s,...liveFWDComm(s)})).filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
+  const fwdYrTotal=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
+
+  // ── Build Income monthly payout map ──
+  // Each sale's commission lands the following month
+  const incomePayMap={};
+  ys.forEach(s=>{
+    const{mo,yr}=getIncomePayoutMoYear(s.date);
+    if(yr===selYear){
+      if(!incomePayMap[mo])incomePayMap[mo]={comm:0,count:0,clients:[]};
+      incomePayMap[mo].comm+=s.totalComm;
+      incomePayMap[mo].count++;
+      incomePayMap[mo].clients.push({name:s.clientName,comm:s.totalComm,date:s.date});
+    }
+  });
+
+  // ── Build FWD monthly payout map for selYear ──
+  const fwdPayMap={};
+  liveFwdAll.forEach(s=>{
+    const{mo,yr}=getPayoutMoYear(s.date);
+    if(yr===selYear){
+      if(!fwdPayMap[mo])fwdPayMap[mo]={comm:0,count:0};
+      fwdPayMap[mo].comm+=s.commission;
+      fwdPayMap[mo].count++;
+    }
+  });
+
+  // ── Quarterly totals table ──
+  // For each quarter: show commission, bonus, total received
+  // Bonus months: Q1 bonus paid Apr, Q2→Jul, Q3→Oct, Q4→Jan
+  const qKeys=["Q1","Q2","Q3","Q4"];
+  const qRows=qKeys.map(q=>{
+    const d=getQD(ys,q);
+    const totalBonus=d.qb+d.eb;
+    return{q,comm:d.tm,qb:d.qb,eb:d.eb,bonus:totalBonus,grand:d.tm+totalBonus,payout:QS[q].payout,credits:d.tc,tier:d.tier};
+  });
+  const qTableHtml="<div style='margin-bottom:20px;'>"
+  +"<div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:10px;'>📊 "+selYear+" Quarterly Breakdown</div>"
+  +"<div style='overflow-x:auto;'><table style='width:100%;border-collapse:collapse;font-size:12px;'>"
+  +"<thead><tr style='background:#0f172a;'>"
+  +"<th style='padding:8px 10px;text-align:left;color:#64748b;border-bottom:1px solid #334155;'>Quarter</th>"
+  +"<th style='padding:8px 10px;text-align:right;color:#64748b;border-bottom:1px solid #334155;'>Commission</th>"
+  +"<th style='padding:8px 10px;text-align:right;color:#64748b;border-bottom:1px solid #334155;'>Qtr Bonus</th>"
+  +"<th style='padding:8px 10px;text-align:right;color:#64748b;border-bottom:1px solid #334155;'>Easy Bonus</th>"
+  +"<th style='padding:8px 10px;text-align:right;color:#f59e0b;border-bottom:1px solid #334155;'>Grand Total</th>"
+  +"<th style='padding:8px 10px;text-align:center;color:#64748b;border-bottom:1px solid #334155;'>Bonus Paid</th>"
+  +"</tr></thead><tbody>"
+  +qRows.map(r=>{
+    const isActive=r.q===activeQ;
+    const bg=isActive?"background:linear-gradient(135deg,#1e3a5f22,#0f294222);border-left:3px solid #60a5fa;":"";
+    return "<tr style='border-bottom:1px solid #1e293b;"+bg+"cursor:pointer;' onclick='setQ(\""+r.q+"\")'>"
+    +"<td style='padding:10px 10px;font-weight:700;color:"+(isActive?"#60a5fa":"#94a3b8")+";'>"+r.q+(isActive?" ◀":"")+"\n<div style='font-size:10px;color:#475569;font-weight:400;'>"+$c(r.credits)+" pts · "+r.tier.bonus+"%</div></td>"
+    +"<td style='padding:10px 10px;text-align:right;color:#e2e8f0;font-weight:600;'>"+(r.comm>0?$f(r.comm):"<span style='color:#334155;'>—</span>")+"</td>"
+    +"<td style='padding:10px 10px;text-align:right;color:#a78bfa;'>"+(r.qb>0?$f(r.qb):"<span style='color:#334155;'>—</span>")+"</td>"
+    +"<td style='padding:10px 10px;text-align:right;color:#f59e0b;'>"+(r.eb>0?$f(r.eb):"<span style='color:#334155;'>—</span>")+"</td>"
+    +"<td style='padding:10px 10px;text-align:right;font-weight:800;color:"+(r.grand>0?"#34d399":"#334155")+";font-size:13px;'>"+(r.grand>0?$f(r.grand):"—")+"</td>"
+    +"<td style='padding:10px 10px;text-align:center;'><span style='font-size:11px;color:#60a5fa;background:#0f2942;padding:2px 8px;border-radius:4px;'>"+r.payout+"</span></td>"
+    +"</tr>";
+  }).join("")
+  +"</tbody></table></div></div>";
+
+  // ── Income payout timeline HTML ──
+  const incomeTimelineHtml="<div style='background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:20px;'>"
+  +"<div style='font-size:13px;font-weight:700;color:#f97316;margin-bottom:12px;'>📅 "+selYear+" Income Monthly Payout Timeline</div>"
+  +"<div class='timeline-grid' style='margin-bottom:0;'>"
+  +MTHS_S.map((m,i)=>{
+    const data=incomePayMap[i];
+    const isBonus=BONUS_MO_MAP[i]!==undefined;
+    const bonusQ=isBonus?BONUS_MO_MAP[i]:null;
+    const bonusAmt=isBonus?getQBonus(ys,bonusQ):0;
+    const commAmt=data?data.comm:0;
+    const totalAmt=commAmt+bonusAmt;
+    const hasAmt=totalAmt>0;
+    const borderCol=isBonus?"#d97706":"#334155";
+    const activeBorderCol=isBonus?"#f59e0b":"#3b82f6";
+    return "<div style='background:"+(isBonus?"#1c1505":"#0f172a")+";border-radius:10px;padding:10px 6px;border:1px solid "+(hasAmt?activeBorderCol:borderCol)+";text-align:center;"+(hasAmt?"box-shadow:0 0 8px rgba(96,165,250,0.12);":"")+";'>"
+    +"<div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:"+(isBonus?"#d97706":"#475569")+";'>"+m+(isBonus?" ★":"")+"</div>"
+    +(commAmt>0?"<div style='font-size:11px;font-weight:700;color:#f97316;margin-top:3px;'>"+$f(commAmt)+"</div>":"")
+    +(bonusAmt>0?"<div style='font-size:10px;font-weight:700;color:#f59e0b;margin-top:2px;'>+"+$f(bonusAmt)+"</div><div style='font-size:9px;color:#78350f;'>"+bonusQ+" bonus</div>":"")
+    +(!hasAmt?"<div style='font-size:12px;font-weight:700;color:#334155;margin-top:3px;'>—</div>":"")
+    +(hasAmt&&(commAmt>0&&bonusAmt>0)?"<div style='border-top:1px solid #334155;margin-top:4px;padding-top:3px;font-size:11px;font-weight:900;color:#fbbf24;'>"+$f(totalAmt)+"</div>":"")
+    +"</div>";
+  }).join("")
+  +"</div>"
+  +"<div style='margin-top:8px;font-size:11px;color:#475569;'>★ = Bonus month (Apr/Jul/Oct/Jan) · Orange = Income commissions · Yellow = Quarterly bonus</div>"
+  +"</div>";
 
   return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
   +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
   +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")+"</div></div>"
   +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
   +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
+  // Income payout timeline
+  +incomeTimelineHtml
+  // Quarterly breakdown table
+  +qTableHtml
   +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;'>"
   +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:18px;border:1px solid #f97316;box-shadow:0 0 24px rgba(249,115,22,0.2);text-align:center;'><div style='font-size:11px;color:#fed7aa;'>🏢 Income Commission</div><div style='font-size:26px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div><div style='font-size:11px;color:#fdba74;margin-top:4px;'>"+QS[activeQ].label+"</div></div>"
   +"<div style='background:linear-gradient(135deg,#071510,#0a2218,#0d2b1a);border-radius:12px;padding:18px;border:1px solid #166534;box-shadow:0 0 20px rgba(52,211,153,0.12);text-align:center;'><div style='font-size:11px;color:#86efac;'>🏢 FWD Commission</div><div style='font-size:26px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(fwdQTotal)+"</div><div style='font-size:11px;color:#475569;margin-top:4px;'>"+QS[activeQ].label+" · "+fwdQ.length+" sale"+(fwdQ.length!==1?"s":"")+"</div>"+(fwdYrTotal>0?"<div style='font-size:10px;color:#166534;margin-top:4px;border-top:1px solid #166534;padding-top:4px;'>Full "+selYear+": <span style='color:#34d399;font-weight:700;'>"+$f(fwdYrTotal)+"</span></div>":"")+"</div>"
@@ -863,7 +968,7 @@ window.doAddFWDSale=async()=>{
   if(hasErr){const err=document.getElementById("fwdValErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;}
   const ap=parseFloat(fwdForm.ap),termNum=parseInt(fwdForm.term);
   const rate=getFWDRate(termNum),bend=getBending(fwdForm.date,sales);
-  const comm=ap*(rate.y1/100)*bend.factor;
+  const comm=ap*0.8*(rate.y1/100)*bend.factor;
   const mo=new Date(fwdForm.date+"T00:00:00").getMonth();
   const obj={date:fwdForm.date,clientName:fwdForm.client,term:termNum,annualPremium:ap,commRate:rate.y1,commission:comm,bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits,payoutMonth:getPayoutMonth(fwdForm.date),quarter:getQ(mo),month:mo,company:"FWD",product:"FWD Future First"};
   await addFWDSaleDB(obj);launchConfetti();
