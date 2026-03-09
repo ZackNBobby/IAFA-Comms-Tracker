@@ -615,8 +615,7 @@ function renderDash(){
   const fwdQTotal=fwdQ.reduce((a,s)=>a+s.commission,0);
   const fwdYrTotal=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
 
-  // ── Build Income monthly payout map ──
-  // Each sale's commission lands the following month
+  // ── Income monthly payout map (sale month +1) ──
   const incomePayMap={};
   ys.forEach(s=>{
     const{mo,yr}=getIncomePayoutMoYear(s.date);
@@ -699,13 +698,7 @@ function renderDash(){
   +"<div style='margin-top:8px;font-size:11px;color:#475569;'>★ = Bonus month (Apr/Jul/Oct/Jan) · Orange = Income commissions · Yellow = Quarterly bonus</div>"
   +"</div>";
 
-  return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
-  +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
-  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")+"</div></div>"
-  +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
-  +"<div style='font-size:13px;color:#94a3b8;margin-bottom:16px;'>"+selYear+" · "+QS[activeQ].label+" · Bonus paid in <span style='color:#60a5fa;font-weight:700;'>"+QS[activeQ].payout+"</span></div>"
   // ── Combined monthly chart data ──
-  // For each month: Income payout (from prev month sales) + FWD payout + bonuses
   const combinedMonths=MTHS_S.map((m,i)=>{
     const incData=incomePayMap[i]||{comm:0,count:0};
     const fwdData=fwdPayMap[i]||{comm:0,count:0};
