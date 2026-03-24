@@ -361,7 +361,7 @@ function buildSrch(pid,sel){
   const q=s.query.toLowerCase();
   const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):CATS;
   if(!s.open)return "<div class='srch-wrap' id='srch-"+pid+"'><button class='srch-sel' id='srchsel-"+pid+"' onclick='srchOpen(\""+pid+"\")'><span class='"+(sel?"":"srch-ph")+"'>"+(sel?esc(sel):"-- Select Product --")+"</span><span style='color:#64748b;font-size:11px;'>&#9660;</span></button></div>";
-  return "<div class='srch-wrap' id='srch-"+pid+"'><input class='srch-inp' id='sinp-"+pid+"' type='text' placeholder='🔍 Type to search...' value='"+esc(s.query)+"' oninput='srchType(\""+pid+"\",this.value)' onkeydown='srchKey(event,\""+pid+"\")' autocomplete='off'/>"
+  return "<div class='srch-wrap' id='srch-"+pid+"'><input class='srch-inp' id='sinp-"+pid+"' type='text' placeholder='🔍 Type to search...' value='"+esc(s.query)+"' oninput='srchType(\""+pid+"\",this.value)' onkeydown='srchKey(event,\""+pid+"\")' autocomplete='off' autocorrect='off' autocapitalize='none' spellcheck='false'/>"
   +(filtered.length>0?"<div class='srch-list'>"+filtered.map(cat=>"<div class='"+cat.hCls+"'>"+cat.label+"</div>"+cat.products.map(p=>"<div class='"+cat.iCls+"' onclick='srchPick(\""+pid+"\",\""+esc(p)+"\")'>"+esc(p)+"</div>").join("")).join("")+"</div>":"<div class='srch-list'><div style='padding:12px;font-size:13px;color:#64748b;'>No products found</div></div>")
   +"</div>";
 }
@@ -1020,7 +1020,20 @@ window.fwdPickToday=()=>{fwdForm.date=todayStr();fwdForm.calOpen=false;const t=n
 window.fwdTermChange=v=>{fwdForm.term=v;updateFWDPreview();};
 window.fwdSelMo=mo=>{fwdSelMonth=fwdSelMonth===mo?null:mo;renderPage();};
 window.srchOpen=pid=>{srch[pid]={open:true,query:""};renderLog();attachAll();setTimeout(()=>document.getElementById("sinp-"+pid)?.focus(),30);};
-window.srchType=(pid,val)=>{srch[pid]={open:true,query:val};renderLog();attachAll();setTimeout(()=>{const i=document.getElementById("sinp-"+pid);if(i){i.focus();i.setSelectionRange(val.length,val.length);}},10);};
+window.srchType=(pid,val)=>{
+  srch[pid]={open:true,query:val};
+  // Only update the dropdown list — never re-render the whole form on mobile (kills keyboard)
+  const wrap=document.getElementById("srch-"+pid);
+  if(!wrap)return;
+  const q=val.toLowerCase();
+  const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):CATS;
+  const listHtml=filtered.length>0
+    ?"<div class=\'srch-list\'>"+filtered.map(cat=>"<div class=\'"+cat.hCls+"\'>"+cat.label+"</div>"+cat.products.map(p=>"<div class=\'"+cat.iCls+"\' onclick=\'srchPick(\""+pid+"\",\""+esc(p)+"\")\'>"+esc(p)+"</div>").join("")).join("")+"</div>"
+    :"<div class=\'srch-list\'><div style=\'padding:12px;font-size:13px;color:#64748b;\'>No products found</div></div>";
+  const existing=wrap.querySelector(".srch-list");
+  if(existing){existing.outerHTML=listHtml;}
+  else{wrap.insertAdjacentHTML("beforeend",listHtml);}
+};
 window.srchPick=(pid,val)=>{srch[pid]={open:false,query:""};pols=pols.map(p=>p.id===pid?{...p,product:val,term:"",ap:"",riders:[]}:p);renderLog();attachAll();};
 window.srchKey=(e,pid)=>{if(e.key==="Escape"){srch[pid]={open:false,query:""};renderLog();attachAll();}};
 window.addPol=()=>{pols.push(newPol());renderLog();attachAll();};
