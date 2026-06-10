@@ -250,6 +250,7 @@ function getYearTotals(yr){
 }
 
 let sales=[],fwdSales=[],tab="log",activeQ="Q1",selYear=new Date().getFullYear();
+let campTab="ignite";
 let pols=[newPol()],fDate=todayStr(),fClient="";
 let calOpen=false,calY=new Date().getFullYear(),calM=new Date().getMonth();
 let srch={};
@@ -272,7 +273,7 @@ async function delFWDSaleDB(fid){try{await deleteDoc(doc(db,COLL_FWD,fid));}catc
 function renderAll(){renderTabs();renderPage();}
 
 function renderTabs(){
-  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["ignite","🔥 Ignite 2026"],["trail","🌍 Trailblazer 2027"],["mdrt","🏆 MDRT / COT / TOT"]];
+  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["campaigns","🎯 Campaigns"],["mdrt","🏆 MDRT / COT / TOT"]];
   document.getElementById("tabBar").innerHTML=TABS.map(([k,v])=>`<button class="tab-btn${tab===k?" active":""}" onclick="setTab('${k}')">${v}</button>`).join("");
 }
 
@@ -282,8 +283,7 @@ function renderPage(){
   else if(tab==="dashboard")el.innerHTML=renderDash();
   else if(tab==="history")el.innerHTML=renderHist();
   else if(tab==="fwd")el.innerHTML=renderFWD();
-  else if(tab==="ignite")el.innerHTML=renderIgnite();
-  else if(tab==="trail")el.innerHTML=renderTrail();
+  else if(tab==="campaigns")el.innerHTML=renderCampaigns();
   else if(tab==="mdrt")el.innerHTML=renderMDRT();
   attachAll();
 }
@@ -806,14 +806,12 @@ function renderDash(){
   +"<div class='pay-card' style='margin-bottom:0;'><div style='font-size:11px;color:#94a3b8;'>🚀 Bonus Payable in "+QS[activeQ].payout+"</div><div style='font-size:24px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div><div style='font-size:10px;color:#64748b;margin-top:2px;'>Qtr "+$f(qd.qb)+" + Easy "+$f(qd.eb)+"</div></div>"
   +"</div>"
   // Easy Bonus progress + Credit Tier progress
-  +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%;background:linear-gradient(90deg,#f59e0b88,#f59e0b);'></div></div><div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>"
-  +"<div class='card' style='margin-bottom:16px;'><div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>📊 Credit Tier Progress</div>"
-  +TIERS.map(t=>{const isA=qd.tc>=t.min&&qd.tc<=t.max,isU=qd.tc>=t.min;return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'><div class='t-dot' style='background:"+(isA?"#34d399":isU?"#1d4ed8":"#334155")+";'></div><div style='flex:1;font-size:12px;color:"+(isA?"#e2e8f0":isU?"#94a3b8":"#475569")+";'>"+t.label+" credits</div><div style='font-size:13px;font-weight:700;color:"+(isA?"#34d399":isU?"#60a5fa":"#475569")+";'>"+t.bonus+"% "+(isA?"← YOU ARE HERE":"")+"</div></div>";}).join("")
-  +(nt?"<div style='margin-top:10px;font-size:12px;color:#f59e0b;'>⚡ Need <strong>"+$c(nt.min-qd.tc)+" more credits</strong> to reach "+nt.bonus+"% tier</div>":"")
+  +"<div class='card' style='margin-bottom:16px;'><div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:8px;'>💎 Credit Tier</div>"
+  +"<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;'><span style='font-weight:700;font-size:15px;color:"+qd.tier.color+"'>"+qd.tier.name+"</span><span style='font-size:13px;color:#94a3b8;'>"+$c(qd.tc)+"</span></div>"
+  +(nt?"<div class='prog-wrap'><div class='prog-bar' style='width:"+Math.min(100,(qd.tc/nt.min)*100)+"%;background:linear-gradient(90deg,"+qd.tier.color+"88,"+qd.tier.color+");'></div></div><div style='font-size:12px;color:#94a3b8;margin-top:6px;'>"+$c(nt.min-qd.tc)+" more for "+nt.name+"</div>"
+  :"<div style='font-size:12px;color:#22c55e;font-weight:700;'>🏆 Highest tier reached!</div>")
   +"</div>"
-  // 3. Combined bar chart + monthly table
   +combinedChartHtml
-  // Quarterly breakdown table
   +qTableHtml;
 }
 
@@ -848,10 +846,8 @@ function renderHist(){
     const qComm=qs.reduce((a,s)=>a+s.totalComm,0);
     const qCred=qs.reduce((a,s)=>a+s.totalCredit,0);
 
-    // Quarter header — always show, grey out if empty
     const hasData=qs.length>0;
     html+="<div style='margin-bottom:20px;'>"
-    // Quarter title bar
     +"<div style='display:flex;align-items:center;justify-content:space-between;background:"+(hasData?"linear-gradient(135deg,#1e3a5f,#0f2942)":"#1a2030")+";border-radius:10px 10px "+(hasData?"0 0":"10px 10px")+";padding:12px 16px;border:1px solid "+(hasData?"#1e40af":"#2a3550")+";'>"
     +"<div style='display:flex;align-items:center;gap:10px;'>"
     +"<span style='font-size:15px;font-weight:800;color:"+(hasData?"#60a5fa":"#475569")+";'>"+q+"</span>"
@@ -872,7 +868,6 @@ function renderHist(){
         const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
         const isLast=si===qs.length-1;
         html+="<div style='background:"+(si%2===0?"#0f172a":"#111827")+";padding:14px 16px;"+(isLast?"":"border-bottom:1px solid #1e293b;")+";'>"
-        // Client row
         +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>"
         +"<div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap;'>"
         +"<span style='font-weight:700;font-size:14px;color:#e2e8f0;'>👤 "+esc(s.clientName)+"</span>"
@@ -884,9 +879,8 @@ function renderHist(){
         +"<div style='font-size:11px;color:#64748b;'>Total Comm</div>"
         +"<div style='font-size:15px;font-weight:800;color:#34d399;'>"+$f(s.totalComm)+"</div>"
         +"</div>"
-        +"<button class='btn-del' onclick='doDelSale(\""+s.fid+"\")'>✕</button>"
+        +"<button class='btn-del' onclick='doDelSale(""+s.fid+"")'>✕</button>"
         +"</div></div>"
-        // Policy rows
         +s.policies.map((p,pi)=>{
           return "<div style='background:#0a1929;border-radius:8px;padding:10px 12px;margin-bottom:"+(pi<s.policies.length-1?"6px":"0")+"px;border-left:3px solid #1e40af;'>"
           +"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;'>"
@@ -918,6 +912,20 @@ function renderHist(){
   return html;
 }
 
+function renderCampaigns(){
+  const subNav="<div style='display:flex;gap:4px;background:#0f172a;padding:4px;border-radius:12px;margin-bottom:20px;'>"
+    +"<button onclick='setCampTab("ignite")' style='flex:1;padding:11px 6px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.25s;background:"+(campTab==="ignite"?"linear-gradient(135deg,#c2410c,#ea580c,#f97316)":"transparent")+";color:"+(campTab==="ignite"?"#fff":"#64748b")+";box-shadow:"+(campTab==="ignite"?"0 2px 14px rgba(234,88,12,0.45)":"none")+";'>🔥 Ignite 2026</button>"
+    +"<button onclick='setCampTab("trail")' style='flex:1;padding:11px 6px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.25s;background:"+(campTab==="trail"?"linear-gradient(135deg,#065f46,#047857,#10b981)":"transparent")+";color:"+(campTab==="trail"?"#fff":"#64748b")+";box-shadow:"+(campTab==="trail"?"0 2px 14px rgba(16,185,129,0.35)":"none")+";'>🌍 Trailblazer 2027</button>"
+    +"</div>";
+  return "<div>"
+    +"<div style='text-align:center;padding:16px 0 18px;'>"
+    +"<div style='font-size:11px;font-weight:700;letter-spacing:0.1em;color:#475569;text-transform:uppercase;margin-bottom:6px;'>Campaign Tracker</div>"
+    +"<div style='font-size:22px;font-weight:900;background:linear-gradient(135deg,#f97316,#f59e0b,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px;'>2026 – 2027</div>"
+    +"</div>"
+    +subNav
+    +(campTab==="ignite"?renderIgnite():renderTrail())
+    +"</div>";
+}
 function renderIgnite(){
   const ig=sales.filter(s=>{const m=new Date(s.date+"T00:00:00").getMonth();return s.date.startsWith("2026")&&m<=4;});
   const ic=ig.reduce((a,s)=>a+s.totalComm,0),pct=Math.min(100,(ic/30000)*100);
@@ -937,7 +945,7 @@ function renderMDRT(){
   const{totalComm,totalBonus,grand}=getYearTotals(selYear);
   const hitMDRT=grand>=MDRT_T,hitCOT=grand>=COT_T,hitTOT=grand>=TOT_T;
   const pMDRT=Math.min(100,(grand/MDRT_T)*100),pCOT=Math.min(100,(grand/COT_T)*100),pTOT=Math.min(100,(grand/TOT_T)*100);
-  const TDATA=[{key:"mdrt",label:"MDRT",full:"Million Dollar Round Table",target:MDRT_T,hit:hitMDRT,pct:pMDRT,icon:"🥇",iconCls:"gold-bob",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",border:"#f59e0b",stars:"⭐",tagline:"\"Every legend starts with a single step forward.\"",hoverNo:"💪 You're laying the foundation of greatness. Every policy you write brings MDRT closer — don't stop now!",hoverYes:"🏅 MDRT unlocked! You've crossed the threshold that only the top advisers in the world reach. Stand tall!",badge:"MDRT Member"},{key:"cot",label:"COT",full:"Court of the Table",target:COT_T,hit:hitCOT,pct:pCOT,icon:"💎",iconCls:"diamond-bob",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",border:"#38bdf8",stars:"⭐⭐",tagline:"\"Most never try. You chose to go further.\"",hoverNo:"🚀 COT demands 3x the effort — and you're chasing it anyway. That separates you from the rest. Grind on!",hoverYes:"💎 Court of the Table achieved! Less than 4% of MDRT members ever get here. You are genuinely elite.",badge:"COT Member"},{key:"tot",label:"TOT",full:"Top of the Table",target:TOT_T,hit:hitTOT,pct:pTOT,icon:"👑",iconCls:"crown-bob",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",border:"#a78bfa",stars:"⭐⭐⭐",tagline:"\"The summit is reserved for the relentless.\"",hoverNo:"🔥 TOT is the pinnacle of the entire profession. The rarest of the rare. Stay relentless — legends are made here.",hoverYes:"👑 TOP OF THE TABLE. You are in the top 1% of the top 1% of financial advisers on the planet. LEGENDARY.",badge:"TOT Member"}];
+  const TDATA=[{key:"mdrt",label:"MDRT",full:"Million Dollar Round Table",target:MDRT_T,hit:hitMDRT,pct:pMDRT,icon:"🥇",iconCls:"gold-bob",shimmer:"shimmer-gold",color:"#f59e0b",glow:"rgba(245,158,11,0.3)",grad:"linear-gradient(135deg,#451a03,#78350f,#92400e)",border:"#f59e0b",stars:"⭐",tagline:""Every legend starts with a single step forward."",hoverNo:"💪 You're laying the foundation of greatness. Every policy you write brings MDRT closer — don't stop now!",hoverYes:"🏅 MDRT unlocked! You've crossed the threshold that only the top advisers in the world reach. Stand tall!",badge:"MDRT Member"},{key:"cot",label:"COT",full:"Court of the Table",target:COT_T,hit:hitCOT,pct:pCOT,icon:"💎",iconCls:"diamond-bob",shimmer:"shimmer-blue",color:"#38bdf8",glow:"rgba(56,189,248,0.3)",grad:"linear-gradient(135deg,#0c1a2e,#0f3460,#1a4a7a)",border:"#38bdf8",stars:"⭐⭐",tagline:""Most never try. You chose to go further."",hoverNo:"🚀 COT demands 3x the effort — and you're chasing it anyway. That separates you from the rest. Grind on!",hoverYes:"💎 Court of the Table achieved! Less than 4% of MDRT members ever get here. You are genuinely elite.",badge:"COT Member"},{key:"tot",label:"TOT",full:"Top of the Table",target:TOT_T,hit:hitTOT,pct:pTOT,icon:"👑",iconCls:"crown-bob",shimmer:"shimmer-purple",color:"#a78bfa",glow:"rgba(167,139,250,0.35)",grad:"linear-gradient(135deg,#1e0a3c,#2e1065,#3b0764)",border:"#a78bfa",stars:"⭐⭐⭐",tagline:""The summit is reserved for the relentless."",hoverNo:"🔥 TOT is the pinnacle of the entire profession. The rarest of the rare. Stay relentless — legends are made here.",hoverYes:"👑 TOP OF THE TABLE. You are in the top 1% of the top 1% of financial advisers on the planet. LEGENDARY.",badge:"TOT Member"}];
   let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;"><div style="position:relative;" id="yrWrap"><button class="yr-btn" onclick="togYrDD()">📅 ${selYear} <span style="font-size:10px;opacity:0.7;">▼</span></button><div class="yr-dd" id="yrDD" style="display:none;">${yearList().map(y=>`<button class="yr-opt" style="color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};" onclick="selYr(${y})">${y}</button>`).join("")}</div></div><div style="font-size:13px;color:#94a3b8;">Full Year ${selYear} · Commissions + All Bonuses</div></div>`;
   html+=`<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:16px 20px;border:1px solid #334155;margin-bottom:22px;"><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">💰 ${selYear} Total Eligible Earnings (Comm + Bonuses)</div><div style="font-size:30px;font-weight:900;color:#e2e8f0;">${$f(grand)}</div><div style="display:flex;gap:20px;margin-top:8px;flex-wrap:wrap;"><div style="font-size:12px;color:#64748b;">Commission: <span style="color:#34d399;font-weight:700;">${$f(totalComm)}</span></div><div style="font-size:12px;color:#64748b;">Bonuses: <span style="color:#f59e0b;font-weight:700;">${$f(totalBonus)}</span></div></div></div>`;
   TDATA.forEach((t,i)=>{
@@ -997,7 +1005,7 @@ function attachAll(){
   },{once:true});
 }
 
-const TAB_KEYS=["log","dashboard","history","fwd","ignite","trail","mdrt"];
+const TAB_KEYS=["log","dashboard","history","fwd","campaigns","mdrt"];
 document.addEventListener("keydown",e=>{
   const tag=document.activeElement.tagName;
   if(tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA")return;
@@ -1006,6 +1014,7 @@ document.addEventListener("keydown",e=>{
 });
 
 window.setTab=t=>{tab=t;if(t!=="log")document.getElementById("app").innerHTML="";renderAll();};
+window.setCampTab=t=>{campTab=t;renderPage();};
 window.setQ=q=>{activeQ=q;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.selYr=y=>{selYear=y;fwdSelMonth=null;document.getElementById("app").innerHTML="";renderPage();};
 window.togYrDD=()=>{const d=document.getElementById("yrDD");if(d)d.style.display=d.style.display==="none"?"block":"none";};
@@ -1028,7 +1037,7 @@ window.srchType=(pid,val)=>{
   const q=val.toLowerCase();
   const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):CATS;
   const listHtml=filtered.length>0
-    ?"<div class=\'srch-list\'>"+filtered.map(cat=>"<div class=\'"+cat.hCls+"\'>"+cat.label+"</div>"+cat.products.map(p=>"<div class=\'"+cat.iCls+"\' onclick=\'srchPick(\""+pid+"\",\""+esc(p)+"\")\'>"+esc(p)+"</div>").join("")).join("")+"</div>"
+    ?"<div class=\'srch-list\'>"+filtered.map(cat=>"<div class=\'"+cat.hCls+"\'>"+cat.label+"</div>"+cat.products.map(p=>"<div class=\'"+cat.iCls+"\' onclick=\'srchPick(""+pid+"",""+esc(p)+"")\'>"+esc(p)+"</div>").join("")).join("")+"</div>"
     :"<div class=\'srch-list\'><div style=\'padding:12px;font-size:13px;color:#64748b;\'>No products found</div></div>";
   const existing=wrap.querySelector(".srch-list");
   if(existing){existing.outerHTML=listHtml;}
