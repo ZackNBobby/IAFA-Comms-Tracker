@@ -86,6 +86,7 @@ button,input,select{font-family:inherit;}
 .cat-trad{background:#1e3a8a;color:#93c5fd;border-color:#3b82f6;}
 .cat-ilp{background:#4c1d95;color:#d8b4fe;border-color:#a855f7;}
 .cat-health{background:#064e3b;color:#6ee7b7;border-color:#10b981;}
+.cat-top{background:#1c1600;color:#fbbf24;border-color:#f59e0b;}
 .srch-item{padding:8px 16px;font-size:13px;color:#e2e8f0;cursor:pointer;border-left:3px solid transparent;}
 .srch-item:hover{background:#0f2942;border-left-color:#3b82f6;}
 .srch-sel{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px;cursor:pointer;text-align:left;transition:background 0.18s,border-color 0.18s;}
@@ -249,6 +250,12 @@ function getYearTotals(yr){
   return{totalComm,totalBaseComm,totalBonus,grand:totalComm+totalBonus};
 }
 
+function getTopProducts(){
+  const freq={};
+  sales.forEach(s=>{if(s.policies)s.policies.forEach(p=>{if(p.product)freq[p.product]=(freq[p.product]||0)+1;});});
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
+}
+
 let sales=[],fwdSales=[],tab="log",activeQ="Q1",selYear=new Date().getFullYear();
 let campTab="ignite";
 let pols=[newPol()],fDate=todayStr(),fClient="";
@@ -359,7 +366,9 @@ function buildCalPop(prefix=""){
 function buildSrch(pid,sel){
   const s=srch[pid]||{open:false,query:""};
   const q=s.query.toLowerCase();
-  const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):CATS;
+  const tops=getTopProducts();
+  const topCat=tops.length>0?[{label:"⭐ Most Sold",hCls:"srch-cat cat-top",iCls:"srch-item",products:tops}]:[];
+  const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):[...topCat,...CATS];
   if(!s.open)return "<div class='srch-wrap' id='srch-"+pid+"'><button class='srch-sel' id='srchsel-"+pid+"' onclick='srchOpen(\""+pid+"\")'><span class='"+(sel?"":"srch-ph")+"'>"+(sel?esc(sel):"-- Select Product --")+"</span><span style='color:#64748b;font-size:11px;'>&#9660;</span></button></div>";
   return "<div class='srch-wrap' id='srch-"+pid+"'><input class='srch-inp' id='sinp-"+pid+"' type='text' placeholder='🔍 Type to search...' value='"+esc(s.query)+"' oninput='srchType(\""+pid+"\",this.value)' onkeydown='srchKey(event,\""+pid+"\")' autocomplete='off' autocorrect='off' autocapitalize='none' spellcheck='false'/>"
   +(filtered.length>0?"<div class='srch-list'>"+filtered.map(cat=>"<div class='"+cat.hCls+"'>"+cat.label+"</div>"+cat.products.map(p=>"<div class='"+cat.iCls+"' onclick='srchPick(\""+pid+"\",\""+esc(p)+"\")'>"+esc(p)+"</div>").join("")).join("")+"</div>":"<div class='srch-list'><div style='padding:12px;font-size:13px;color:#64748b;'>No products found</div></div>")
@@ -1048,7 +1057,9 @@ window.srchType=(pid,val)=>{
   const wrap=document.getElementById("srch-"+pid);
   if(!wrap)return;
   const q=val.toLowerCase();
-  const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):CATS;
+  const tops=getTopProducts();
+  const topCat=tops.length>0?[{label:"⭐ Most Sold",hCls:"srch-cat cat-top",iCls:"srch-item",products:tops}]:[];
+  const filtered=q?CATS.map(cat=>({...cat,products:cat.products.filter(p=>p.toLowerCase().includes(q))})).filter(cat=>cat.products.length>0):[...topCat,...CATS];
   const listHtml=filtered.length>0
     ?"<div class=\'srch-list\'>"+filtered.map(cat=>"<div class=\'"+cat.hCls+"\'>"+cat.label+"</div>"+cat.products.map(p=>"<div class=\'"+cat.iCls+"\' onclick=\'srchPick(\""+pid+"\",\""+esc(p)+"\")\'>"+esc(p)+"</div>").join("")).join("")+"</div>"
     :"<div class=\'srch-list\'><div style=\'padding:12px;font-size:13px;color:#64748b;\'>No products found</div></div>";
