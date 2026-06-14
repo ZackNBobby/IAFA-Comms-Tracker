@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -792,23 +792,45 @@ function renderDash(){
     const hasAmt=totalAmt>0;
     const borderCol=isBonus?"#d97706":"#334155";
     const activeBorderCol=isBonus?"#f59e0b":"#3b82f6";
-    return "<div style='background:"+(isBonus?"#1c1505":"#0f172a")+";border-radius:10px;padding:12px 10px;border:1px solid "+(hasAmt?activeBorderCol:borderCol)+";text-align:center;"+(hasAmt?"box-shadow:0 0 8px rgba(96,165,250,0.12);":"")+";'>"
-    +"<div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:"+(isBonus?"#d97706":"#7a8fa6")+";'>"+m+(isBonus?" ★":"")+"</div>"
-    +(commAmt>0?"<div style='font-size:13px;font-weight:700;color:#f97316;margin-top:4px;'>"+$f(commAmt)+"</div>":"")
-    +(bonusAmt>0?"<div style='font-size:12px;font-weight:700;color:#f59e0b;margin-top:2px;'>+"+$f(bonusAmt)+"</div><div style='font-size:10px;color:#78350f;'>"+bonusQ+" bonus</div>":"")
-    +(!hasAmt?"<div style='font-size:13px;font-weight:700;color:#334155;margin-top:4px;'>—</div>":"")
-    +(hasAmt&&commAmt>0&&bonusAmt>0?"<div style='border-top:1px solid #334155;margin-top:5px;padding-top:4px;font-size:13px;font-weight:900;color:#fbbf24;'>"+$f(totalAmt)+"</div>":"")
+    return "<div style='background:"+(isBonus?"#1c1505":"#0f172a")+";border-radius:10px;padding:8px 6px;border:1px solid "+(hasAmt?activeBorderCol:borderCol)+";text-align:center;"+(hasAmt?"box-shadow:0 0 8px rgba(96,165,250,0.12);":"")+";'>"
+    +"<div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:"+(isBonus?"#d97706":"#7a8fa6")+";'>"+m+(isBonus?" ★":"")+"</div>"
+    +(commAmt>0?"<div style='font-size:12px;font-weight:700;color:#f97316;margin-top:3px;'>"+$f(commAmt)+"</div>":"")
+    +(bonusAmt>0?"<div style='font-size:11px;font-weight:700;color:#f59e0b;margin-top:2px;'>+"+$f(bonusAmt)+"</div><div style='font-size:9px;color:#78350f;'>"+bonusQ+" bonus</div>":"")
+    +(!hasAmt?"<div style='font-size:11px;font-weight:700;color:#334155;margin-top:3px;'>—</div>":"")
+    +(hasAmt&&commAmt>0&&bonusAmt>0?"<div style='border-top:1px solid #334155;margin-top:4px;padding-top:3px;font-size:12px;font-weight:900;color:#fbbf24;'>"+$f(totalAmt)+"</div>":"")
     +"</div>";
   };
   const _nextPayMo=(new Date().getMonth()+1)%12;
-  const incomeTimelineHtml="<div style='background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155;margin-bottom:20px;'>"
-  +"<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;'>"
+  const _nextIsBonus=BONUS_MO_MAP[_nextPayMo]!==undefined;
+  const _tlCollapsed=(()=>{
+    if(!_nextIsBonus){
+      return "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;'>"+_tlMoCard(MTHS_S[_nextPayMo],_nextPayMo)+"</div>";
+    }
+    const _nd=incomePayMap[_nextPayMo];
+    const _nc=_nd?_nd.comm:0;
+    const _nq=BONUS_MO_MAP[_nextPayMo];
+    const _nb=getQBonus(ys,_nq);
+    const _nm=MTHS_S[_nextPayMo];
+    const _iCard="<div style='background:#0f172a;border-radius:10px;padding:12px 14px;border:1px solid "+(_nc>0?"#3b82f6":"#334155")+";text-align:center;"+(_nc>0?"box-shadow:0 0 8px rgba(96,165,250,0.12);":"")+"'>"
+      +"<div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#7a8fa6;margin-bottom:6px;'>"+_nm+" · Base Comms</div>"
+      +(_nc>0?"<div style='font-size:22px;font-weight:900;color:#f97316;'>"+$f(_nc)+"</div>":"<div style='font-size:18px;font-weight:700;color:#334155;'>—</div>")
+      +"<div style='font-size:10px;color:#7a8fa6;margin-top:4px;'>Income commission</div>"
+      +"</div>";
+    const _bCard="<div style='background:#1c1505;border-radius:10px;padding:12px 14px;border:1px solid "+(_nb>0?"#f59e0b":"#d97706")+";text-align:center;"+(_nb>0?"box-shadow:0 0 10px rgba(245,158,11,0.2);":"")+"'>"
+      +"<div style='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#d97706;margin-bottom:6px;'>"+_nm+" ★ "+_nq+" Bonus</div>"
+      +(_nb>0?"<div style='font-size:22px;font-weight:900;color:#f59e0b;'>"+$f(_nb)+"</div>":"<div style='font-size:18px;font-weight:700;color:#334155;'>—</div>")
+      +"<div style='font-size:10px;color:#78350f;margin-top:4px;'>Quarterly bonus</div>"
+      +"</div>";
+    return "<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;'>"+_iCard+_bCard+"</div>";
+  })();
+  const incomeTimelineHtml="<div style='background:#1e293b;border-radius:12px;padding:14px;border:1px solid #334155;margin-bottom:16px;'>"
+  +"<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;'>"
   +"<div style='font-size:14px;font-weight:700;color:#f97316;'>📅 "+selYear+" Income Monthly Payout Timeline</div>"
   +(incomeTimelineExpanded?"<span style='font-size:12px;color:#7a8fa6;'>All months</span>":"<span style='font-size:12px;color:#60a5fa;font-weight:600;'>Next payout: "+MTHS_S[_nextPayMo]+"</span>")
   +"</div>"
   +(incomeTimelineExpanded
     ?"<div class='timeline-grid' style='margin-bottom:0;'>"+MTHS_S.map((m,i)=>_tlMoCard(m,i)).join("")+"</div>"
-    :"<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;'>"+_tlMoCard(MTHS_S[_nextPayMo],_nextPayMo)+"</div>")
+    :_tlCollapsed)
   +"<div style='display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px;'>"
   +"<div style='font-size:12px;color:#7a8fa6;'>★ = Bonus month (Apr/Jul/Oct/Jan) · Orange = Income · Yellow = Bonus</div>"
   +"<button onclick='togTimeline()' style='background:rgba(15,23,42,0.9);border:1px solid rgba(96,165,250,0.4);border-radius:8px;padding:5px 14px;color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;'>"+(incomeTimelineExpanded?"Hide ▲":"Show all months ▼")+"</button>"
@@ -919,18 +941,18 @@ function renderDash(){
   +ytdHtml
   // 1. Income monthly payout timeline
   +incomeTimelineHtml
-  // 2. Six stat cards: Income Comm, FWD Comm, Qtr Bonus, Easy Bonus, Total Credits, Total Bonus Payable
-  +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;'>"
-  +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:16px;border:1px solid #f97316;box-shadow:0 0 24px rgba(249,115,22,0.2);text-align:center;'><div style='font-size:12px;color:#fed7aa;'>🏢 Income Commission</div><div style='font-size:24px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div><div style='font-size:12px;color:#fdba74;margin-top:4px;'>"+QS[activeQ].label+"</div></div>"
-  +"<div style='background:linear-gradient(135deg,#071510,#0a2218,#0d2b1a);border-radius:12px;padding:16px;border:1px solid #166534;box-shadow:0 0 20px rgba(52,211,153,0.12);text-align:center;'><div style='font-size:12px;color:#86efac;'>🏢 FWD Commission</div><div style='font-size:24px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(fwdQTotal)+"</div><div style='font-size:12px;color:#7a8fa6;margin-top:4px;'>"+QS[activeQ].label+" · "+fwdQ.length+" sale"+(fwdQ.length!==1?"s":"")+"</div>"+(fwdYrTotal>0?"<div style='font-size:10px;color:#166534;margin-top:4px;border-top:1px solid #166534;padding-top:4px;'>Full "+selYear+": <span style='color:#34d399;font-weight:700;'>"+$f(fwdYrTotal)+"</span></div>":"")+"</div>"
+  // Row 1: 4 cards — Income Comm · FWD Comm · Qtr Bonus · Easy Bonus
+  +"<div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:10px;'>"
+  +"<div style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);border-radius:12px;padding:12px;border:1px solid #f97316;box-shadow:0 0 20px rgba(249,115,22,0.18);text-align:center;'><div style='font-size:11px;color:#fed7aa;font-weight:600;'>💰 Income Commission</div><div style='font-size:22px;font-weight:900;color:#fff;margin-top:4px;'>"+$f(qd.tm)+"</div><div style='font-size:11px;color:#fdba74;margin-top:3px;'>"+QS[activeQ].label+"</div></div>"
+  +"<div style='background:linear-gradient(135deg,#071510,#0a2218,#0d2b1a);border-radius:12px;padding:12px;border:1px solid #166534;box-shadow:0 0 16px rgba(52,211,153,0.1);text-align:center;'><div style='font-size:11px;color:#86efac;font-weight:600;'>🏢 FWD Commission</div><div style='font-size:22px;font-weight:900;color:#34d399;margin-top:4px;'>"+$f(fwdQTotal)+"</div><div style='font-size:11px;color:#7a8fa6;margin-top:3px;'>"+fwdQ.length+" sale"+(fwdQ.length!==1?"s":"")+"</div></div>"
+  +"<div class='dash-stat-card' style='padding:12px;'><div class='lbl' style='text-align:center;'>🏆 Qtr Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;font-size:22px;'>"+$f(qd.qb)+"</div></div>"
+  +"<div class='dash-stat-card' style='padding:12px;'><div class='lbl' style='text-align:center;'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#8099b0")+";font-size:22px;'>"+(qd.tm>=3000?$f(qd.eb):"Not reached")+"</div></div>"
   +"</div>"
-  +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;'>"
-  +"<div class='dash-stat-card'><div class='lbl' style='text-align:center;'>🏆 Quarterly Bonus ("+qd.tier.bonus+"%)</div><div class='kpi' style='color:#a78bfa;'>"+$f(qd.qb)+"</div></div>"
-  +"<div class='dash-stat-card'><div class='lbl' style='text-align:center;'>🎉 Easy Bonus (25%)</div><div class='kpi' style='color:"+(qd.tm>=3000?"#f59e0b":"#8099b0")+";'>"+(qd.tm>=3000?$f(qd.eb):"Not reached")+"</div></div>"
-  +"</div>"
-  +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;'>"
-  +"<div style='background:linear-gradient(135deg,#0f3460,#1a4a7a,#1e5f8a);border-radius:12px;padding:16px;border:1px solid #2563eb;text-align:center;'><div style='font-size:11px;color:#93c5fd;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;'><span style='display:inline-block;background:#f59e0b;color:#000;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:900;line-height:14px;margin-right:4px;'>$</span>Total Credits</div><div style='font-size:24px;font-weight:900;color:#60a5fa;'>"+$c(qd.tc)+"</div><div style='font-size:12px;color:#8099b0;margin-top:2px;'>pts · resets quarterly</div></div>"
-  +"<div class='pay-card' style='margin-bottom:0;'><div style='font-size:12px;color:#b0c4d4;'>🚀 Bonus Payable in "+QS[activeQ].payout+"</div><div style='font-size:24px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div><div style='font-size:11px;color:#8099b0;margin-top:2px;'>Qtr "+$f(qd.qb)+" + Easy "+$f(qd.eb)+"</div></div>"
+  // Row 2: 3 cards — Total Credits · Bonus Payable · Qtr Total Earned
+  +"<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;'>"
+  +"<div style='background:linear-gradient(135deg,#0f3460,#1a4a7a,#1e5f8a);border-radius:12px;padding:12px;border:1px solid #2563eb;text-align:center;'><div style='font-size:11px;color:#93c5fd;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;'><span style='display:inline-block;background:#f59e0b;color:#000;border-radius:50%;width:13px;height:13px;font-size:8px;font-weight:900;line-height:13px;margin-right:4px;'>$</span>Total Credits</div><div style='font-size:22px;font-weight:900;color:#60a5fa;'>"+$c(qd.tc)+"</div><div style='font-size:11px;color:#8099b0;margin-top:2px;'>pts · resets quarterly</div></div>"
+  +"<div class='pay-card' style='margin-bottom:0;padding:12px;'><div style='font-size:11px;color:#b0c4d4;'>🚀 Bonus Payable in "+QS[activeQ].payout+"</div><div style='font-size:22px;font-weight:900;color:#fbbf24;margin-top:4px;'>"+$f(qd.tb)+"</div><div style='font-size:11px;color:#8099b0;margin-top:2px;'>Qtr "+$f(qd.qb)+" + Easy "+$f(qd.eb)+"</div></div>"
+  +"<div style='background:linear-gradient(135deg,#1a103c,#1e1250,#231558);border-radius:12px;padding:12px;border:1px solid #7c3aed;box-shadow:0 0 18px rgba(124,58,237,0.15);text-align:center;'><div style='font-size:11px;color:#c4b5fd;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;'>⚡ Qtr Total Earned</div><div style='font-size:22px;font-weight:900;color:#a78bfa;margin-top:4px;'>"+$f(qd.tm+fwdQTotal+qd.tb)+"</div><div style='font-size:11px;color:#8099b0;margin-top:2px;'>Inc + FWD + Bonuses</div></div>"
   +"</div>"
   // Easy Bonus progress + Credit Tier progress
   +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar pb-candy' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%'></div></div><div style='font-size:13px;color:#b0c4d4;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>"
@@ -1283,4 +1305,5 @@ window.doSignOut=async()=>{if(confirm("Sign out of this device?"))await signOut(
 </script>
 </body>
 </html>
+
 
