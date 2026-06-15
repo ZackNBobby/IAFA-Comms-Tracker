@@ -1293,8 +1293,17 @@ window.doAddFWDSale=async()=>{
   renderAll();
 };
 
-window.doDelSale=async id=>{if(confirm("Delete this sale?"))await delSaleDB(id);};
-window.doDelFWDSale=async id=>{if(confirm("Delete this FWD sale?"))await delFWDSaleDB(id);};
+let _delCtx=null,_delBuf=null;
+async function playDeleteSound(){
+  try{
+    if(!_delCtx)_delCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(!_delBuf){const r=await fetch('delete.mp3');_delBuf=await _delCtx.decodeAudioData(await r.arrayBuffer());}
+    const src=_delCtx.createBufferSource();src.buffer=_delBuf;src.connect(_delCtx.destination);src.start();
+  }catch(e){}
+}
+
+window.doDelSale=async id=>{if(confirm("Delete this sale?")){playDeleteSound();await delSaleDB(id);}};
+window.doDelFWDSale=async id=>{if(confirm("Delete this FWD sale?")){playDeleteSound();await delFWDSaleDB(id);}};
 
 onAuthStateChanged(auth,user=>{
   if(user){
