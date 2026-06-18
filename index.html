@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -218,6 +218,8 @@ button,input,select{font-family:inherit;}
 .btn-google:active{background:#f0f0f0;}
 .sign-out-btn{position:absolute;top:14px;right:14px;background:rgba(30,41,59,0.7);border:1px solid rgba(51,65,85,0.5);border-radius:8px;padding:6px 12px;color:#64748b;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;z-index:10;}
 .sign-out-btn:hover{background:rgba(127,29,29,0.5);border-color:rgba(239,68,68,0.3);color:#fca5a5;}
+.dash-sub-btn{padding:8px 20px;border-radius:20px;border:1px solid rgba(51,65,85,0.5);background:transparent;color:#7a8fa6;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.25s;}
+.dash-sub-active{background:linear-gradient(135deg,#0f766e,#0d9488);border-color:#2dd4bf;color:#fff;box-shadow:0 0 14px rgba(45,212,191,0.3);animation:tabBreath 2.5s ease-in-out infinite;}
 </style>
 </head>
 <body>
@@ -258,6 +260,7 @@ const auth=getAuth(fbApp);
 const gProvider=new GoogleAuthProvider();
 setPersistence(auth,browserLocalPersistence);
 const COLL="sales", COLL_FWD="fwd_sales";
+const COLL_GI="gi_sales", COLL_RENEWAL="renewal_sales";
 
 // ── FWD Future First commission table ──
 const FWD_RATES={
@@ -316,16 +319,34 @@ function getPayoutMoYear(saleDate){
 }
 
 const WAIVER_TERMS=[{l:"2 years",y:7.50,c:4},{l:"3 years",y:8.00,c:4},{l:"4 years",y:8.50,c:4},{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.50,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}];
-const RIDER_TERMS={"Disability Accelerator (TCN2)":[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}],"Essential Protect (LBV3)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],"Total Protect (TPV1)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],"Advanced Critical Secure (CSV10)":[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}],"Early Critical Secure (CSV11)":[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}],"Cancer Premium Waiver / GIO (WPV10)":WAIVER_TERMS,"Payor Premium Waiver (WPV6)":WAIVER_TERMS,"Enhanced Payor Premium Waiver (WEV2)":WAIVER_TERMS,"Dread Disease Premium Waiver (WSV2)":WAIVER_TERMS,"Hospital CashAid (HBV3)":[{l:"All Terms",y:20.00,c:4}],"Lady 360 (LPN)":[{l:"All Terms",y:20.00,c:4}],"Maternity 360 (MBN)":[{l:"Single",y:5.00,c:1}],"Classic Care Rider (ISEPL)":[{l:"Yearly",y:15.00,c:4}],"Deluxe Care Rider (ISEPH)":[{l:"Yearly",y:15.00,c:4}]};
+const RIDER_TERMS={"Disability Accelerator (TCN2)":[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}],"Essential Protect (LBV3)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],"Total Protect (TPV1)":[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}],"Advanced Critical Secure (CSV10)":[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}],"Early Critical Secure (CSV11)":[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}],"Cancer Premium Waiver / GIO (WPV10)":WAIVER_TERMS,"Payor Premium Waiver (WPV6)":WAIVER_TERMS,"Enhanced Payor Premium Waiver (WEV2)":WAIVER_TERMS,"Dread Disease Premium Waiver (WSV2)":WAIVER_TERMS,"Hospital CashAid (HBV3)":[{l:"All Terms",y:20.00,c:4}],"Lady 360 (LPN)":[{l:"All Terms",y:20.00,c:4}],"Maternity 360 (MBN)":[{l:"Single",y:5.00,c:1}],"Essential Care Rider":[{l:"Yearly",y:15.00,c:4}],"Optima Care Rider":[{l:"Yearly",y:15.00,c:4}],"Classic Care Rider (ISEPL)":[{l:"Yearly",y:15.00,c:4}],"Deluxe Care Rider (ISEPH)":[{l:"Yearly",y:15.00,c:4}]};
 function getRiderRate(n,t){const terms=RIDER_TERMS[n];if(!terms)return null;if(terms.length===1)return{y:terms[0].y,c:terms[0].c};const f=terms.find(x=>x.l===t);return f?{y:f.y,c:f.c}:null;}
 
 const CATS=[
   {label:"Traditional Life Insurance",hCls:"srch-cat cat-trad",iCls:"srch-item",products:["Complete Cancer Care (CBN3)","Complete Critical Protect (CCN1)","Complete Life Secure (VQMW)","Complete Life Secure - Protection Benefit (VQVW)","Essential Protect (LBV3)","Gro Annuity Pro (GAMA)","Gro Cash Flex Pro (GCME)","Gro Cash Plus (GDMW)","Gro Cash Sure (GCMW)","Gro Power Saver Pro (RSME)","Gro Retire Flex Pro (GRME)","Gro Retire Flex Pro - Protection Benefit (SPV4)","Gro Saver Flex Pro (GSME)","Luxe Plus Solitaire II (LTMW)","Mortgage Term (MPN2)","Provenance Disability Accelerator (TSN3)","Provenance Solitaire (VPMW)","Provenance Solitaire - Protection Benefit (VPVW)","Savings Protector Pro (SPV3)","Star Term Protect (TAN19)","TermLife Solitaire (TBN4)","Total Protect (TPV1)","Wealth Plus Solitaire (LHMWA)"]},
-  {label:"Investment Linked Insurance",hCls:"srch-cat cat-ilp",iCls:"srch-item",products:["AstraLink (VA2)","Invest Flex (VS1)","Invest Flex TriVantage (VS3)","Invest Flex Vantage (VS2)","WealthLink (GL3)"]},
+  {label:"Investment Linked Insurance",hCls:"srch-cat cat-ilp",iCls:"srch-item",products:["AstraLink (VA2)","Invest Flex (VS1)","Invest Flex TriVantage (VS3)","Invest Flex Vantage (VS2)","Legacy Flex Solitaire (VA3R)","Legacy Flex Solitaire (VA3S)","WealthLink (GL3)"]},
   {label:"Health Insurance",hCls:"srch-cat cat-health",iCls:"srch-item",products:["Care Secure","Enhanced IncomeShield / IncomeShield Standard (ISEP)","PrimeShield"]}
 ];
-const PROD={"Complete Cancer Care (CBN3)":{terms:[{l:"10 years",y:22.00,c:4}]},"Complete Critical Protect (CCN1)":{riders:["Dread Disease Premium Waiver (WSV2)"],terms:[{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},"Complete Life Secure (VQMW)":{riders:["Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)","Hospital CashAid (HBV3)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},"Complete Life Secure - Protection Benefit (VQVW)":{terms:[{l:"5 years",y:10.00,c:4},{l:"6-9 years",y:10.20,c:4},{l:"10-14 years",y:22.00,c:4},{l:"15-19 years",y:33.00,c:4},{l:"20-24 years",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},"Essential Protect (LBV3)":{terms:[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}]},"Gro Annuity Pro (GAMA)":{terms:[{l:"Single",y:1.00,c:0}]},"Gro Cash Flex Pro (GCME)":{terms:[{l:"Single",y:3.00,c:1}]},"Gro Cash Plus (GDMW)":{terms:[{l:"5 years",y:11.50,c:1},{l:"10 years",y:18.30,c:1}]},"Gro Cash Sure (GCMW)":{terms:[{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:0.60},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},"Gro Power Saver Pro (RSME)":{terms:[{l:"3 years",y:3.30,c:0.30}]},"Gro Retire Flex Pro (GRME)":{terms:[{l:"Single",y:3.50,c:1.00},{l:"5yr (Policy <=10)",y:5.50,c:0.60},{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy <=25)",y:27.20,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:1.00},{l:"20yr (Policy <=25)",y:36.30,c:1.00},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},"Gro Retire Flex Pro - Protection Benefit (SPV4)":{terms:[{l:"5yr (Policy <=10)",y:5.50,c:0.60},{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy <=25)",y:27.20,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:1.00},{l:"20yr (Policy <=25)",y:36.30,c:1.00},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},"Gro Saver Flex Pro (GSME)":{terms:[{l:"Single",y:3.00,c:1}]},"Luxe Plus Solitaire II (LTMW)":{terms:[{l:"Single",y:3.25,c:1}]},"Mortgage Term (MPN2)":{terms:[{l:"3 years",y:10.50,c:3},{l:"4 years",y:11.50,c:3},{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20+ years",y:40.00,c:3}]},"Provenance Disability Accelerator (TSN3)":{terms:[{l:"Single",y:5.50,c:1}]},"Provenance Solitaire (VPMW)":{terms:[{l:"Single",y:5.50,c:1}]},"Provenance Solitaire - Protection Benefit (VPVW)":{terms:[{l:"Single",y:5.50,c:1}]},"Savings Protector Pro (SPV3)":{terms:[{l:"1yr (Policy <=10)",y:2.00,c:4},{l:"2yr (Policy <=10)",y:2.20,c:4},{l:"3yr (Policy <=10)",y:3.30,c:4},{l:"4yr (Policy <=10)",y:4.40,c:4},{l:"5yr (Policy <=10)",y:5.50,c:4},{l:"5yr (Policy >10 <=25)",y:9.00,c:4},{l:"5yr (Policy >25)",y:10.00,c:4},{l:"10yr (Policy <=25)",y:18.20,c:4},{l:"10yr (Policy >25)",y:22.00,c:4},{l:"15yr (Policy <=25)",y:27.20,c:4},{l:"15yr (Policy >25)",y:33.00,c:4},{l:"20yr (Policy <=25)",y:36.30,c:4},{l:"20yr (Policy >25)",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},"Star Term Protect (TAN19)":{riders:["Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5 years",y:12.50,c:3},{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:40.00,c:3},{l:"25+ years",y:40.00,c:3}]},"TermLife Solitaire (TBN4)":{riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"6-9 years",y:13.00,c:3},{l:"10-14 years",y:18.00,c:3},{l:"15-19 years",y:26.00,c:3},{l:"20-24 years",y:41.20,c:3},{l:"25+ years",y:45.50,c:3}]},"Total Protect (TPV1)":{terms:[{l:"5 years",y:12.50,c:4},{l:"6-9 years",y:13.00,c:4},{l:"10-14 years",y:18.00,c:4},{l:"15-19 years",y:26.00,c:4},{l:"20+ years",y:40.00,c:4}]},"Wealth Plus Solitaire (LHMWA)":{terms:[{l:"Single",y:3.00,c:1}]},"AstraLink (VA2)":{terms:[{l:"MIP 10yr",y:22.00,c:4},{l:"MIP 15yr",y:33.00,c:4},{l:"MIP 20yr",y:44.00,c:4},{l:"MIP 25yr",y:55.00,c:4}]},"Invest Flex (VS1)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5yr (All Policy Term)",y:3.85,c:1.50},{l:"10yr (All Policy Term)",y:23.95,c:2.50},{l:"15yr (All Policy Term)",y:48.55,c:3.00},{l:"20yr (All Policy Term)",y:52.35,c:3.00}]},"Invest Flex TriVantage (VS3)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"10yr (All Policy Term)",y:11.00,c:1.50}]},"Invest Flex Vantage (VS2)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5yr (All Policy Term)",y:2.60,c:1.50},{l:"10yr (All Policy Term)",y:23.00,c:2.50},{l:"15yr (All Policy Term)",y:44.20,c:3.00},{l:"20yr (All Policy Term)",y:46.00,c:3.00}]},"WealthLink (GL3)":{terms:[{l:"Single",y:1.50,c:0}]},"Care Secure":{terms:[{l:"Yearly",y:45.00,c:4}]},"Enhanced IncomeShield / IncomeShield Standard (ISEP)":{riders:["Classic Care Rider (ISEPL)","Deluxe Care Rider (ISEPH)"],terms:[{l:"Yearly",y:30.00,c:4}]},"PrimeShield":{terms:[{l:"Yearly",y:35.00,c:4}]}};
+const PROD={"Complete Cancer Care (CBN3)":{terms:[{l:"10 years",y:22.00,c:4,rates:[22.0,12.0,2.4,1.2,1.2,1.2]}]},"Complete Critical Protect (CCN1)":{riders:["Dread Disease Premium Waiver (WSV2)"],terms:[{l:"10-14 years",y:22.00,c:4,rates:[22.0,12.0,2.4,1.2,1.2,1.2]},{l:"15-19 years",y:33.00,c:4,rates:[33.0,18.0,3.6,1.8,1.8,1.8]},{l:"20-24 years",y:44.00,c:4,rates:[44.0,24.0,4.8,2.4,2.4,2.4]},{l:"25+ years",y:55.00,c:4,rates:[55.0,30.0,6.0,3.0,3.0,3.0]}]},"Complete Life Secure (VQMW)":{riders:["Advanced Critical Secure (CSV10)","Early Critical Secure (CSV11)","Hospital CashAid (HBV3)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5 years",y:10.00,c:4,rates:[10.0,5.6,0.9,0.9,0.9,0]},{l:"6-9 years",y:10.20,c:4,rates:[10.2,5.6,1.1,0.6,0.6,0.6]},{l:"10-14 years",y:22.00,c:4,rates:[22.0,12.0,2.4,1.2,1.2,1.2]},{l:"15-19 years",y:33.00,c:4,rates:[33.0,18.0,3.6,1.8,1.8,1.8]},{l:"20-24 years",y:44.00,c:4,rates:[44.0,24.0,4.8,2.4,2.4,2.4]},{l:"25+ years",y:55.00,c:4,rates:[55.0,30.0,6.0,3.0,3.0,3.0]}]},"Complete Life Secure - Protection Benefit (VQVW)":{terms:[{l:"5 years",y:10.00,c:4,rates:[10.0,5.6,0.9,0.9,0.9,0]},{l:"6-9 years",y:10.20,c:4,rates:[10.2,5.6,1.1,0.6,0.6,0.6]},{l:"10-14 years",y:22.00,c:4,rates:[22.0,12.0,2.4,1.2,1.2,1.2]},{l:"15-19 years",y:33.00,c:4,rates:[33.0,18.0,3.6,1.8,1.8,1.8]},{l:"20-24 years",y:44.00,c:4,rates:[44.0,24.0,4.8,2.4,2.4,2.4]},{l:"25+ years",y:55.00,c:4,rates:[55.0,30.0,6.0,3.0,3.0,3.0]}]},"Essential Protect (LBV3)":{terms:[{l:"5 years",y:12.50,c:4,rates:[12.5,6.0,1.5,1.5,1.5,0]},{l:"6-9 years",y:13.00,c:4,rates:[13.0,5.5,1.5,1.5,1.5,1.5]},{l:"10-14 years",y:18.00,c:4,rates:[18.0,7.0,2.0,2.0,2.0,2.0]},{l:"15-19 years",y:26.00,c:4,rates:[26.0,11.5,2.5,2.5,2.5,2.5]},{l:"20+ years",y:40.00,c:4,rates:[40.0,13.0,5.0,5.0,5.0,5.0]}]},"Gro Annuity Pro (GAMA)":{terms:[{l:"Single",y:1.00,c:0}]},"Gro Cash Flex Pro (GCME)":{terms:[{l:"Single",y:3.00,c:1}]},"Gro Cash Plus (GDMW)":{terms:[{l:"5 years",y:11.50,c:1},{l:"10 years",y:18.30,c:1}]},"Gro Cash Sure (GCMW)":{terms:[{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:0.60},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},"Gro Power Saver Pro (RSME)":{terms:[{l:"3 years",y:3.30,c:0.30}]},"Gro Retire Flex Pro (GRME)":{terms:[{l:"Single",y:3.50,c:1.00},{l:"5yr (Policy <=10)",y:5.50,c:0.60},{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy <=25)",y:27.20,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:1.00},{l:"20yr (Policy <=25)",y:36.30,c:1.00},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},"Gro Retire Flex Pro - Protection Benefit (SPV4)":{terms:[{l:"5yr (Policy <=10)",y:5.50,c:0.60},{l:"5yr (Policy >10 <=25)",y:9.00,c:0.60},{l:"5yr (Policy >25)",y:10.00,c:0.60},{l:"10yr (Policy <=25)",y:18.20,c:0.60},{l:"10yr (Policy >25)",y:22.00,c:0.60},{l:"15yr (Policy <=25)",y:27.20,c:0.60},{l:"15yr (Policy >25)",y:33.00,c:1.00},{l:"20yr (Policy <=25)",y:36.30,c:1.00},{l:"20yr (Policy >25)",y:44.00,c:1.00},{l:"25+ years",y:55.00,c:1.00}]},"Gro Saver Flex Pro (GSME)":{terms:[{l:"Single",y:3.00,c:1}]},"Luxe Plus Solitaire II (LTMW)":{terms:[{l:"Single",y:3.25,c:1}]},"Mortgage Term (MPN2)":{terms:[{l:"3 years",y:10.50,c:3,rates:[10.5,8.0,1.5,0,0,0]},{l:"4 years",y:11.50,c:3,rates:[11.5,7.0,1.5,1.5,0,0]},{l:"5 years",y:12.50,c:3,rates:[12.5,6.0,1.5,1.5,1.5,0]},{l:"6-9 years",y:13.00,c:3,rates:[13.0,5.5,1.5,1.5,1.5,1.5]},{l:"10-14 years",y:18.00,c:3,rates:[18.0,7.0,2.0,2.0,2.0,2.0]},{l:"15-19 years",y:26.00,c:3,rates:[26.0,11.5,2.5,2.5,2.5,2.5]},{l:"20+ years",y:40.00,c:3,rates:[40.0,13.0,5.0,5.0,5.0,5.0]}]},"Provenance Disability Accelerator (TSN3)":{terms:[{l:"Single",y:5.50,c:1}]},"Provenance Solitaire (VPMW)":{terms:[{l:"Single",y:5.50,c:1}]},"Provenance Solitaire - Protection Benefit (VPVW)":{terms:[{l:"Single",y:5.50,c:1}]},"Savings Protector Pro (SPV3)":{terms:[{l:"1yr (Policy <=10)",y:2.00,c:4},{l:"2yr (Policy <=10)",y:2.20,c:4},{l:"3yr (Policy <=10)",y:3.30,c:4},{l:"4yr (Policy <=10)",y:4.40,c:4},{l:"5yr (Policy <=10)",y:5.50,c:4},{l:"5yr (Policy >10 <=25)",y:9.00,c:4},{l:"5yr (Policy >25)",y:10.00,c:4},{l:"10yr (Policy <=25)",y:18.20,c:4},{l:"10yr (Policy >25)",y:22.00,c:4},{l:"15yr (Policy <=25)",y:27.20,c:4},{l:"15yr (Policy >25)",y:33.00,c:4},{l:"20yr (Policy <=25)",y:36.30,c:4},{l:"20yr (Policy >25)",y:44.00,c:4},{l:"25+ years",y:55.00,c:4}]},"Star Term Protect (TAN19)":{riders:["Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5 years",y:12.50,c:3,rates:[12.5,6.0,1.5,1.5,1.5,0]},{l:"6-9 years",y:13.00,c:3,rates:[13.0,5.5,1.5,1.5,1.5,1.5]},{l:"10-14 years",y:18.00,c:3,rates:[18.0,7.0,2.0,2.0,2.0,2.0]},{l:"15-19 years",y:26.00,c:3,rates:[26.0,11.5,2.5,2.5,2.5,2.5]},{l:"20-24 years",y:40.00,c:3,rates:[40.0,13.0,5.0,5.0,5.0,5.0]},{l:"25+ years",y:40.00,c:3,rates:[40.0,13.0,5.0,5.0,5.0,5.0]}]},"TermLife Solitaire (TBN4)":{riders:["Disability Accelerator (TCN2)","Essential Protect (LBV3)","Hospital CashAid (HBV3)","Total Protect (TPV1)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"6-9 years",y:13.00,c:3,rates:[13.0,5.5,1.5,1.5,1.5,1.5]},{l:"10-14 years",y:18.00,c:3,rates:[18.0,7.0,2.0,2.0,2.0,2.0]},{l:"15-19 years",y:26.00,c:3,rates:[26.0,11.5,2.5,2.5,2.5,2.5]},{l:"20-24 years",y:41.20,c:3,rates:[41.2,13.5,5.2,5.2,5.2,5.2]},{l:"25+ years",y:45.50,c:3,rates:[45.5,14.7,5.7,5.7,5.7,5.7]}]},"Total Protect (TPV1)":{terms:[{l:"5 years",y:12.50,c:4,rates:[12.5,6.0,1.5,1.5,1.5,0]},{l:"6-9 years",y:13.00,c:4,rates:[13.0,5.5,1.5,1.5,1.5,1.5]},{l:"10-14 years",y:18.00,c:4,rates:[18.0,7.0,2.0,2.0,2.0,2.0]},{l:"15-19 years",y:26.00,c:4,rates:[26.0,11.5,2.5,2.5,2.5,2.5]},{l:"20+ years",y:40.00,c:4,rates:[40.0,13.0,5.0,5.0,5.0,5.0]}]},"Wealth Plus Solitaire (LHMWA)":{terms:[{l:"Single",y:3.00,c:1}]},"AstraLink (VA2)":{terms:[{l:"MIP 10yr",y:22.00,c:4,rates:[22.0,12.0,1.5,1.5,1.5,1.5]},{l:"MIP 15yr",y:33.00,c:4,rates:[33.0,18.0,1.5,1.5,1.5,1.5]},{l:"MIP 20yr",y:44.00,c:4,rates:[44.0,24.0,1.5,1.5,1.5,1.5]},{l:"MIP 25yr",y:55.00,c:4,rates:[50.0,30.0,2.0,2.0,2.0,2.0]}]},"Invest Flex (VS1)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5yr (All Policy Term)",y:3.85,c:1.50,rates:[3.85,2.10,0.35,0.35,0.35,0]},{l:"10yr (All Policy Term)",y:23.95,c:2.50,rates:[23.95,1.0,1.0,1.0,1.0,1.0]},{l:"15yr (All Policy Term)",y:48.55,c:3.00,rates:[48.55,2.35,2.35,2.35,2.35,2.10]},{l:"20yr (All Policy Term)",y:52.35,c:3.00,rates:[52.35,2.50,2.50,2.50,2.50,2.50]}]},"Invest Flex TriVantage (VS3)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"10yr (All Policy Term)",y:11.00,c:1.50,rates:[11.0,2.0,1.5,1.5,1.5,1.0]}]},"Invest Flex Vantage (VS2)":{riders:["Cancer Premium Waiver / GIO (WPV10)","Dread Disease Premium Waiver (WSV2)"],terms:[{l:"5yr (All Policy Term)",y:2.60,c:1.50,rates:[2.60,2.10,0.35,0.35,0.35,0]},{l:"10yr (All Policy Term)",y:23.00,c:2.50,rates:[23.0,1.0,1.0,1.0,1.0,1.0]},{l:"15yr (All Policy Term)",y:44.20,c:3.00,rates:[44.20,2.35,2.35,2.35,2.35,2.10]},{l:"20yr (All Policy Term)",y:46.00,c:3.00,rates:[46.0,2.50,2.50,2.50,2.50,2.50]}]},"WealthLink (GL3)":{terms:[{l:"Single",y:1.50,c:0}]},"Care Secure":{terms:[{l:"Yearly",y:45.00,c:4,rates:[45.0,17.0,3.0,0,0,0]}]},"Enhanced IncomeShield / IncomeShield Standard (ISEP)":{riders:["Essential Care Rider","Optima Care Rider","Classic Care Rider (ISEPL)","Deluxe Care Rider (ISEPH)"],terms:[{l:"Yearly",y:30.00,c:4,rates:[30.0,5.0,5.0,5.0,5.0,5.0]}]},"PrimeShield":{terms:[{l:"Yearly",y:35.00,c:4,rates:[35.0,10.0,5.0,5.0,5.0,5.0]}]},"Legacy Flex Solitaire (VA3R)":{terms:[{l:"MIP 5yr",y:18.00,c:3,rates:[18.0,6.0,6.0,5.0,5.0,1.5]},{l:"MIP 10yr",y:25.00,c:4,rates:[25.0,12.5,6.0,6.0,6.0,1.5]}]},"Legacy Flex Solitaire (VA3S)":{terms:[{l:"Single (5yr Policy)",y:4.50,c:3,rates:[4.5,0,0,0,0,0]}]}};
 
+const GI_PRODUCTS=[
+  {label:"Private Car Insurance",code:"GPC",nb:15,renew:12},
+  {label:"Enhanced Home Insurance",code:"GHA",nb:25,renew:25},
+  {label:"Domestic Helper Insurance",code:"GDH",nb:15,renew:0},
+  {label:"PA Assurance",code:"GPB",nb:25,renew:25},
+  {label:"Travel Insurance",code:"GPT",nb:5,renew:0},
+  {label:"Happy Tails Pet Insurance",code:"GPI",nb:15,renew:15},
+  {label:"Other Commercial Insurance",code:"GCI",nb:15,renew:12},
+];
+const GROUP_PRODUCTS=[
+  {label:"Group Life",code:"GRP-LIFE",nb:10,renew:10},
+  {label:"Group Health",code:"GRP-HEALTH",nb:15,renew:15},
+  {label:"Group PA",code:"GRP-PA",nb:15,renew:15},
+  {label:"Junior Protection Plan",code:"GRP-JPP",nb:10,renew:10},
+  {label:"i-Medical Plan (Outpatient)",code:"GRP-IMED",nb:10,renew:10},
+  {label:"Workmedic",code:"GRP-WM",nb:15,renew:15},
+  {label:"Workmedic (Agent via BIX)",code:"GRP-WMB",nb:18,renew:18},
+];
 const QS={Q1:{months:[0,1,2],label:"Q1 (Jan-Mar)",payout:"April"},Q2:{months:[3,4,5],label:"Q2 (Apr-Jun)",payout:"July"},Q3:{months:[6,7,8],label:"Q3 (Jul-Sep)",payout:"October"},Q4:{months:[9,10,11],label:"Q4 (Oct-Dec)",payout:"January"}};
 const TIERS=[{min:0,max:49999,bonus:0,label:"< 50,000"},{min:50000,max:67999,bonus:10,label:"50,000 - 67,999"},{min:68000,max:96999,bonus:20,label:"68,000 - 96,999"},{min:97000,max:139999,bonus:30,label:"97,000 - 139,999"},{min:140000,max:Infinity,bonus:40,label:"140,000+"}];
 const MTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -361,9 +382,11 @@ function getTopProducts(){
   return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
 }
 
-let sales=[],fwdSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
-let incomeTimelineExpanded=false;
+let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
+let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false;
 let campTab="ignite";
+let giForm={date:todayStr(),client:"",product:"",category:"gi",isRenewal:false,policyStartDate:"",premium:""};
+let renewalForm={date:todayStr(),clientSearch:"",selectedSale:null,annualPremium:"",commRate:0,renewalYear:1};
 let pols=[newPol()],fDate=todayStr(),fClient="";
 let calOpen=false,calY=new Date().getFullYear(),calM=new Date().getMonth();
 let srch={};
@@ -375,22 +398,28 @@ let fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date
 function newPol(){return{id:uid(),product:"",term:"",ap:"",riders:[]};}
 function newRider(){return{id:uid(),name:"",riderTerm:"",premium:""};}
 
-let unsubSales=null,unsubFWD=null;
+let unsubSales=null,unsubFWD=null,unsubGI=null,unsubRenewal=null;
 function startListeners(){
   if(unsubSales)return;
   unsubSales=onSnapshot(collection(db,COLL),snap=>{sales=[];snap.forEach(d=>sales.push({...d.data(),fid:d.id}));sales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
   unsubFWD=onSnapshot(collection(db,COLL_FWD),snap=>{fwdSales=[];snap.forEach(d=>fwdSales.push({...d.data(),fid:d.id}));fwdSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
+  unsubGI=onSnapshot(collection(db,COLL_GI),snap=>{giSales=[];snap.forEach(d=>giSales.push({...d.data(),fid:d.id}));giSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
+  unsubRenewal=onSnapshot(collection(db,COLL_RENEWAL),snap=>{renewalSales=[];snap.forEach(d=>renewalSales.push({...d.data(),fid:d.id}));renewalSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
 }
 
 async function addSaleDB(obj){try{await addDoc(collection(db,COLL),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delSaleDB(fid){try{await deleteDoc(doc(db,COLL,fid));}catch(e){alert("Delete error: "+e.message);}}
 async function addFWDSaleDB(obj){try{await addDoc(collection(db,COLL_FWD),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delFWDSaleDB(fid){try{await deleteDoc(doc(db,COLL_FWD,fid));}catch(e){alert("Delete error: "+e.message);}}
+async function addGISaleDB(obj){try{await addDoc(collection(db,COLL_GI),obj);}catch(e){alert("Save error: "+e.message);}}
+async function delGISaleDB(fid){try{await deleteDoc(doc(db,COLL_GI,fid));}catch(e){alert("Delete error: "+e.message);}}
+async function addRenewalDB(obj){try{await addDoc(collection(db,COLL_RENEWAL),obj);}catch(e){alert("Save error: "+e.message);}}
+async function delRenewalDB(fid){try{await deleteDoc(doc(db,COLL_RENEWAL,fid));}catch(e){alert("Delete error: "+e.message);}}
 
 function renderAll(){renderTabs();renderPage();}
 
 function renderTabs(){
-  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["campaigns","🎯 Campaigns"],["mdrt","🏆 MDRT / COT / TOT"]];
+  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["gi","🛡️ GI"],["renewal","🔄 Renewal"],["campaigns","🎯 Campaigns"],["mdrt","🏆 MDRT / COT / TOT"]];
   document.getElementById("tabBar").innerHTML=TABS.map(([k,v])=>`<button class="tab-btn${tab===k?" active":""}" onclick="setTab('${k}')">${v}</button>`).join("");
 }
 
@@ -400,6 +429,8 @@ function renderPage(){
   else if(tab==="dashboard")el.innerHTML=renderDash();
   else if(tab==="history")el.innerHTML=renderHist();
   else if(tab==="fwd")el.innerHTML=renderFWD();
+  else if(tab==="gi")el.innerHTML=renderGI();
+  else if(tab==="renewal")el.innerHTML=renderRenewal();
   else if(tab==="campaigns")el.innerHTML=renderCampaigns();
   else if(tab==="mdrt")el.innerHTML=renderMDRT();
   attachAll();
@@ -730,7 +761,8 @@ function getQBonus(ys,q){
 
 function renderDash(){
   const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
-  const qd=getQD(ys,activeQ);
+  const yrRenewals=renewalSales.filter(s=>s.date.startsWith(String(selYear)));
+  const qd=getQD(ys,activeQ,yrRenewals);
   const nt=TIERS.find(t=>t.min>qd.tc);
   const liveFwdAll=fwdSales.map(s=>({...s,...liveFWDComm(s)}));
   const fwdQ=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
@@ -945,7 +977,49 @@ function renderDash(){
   +"</div>"
   +"</div>";
 
-  return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+  const dashSubHtml="<div style='display:flex;gap:8px;margin-bottom:16px;'>"
+  +"<button class='dash-sub-btn"+(dashSubTab==="active"?" dash-sub-active":"")+"' onclick='setDashTab(\"active\")'>📈 Active</button>"
+  +"<button class='dash-sub-btn"+(dashSubTab==="renewal"?" dash-sub-active":"")+"' onclick='setDashTab(\"renewal\")'>🔄 Renewal</button>"
+  +"</div>";
+
+  if(dashSubTab==="renewal"){
+    const ytdRenewal=yrRenewals.reduce((a,s)=>a+s.totalComm,0);
+    const qRenewals=yrRenewals.filter(s=>s.quarter===activeQ);
+    const qRenewalTotal=qRenewals.reduce((a,s)=>a+s.totalComm,0);
+    let renewHtml=dashSubHtml;
+    renewHtml+="<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+    +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
+    +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
+    +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>";
+    renewHtml+="<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;'>"
+    +"<div style='background:linear-gradient(135deg,#1a103c,#231558);border-radius:12px;padding:16px;border:1px solid #7c3aed;text-align:center;'>"
+    +"<div style='font-size:11px;color:#c4b5fd;'>YTD Renewal Commission</div>"
+    +"<div style='font-size:24px;font-weight:900;color:#a78bfa;margin-top:6px;'>"+$f(ytdRenewal)+"</div>"
+    +"<div style='font-size:11px;color:#7a8fa6;margin-top:2px;'>"+yrRenewals.length+" renewal"+(yrRenewals.length!==1?"s":"")+"</div>"
+    +"</div>"
+    +"<div style='background:linear-gradient(135deg,#1a103c,#231558);border-radius:12px;padding:16px;border:1px solid #7c3aed;text-align:center;'>"
+    +"<div style='font-size:11px;color:#c4b5fd;'>"+QS[activeQ].label+" Renewal</div>"
+    +"<div style='font-size:24px;font-weight:900;color:#a78bfa;margin-top:6px;'>"+$f(qRenewalTotal)+"</div>"
+    +"<div style='font-size:11px;color:#7a8fa6;margin-top:2px;'>"+qRenewals.length+" renewal"+(qRenewals.length!==1?"s":"")+"</div>"
+    +"</div></div>";
+    renewHtml+="<div style='font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:10px;'>🔄 Recent Renewals</div>";
+    if(yrRenewals.length===0){
+      renewHtml+="<div style='text-align:center;color:#475569;padding:30px;background:#1e293b;border-radius:12px;border:1px solid #334155;'>No renewals logged yet. Use the Renewal tab to add them.</div>";
+    } else {
+      yrRenewals.slice(0,10).forEach(r=>{
+        const dt=new Date(r.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+        renewHtml+="<div style='background:rgba(30,10,60,0.8);border-radius:12px;padding:14px;border:1px solid rgba(124,58,237,0.3);margin-bottom:10px;'>"
+        +"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+        +"<div><div style='font-weight:700;color:#e2e8f0;'>"+esc(r.clientName)+"</div>"
+        +"<div style='font-size:12px;color:#64748b;'>"+esc(r.product)+" · Y"+r.renewalYear+" · "+dt+"</div></div>"
+        +"<div style='font-size:16px;font-weight:800;color:#a78bfa;'>"+$f(r.totalComm)+"</div>"
+        +"</div></div>";
+      });
+    }
+    return renewHtml;
+  }
+
+  return dashSubHtml+"<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
   +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
   +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
   +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>"
@@ -979,7 +1053,23 @@ function renderDash(){
   +qTableHtml;
 }
 
-function getQD(ys,q){const qs=ys.filter(s=>s.quarter===q);const tm=qs.reduce((a,s)=>a+s.totalComm,0),bc=qs.reduce((a,s)=>a+s.baseComm,0),tc=qs.reduce((a,s)=>a+s.totalCredit,0),tier=getTier(tc),eb=tm>=3000?tm*0.25:0,qb=tm*tier.bonus/100;return{tm,bc,tc,tier,eb,qb,tb:eb+qb};}
+function getQD(ys,q,renewalYs=[]){
+  const qs=ys.filter(s=>s.quarter===q);
+  const rqs=renewalYs.filter(s=>s.quarter===q);
+  const tm=qs.reduce((a,s)=>a+s.totalComm,0)+rqs.reduce((a,s)=>a+s.totalComm,0);
+  const bc=qs.reduce((a,s)=>a+s.baseComm,0);
+  const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
+  const tier=getTier(tc);
+  const eb=tm>=3000?tm*0.25:0;
+  const qb=tm*tier.bonus/100;
+  return{tm,bc,tc,tier,eb,qb,tb:eb+qb};
+}
+
+function getRenewalRate(rates,renewalYear){
+  if(!rates||!rates.length)return 0;
+  const idx=Math.min(renewalYear-1,5);
+  return rates[idx]||0;
+}
 
 function renderHist(){
   const yrSales=sales.filter(s=>s.date.startsWith(String(selYear)));
@@ -1078,6 +1168,164 @@ function renderHist(){
   });
 
   return html;
+}
+
+function renderGI(){
+  const isGroup=giForm.category==="group";
+  const prods=isGroup?GROUP_PRODUCTS:GI_PRODUCTS;
+  const selProd=prods.find(p=>p.code===giForm.product)||null;
+  const ap=parseFloat(giForm.premium)||0;
+  const commRate=selProd?(giForm.isRenewal?selProd.renew:selProd.nb):0;
+  const comm=ap>0&&commRate>0?ap*commRate/100:0;
+
+  let recentHtml="";
+  const giYr=giSales.filter(s=>s.date.startsWith(String(selYear)));
+  if(giYr.length>0){
+    recentHtml="<div style='font-size:14px;font-weight:700;color:#2dd4bf;margin:16px 0 10px;'>📋 Recent GI Sales ("+giYr.length+")</div>";
+    giYr.slice(0,15).forEach(s=>{
+      const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+      recentHtml+="<div style='background:rgba(5,28,26,0.85);border-radius:12px;padding:14px;border:1px solid rgba(13,148,136,0.3);margin-bottom:10px;'>"
+      +"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+      +"<div>"
+      +"<div style='font-weight:700;color:#e2e8f0;'>"+esc(s.clientName)+"</div>"
+      +"<div style='font-size:12px;color:#64748b;'>"+esc(s.product)+" · "+(s.isRenewal?"Renewal":"New Biz")+" · "+dt+"</div>"
+      +"<div style='font-size:11px;color:#64748b;'>AP: "+$f(s.annualPremium)+" · Rate: "+s.commRate+"%</div>"
+      +"</div>"
+      +"<div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='text-align:right;'><div style='font-size:11px;color:#64748b;'>Commission</div><div style='font-size:16px;font-weight:800;color:#2dd4bf;'>"+$f(s.commission)+"</div></div>"
+      +"<button class='btn-del' onclick='doDelGISale(\""+s.fid+"\")'>✕</button>"
+      +"</div></div></div>";
+    });
+  }
+
+  return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+  +"<div style='font-size:16px;font-weight:700;color:#2dd4bf;'>🛡️ General & Group Insurance</div>"
+  +"<div style='position:relative;margin-left:auto;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
+  +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
+  +"</div>"
+  +"<div style='background:linear-gradient(135deg,rgba(5,28,26,0.85),rgba(4,20,20,0.95));border-radius:16px;padding:16px;border:1px solid rgba(13,148,136,0.35);margin-bottom:12px;'>"
+  +"<div style='font-size:14px;font-weight:700;color:#2dd4bf;margin-bottom:14px;'>➕ Log GI Sale</div>"
+  // Category selector
+  +"<div style='display:flex;gap:8px;margin-bottom:14px;'>"
+  +"<button onclick='setGiCat(\"gi\")' style='flex:1;padding:10px;border-radius:10px;border:1px solid "+(isGroup?"rgba(51,65,85,0.5)":"rgba(13,148,136,0.6)")+";background:"+(isGroup?"transparent":"rgba(15,80,72,0.7)")+";color:"+(isGroup?"#64748b":"#5eead4")+";font-weight:700;font-size:13px;cursor:pointer;'>🛡️ General Insurance</button>"
+  +"<button onclick='setGiCat(\"group\")' style='flex:1;padding:10px;border-radius:10px;border:1px solid "+(!isGroup?"rgba(51,65,85,0.5)":"rgba(13,148,136,0.6)")+";background:"+(!isGroup?"transparent":"rgba(15,80,72,0.7)")+";color:"+(!isGroup?"#64748b":"#5eead4")+";font-weight:700;font-size:13px;cursor:pointer;'>👥 Group Insurance</button>"
+  +"</div>"
+  // Date + Client
+  +"<div class='g2' style='margin-bottom:12px;'>"
+  +"<div><label class='lbl'>📅 Date of Sale</label><input class='inp' id='giDateInp' type='text' placeholder='YYYY-MM-DD' value='"+giForm.date+"'/></div>"
+  +"<div><label class='lbl'>👤 Client Name</label><input class='inp' id='giClientInp' type='text' placeholder='e.g. ABC Company' value='"+esc(giForm.client)+"'/></div>"
+  +"</div>"
+  // Product selector
+  +"<div style='margin-bottom:12px;'><label class='lbl'>🏷️ Product</label>"
+  +"<select class='sel' onchange='setGiProd(this.value)' style='color:"+(giForm.product?"#e2e8f0":"#64748b")+";'>"
+  +"<option value=''>-- Select Product --</option>"
+  +prods.map(p=>"<option value='"+p.code+"'"+(giForm.product===p.code?" selected":"")+">"+esc(p.label)+"</option>").join("")
+  +"</select></div>"
+  // New Biz / Renewal toggle
+  +"<div style='margin-bottom:12px;'><label class='lbl'>📋 Type</label>"
+  +"<div style='display:flex;gap:8px;'>"
+  +"<button onclick='togGiRenewal(false)' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(!giForm.isRenewal?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(!giForm.isRenewal?"rgba(15,80,72,0.7)":"transparent")+";color:"+(!giForm.isRenewal?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;'>New Business</button>"
+  +"<button onclick='togGiRenewal(true)' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(giForm.isRenewal?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(giForm.isRenewal?"rgba(15,80,72,0.7)":"transparent")+";color:"+(giForm.isRenewal?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;'>Renewal</button>"
+  +"</div></div>"
+  // Premium
+  +"<div style='margin-bottom:12px;'><label class='lbl'>💰 Annual Premium (SGD)</label><input class='inp' id='giPremInp' type='number' placeholder='e.g. 1200' value='"+esc(giForm.premium)+"'/></div>"
+  // Commission preview
+  +(selProd&&ap>0?"<div style='background:#071510;border-radius:10px;padding:12px;border:1px solid #166534;margin-bottom:14px;'>"
+  +"<div style='font-size:11px;color:#2dd4bf;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>"
+  +"<div class='g3'>"
+  +"<div class='mc'><div class='ml'>Commission Rate</div><div class='mv' style='color:#2dd4bf;'>"+commRate+"%</div></div>"
+  +"<div class='mc'><div class='ml'>Annual Premium</div><div class='mv' style='color:#e2e8f0;'>"+$f(ap)+"</div></div>"
+  +"<div class='mc'><div class='ml'>Commission</div><div class='mv' style='color:#2dd4bf;font-size:15px;'>"+$f(comm)+"</div></div>"
+  +"</div></div>":"")
+  +"<div class='val-err' id='giValErr'>⚠️ Please fill in all required fields.</div>"
+  +"<button class='btn-pri' style='background:linear-gradient(135deg,#0f766e,#0d9488);' onclick='doAddGISale()'>✅ Add GI Sale</button>"
+  +"</div>"
+  +recentHtml;
+}
+
+function renderRenewal(){
+  const matchedSales=renewalForm.clientSearch.length>=2
+    ?sales.filter(s=>s.clientName.toLowerCase().includes(renewalForm.clientSearch.toLowerCase()))
+    :[];
+  const today=new Date();
+
+  let policyCardsHtml="";
+  if(matchedSales.length>0&&!renewalForm.selectedSale){
+    policyCardsHtml="<div style='margin-bottom:14px;'>";
+    matchedSales.slice(0,8).forEach(s=>{
+      const saleDate=new Date(s.date+"T00:00:00");
+      const yearsElapsed=Math.floor((today-saleDate)/(365.25*24*3600*1000));
+      const renewalYear=yearsElapsed+1;
+      const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+      (s.policies||[]).forEach((p,pi)=>{
+        policyCardsHtml+="<div onclick='pickRenewalSale(\""+s.fid+"\","+pi+")' style='background:rgba(30,10,60,0.8);border-radius:10px;padding:12px 14px;border:1px solid rgba(124,58,237,0.3);margin-bottom:8px;cursor:pointer;transition:all 0.2s;' onmouseover='this.style.borderColor=\"rgba(167,139,250,0.6)\"' onmouseout='this.style.borderColor=\"rgba(124,58,237,0.3)\"'>"
+        +"<div style='font-weight:700;color:#e2e8f0;'>"+esc(s.clientName)+"</div>"
+        +"<div style='font-size:12px;color:#94a3b8;margin-top:2px;'>"+esc(p.product)+" · "+esc(p.term)+"</div>"
+        +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Sold: "+dt+" · Year "+renewalYear+" renewal</div>"
+        +"</div>";
+      });
+    });
+    policyCardsHtml+="</div>";
+  }
+
+  const sel=renewalForm.selectedSale;
+  const ap=parseFloat(renewalForm.annualPremium)||0;
+  const comm=ap>0&&renewalForm.commRate>0?ap*renewalForm.commRate/100:0;
+
+  let recentHtml="";
+  const renYr=renewalSales.filter(s=>s.date.startsWith(String(selYear)));
+  if(renYr.length>0){
+    recentHtml="<div style='font-size:14px;font-weight:700;color:#a78bfa;margin:16px 0 10px;'>📋 Recent Renewals ("+renYr.length+")</div>";
+    renYr.slice(0,10).forEach(r=>{
+      const dt=new Date(r.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+      recentHtml+="<div style='background:rgba(30,10,60,0.8);border-radius:12px;padding:14px;border:1px solid rgba(124,58,237,0.3);margin-bottom:10px;'>"
+      +"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+      +"<div>"
+      +"<div style='font-weight:700;color:#e2e8f0;'>"+esc(r.clientName)+"</div>"
+      +"<div style='font-size:12px;color:#64748b;'>"+esc(r.product)+(r.term?" · "+esc(r.term):"")+" · Year "+r.renewalYear+" · "+dt+"</div>"
+      +"</div>"
+      +"<div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='text-align:right;'><div style='font-size:11px;color:#64748b;'>Commission</div><div style='font-size:16px;font-weight:800;color:#a78bfa;'>"+$f(r.totalComm)+"</div></div>"
+      +"<button class='btn-del' onclick='doDelRenewal(\""+r.fid+"\")'>✕</button>"
+      +"</div></div></div>";
+    });
+  }
+
+  return "<div style='font-size:16px;font-weight:700;color:#a78bfa;margin-bottom:16px;'>🔄 Log Renewal Commission</div>"
+  +"<div style='background:rgba(30,10,60,0.85);border-radius:16px;padding:16px;border:1px solid rgba(124,58,237,0.35);margin-bottom:12px;'>"
+  // Step 1: client search
+  +"<div style='margin-bottom:14px;'>"
+  +"<label class='lbl'>🔍 Step 1: Search Client Name</label>"
+  +"<input class='inp' id='renewSearchInp' type='text' placeholder='Type client name...' value='"+esc(renewalForm.clientSearch)+"' oninput='renewalSearch(this.value)' style='border-color:rgba(124,58,237,0.4);'/>"
+  +"</div>"
+  +policyCardsHtml
+  +(sel?"<div style='background:rgba(20,5,40,0.9);border-radius:12px;padding:12px;border:1px solid rgba(167,139,250,0.4);margin-bottom:14px;'>"
+  +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;'>"
+  +"<div style='font-size:12px;font-weight:700;color:#a78bfa;'>✅ Selected Policy</div>"
+  +"<button class='btn-sm' onclick='clearRenewalSel()' style='font-size:11px;padding:3px 10px;'>Clear</button>"
+  +"</div>"
+  +"<div style='font-weight:700;color:#e2e8f0;'>"+esc(sel.clientName)+"</div>"
+  +"<div style='font-size:12px;color:#94a3b8;'>"+esc(sel.product)+(sel.term?" · "+esc(sel.term):"")+" · Year "+renewalForm.renewalYear+"</div>"
+  +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Commission Rate: "+renewalForm.commRate+"%</div>"
+  +"</div>":"")
+  // Date + Premium
+  +"<div class='g2' style='margin-bottom:12px;'>"
+  +"<div><label class='lbl'>📅 Date of Renewal</label><input class='inp' id='renewDateInp' type='text' placeholder='YYYY-MM-DD' value='"+renewalForm.date+"'/></div>"
+  +"<div><label class='lbl'>💰 Annual Premium (SGD)</label><input class='inp' id='renewPremInp' type='number' placeholder='e.g. 5000' value='"+esc(renewalForm.annualPremium)+"'/></div>"
+  +"</div>"
+  +"<div style='margin-bottom:12px;'><label class='lbl'>% Commission Rate (auto-filled)</label>"
+  +"<input class='inp' id='renewRateInp' type='number' step='0.01' placeholder='e.g. 5.00' value='"+renewalForm.commRate+"' style='border-color:rgba(124,58,237,0.4);'/></div>"
+  // Preview
+  +(ap>0&&renewalForm.commRate>0?"<div style='background:#1a0a3c;border-radius:10px;padding:12px;border:1px solid rgba(167,139,250,0.3);margin-bottom:14px;'>"
+  +"<div style='font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>"
+  +"<div class='g2'>"
+  +"<div class='mc'><div class='ml'>Renewal Commission</div><div class='mv' style='color:#a78bfa;font-size:16px;'>"+$f(comm)+"</div></div>"
+  +"<div class='mc'><div class='ml'>Year "+renewalForm.renewalYear+" at "+renewalForm.commRate+"%</div><div class='mv' style='color:#94a3b8;'>"+$f(ap)+" AP</div></div>"
+  +"</div></div>":"")
+  +"<div class='val-err' id='renewValErr'>⚠️ Please fill in all required fields.</div>"
+  +"<button class='btn-pri' style='background:linear-gradient(135deg,#4c1d95,#6d28d9);' onclick='doAddRenewal()'>✅ Add Renewal Commission</button>"
+  +"</div>"
+  +recentHtml;
 }
 
 function renderCampaigns(){
@@ -1202,7 +1450,7 @@ function attachAll(){
   },{once:true});
 }
 
-const TAB_KEYS=["log","dashboard","history","fwd","campaigns","mdrt"];
+const TAB_KEYS=["log","dashboard","history","fwd","gi","renewal","campaigns","mdrt"];
 document.addEventListener("keydown",e=>{
   const tag=document.activeElement.tagName;
   if(tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA")return;
@@ -1304,6 +1552,68 @@ async function playDeleteSound(){
 
 window.doDelSale=async id=>{if(confirm("Delete this sale?")){playDeleteSound();await delSaleDB(id);}};
 window.doDelFWDSale=async id=>{if(confirm("Delete this FWD sale?")){playDeleteSound();await delFWDSaleDB(id);}};
+window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
+window.setGiCat=v=>{giForm.category=v;giForm.product="";renderPage();};
+window.setGiProd=v=>{giForm.product=v;renderPage();};
+window.togGiRenewal=v=>{giForm.isRenewal=v;renderPage();};
+window.doAddGISale=async()=>{
+  const cli=document.getElementById("giClientInp");if(cli)giForm.client=cli.value.trim();
+  const dt=document.getElementById("giDateInp");if(dt)giForm.date=dt.value;
+  const pr=document.getElementById("giPremInp");if(pr)giForm.premium=pr.value;
+  if(!giForm.client||!giForm.product||!giForm.premium||parseFloat(giForm.premium)<=0){
+    const err=document.getElementById("giValErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;
+  }
+  const prods=giForm.category==="group"?GROUP_PRODUCTS:GI_PRODUCTS;
+  const prod=prods.find(p=>p.code===giForm.product);
+  if(!prod)return;
+  const ap=parseFloat(giForm.premium);
+  const commRate=giForm.isRenewal?prod.renew:prod.nb;
+  const commission=ap*commRate/100;
+  const mo=new Date(giForm.date+"T00:00:00").getMonth();
+  const obj={date:giForm.date,clientName:giForm.client,product:prod.label,productCode:prod.code,category:giForm.category,isRenewal:giForm.isRenewal,annualPremium:ap,commRate,commission,totalComm:commission,totalCredit:0,quarter:getQ(mo),month:mo};
+  await addGISaleDB(obj);
+  giForm={date:todayStr(),client:"",product:"",category:giForm.category,isRenewal:false,policyStartDate:"",premium:""};
+  renderPage();
+};
+window.doDelGISale=async id=>{if(confirm("Delete this GI sale?"))await delGISaleDB(id);};
+window.renewalSearch=v=>{renewalForm.clientSearch=v;renewalForm.selectedSale=null;renderPage();};
+window.pickRenewalSale=(fid,policyIdx)=>{
+  const s=sales.find(x=>x.fid===fid);
+  if(!s)return;
+  const pol=(s.policies||[])[policyIdx]||null;
+  const today=new Date();
+  const saleDate=new Date(s.date+"T00:00:00");
+  const yearsElapsed=Math.floor((today-saleDate)/(365.25*24*3600*1000));
+  const renewalYear=Math.max(2,yearsElapsed+1);
+  const def=pol?PROD[pol.product]:null;
+  const term=pol?def&&def.terms.find(t=>t.l===pol.term):null;
+  const rates=term?term.rates:null;
+  const commRate=rates?getRenewalRate(rates,renewalYear):(term?term.y:0);
+  renewalForm.selectedSale={clientName:s.clientName,product:pol?pol.product:"",term:pol?pol.term:"",fid:s.fid};
+  renewalForm.clientSearch=s.clientName;
+  renewalForm.renewalYear=renewalYear;
+  renewalForm.commRate=commRate;
+  renewalForm.annualPremium=pol?String(pol.annualPremium):"";
+  renderPage();
+};
+window.clearRenewalSel=()=>{renewalForm.selectedSale=null;renewalForm.commRate=0;renewalForm.renewalYear=1;renewalForm.annualPremium="";renderPage();};
+window.doAddRenewal=async()=>{
+  const dt=document.getElementById("renewDateInp");if(dt)renewalForm.date=dt.value;
+  const pr=document.getElementById("renewPremInp");if(pr)renewalForm.annualPremium=pr.value;
+  const rt=document.getElementById("renewRateInp");if(rt)renewalForm.commRate=parseFloat(rt.value)||0;
+  const ap=parseFloat(renewalForm.annualPremium)||0;
+  if(!renewalForm.selectedSale||ap<=0){
+    const err=document.getElementById("renewValErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;
+  }
+  const commission=ap*renewalForm.commRate/100;
+  const mo=new Date(renewalForm.date+"T00:00:00").getMonth();
+  const sel=renewalForm.selectedSale;
+  const obj={date:renewalForm.date,clientName:sel.clientName,product:sel.product,term:sel.term,annualPremium:ap,commPct:renewalForm.commRate,totalComm:commission,totalCredit:0,quarter:getQ(mo),month:mo,renewalYear:renewalForm.renewalYear,originalSaleFid:sel.fid};
+  await addRenewalDB(obj);
+  renewalForm={date:todayStr(),clientSearch:"",selectedSale:null,annualPremium:"",commRate:0,renewalYear:1};
+  renderPage();
+};
+window.doDelRenewal=async id=>{if(confirm("Delete this renewal?"))await delRenewalDB(id);};
 
 onAuthStateChanged(auth,user=>{
   if(user){
@@ -1315,7 +1625,9 @@ onAuthStateChanged(auth,user=>{
     document.getElementById("appShell").style.display="none";
     if(unsubSales){unsubSales();unsubSales=null;}
     if(unsubFWD){unsubFWD();unsubFWD=null;}
-    sales=[];fwdSales=[];
+    if(unsubGI){unsubGI();unsubGI=null;}
+    if(unsubRenewal){unsubRenewal();unsubRenewal=null;}
+    sales=[];fwdSales=[];giSales=[];renewalSales=[];
   }
 });
 
@@ -1327,6 +1639,7 @@ window.doSignOut=async()=>{if(confirm("Sign out of this device?"))await signOut(
 </script>
 </body>
 </html>
+
 
 
 
