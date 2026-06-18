@@ -363,10 +363,14 @@ const yearList=()=>{const y=[],cur=new Date().getFullYear();for(let i=cur;i>=202
 
 function getYearTotals(yr){
   const ys=sales.filter(s=>s.date.startsWith(String(yr)));
+  const rys=renewalSales.filter(s=>s.date.startsWith(String(yr)));
+  const gys=giSales.filter(s=>s.date.startsWith(String(yr)));
   let totalComm=0,totalBaseComm=0,totalBonus=0;
   Object.keys(QS).forEach(q=>{
     const qs=ys.filter(s=>s.quarter===q);
-    const tm=qs.reduce((a,s)=>a+s.totalComm,0);
+    const rqs=rys.filter(s=>s.quarter===q);
+    const gqs=gys.filter(s=>s.quarter===q);
+    const tm=qs.reduce((a,s)=>a+s.totalComm,0)+rqs.reduce((a,s)=>a+s.totalComm,0)+gqs.reduce((a,s)=>a+s.totalComm,0);
     const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
     const tier=getTier(tc);
     const eb=tm>=3000?tm*0.25:0;
@@ -383,10 +387,11 @@ function getTopProducts(){
 }
 
 let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
-let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false;
+let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life";
 let campTab="ignite";
 let giForm={date:todayStr(),client:"",product:"",category:"gi",isRenewal:false,policyStartDate:"",premium:""};
 let renewalForm={date:todayStr(),clientSearch:"",selectedSale:null,annualPremium:"",commRate:0,renewalYear:1};
+let renewalEditing={};
 let pols=[newPol()],fDate=todayStr(),fClient="";
 let calOpen=false,calY=new Date().getFullYear(),calM=new Date().getMonth();
 let srch={};
@@ -419,7 +424,7 @@ async function delRenewalDB(fid){try{await deleteDoc(doc(db,COLL_RENEWAL,fid));}
 function renderAll(){renderTabs();renderPage();}
 
 function renderTabs(){
-  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["gi","🛡️ GI"],["renewal","🔄 Renewal"],["campaigns","🎯 Campaigns"],["mdrt","🏆 MDRT / COT / TOT"]];
+  const TABS=[["log","➕ Log Sale"],["dashboard","📈 Dashboard"],["history","📋 All Sales"],["fwd","🏢 3rd Party"],["campaigns","🎯 Campaigns"],["mdrt","🏆 MDRT / COT / TOT"]];
   document.getElementById("tabBar").innerHTML=TABS.map(([k,v])=>`<button class="tab-btn${tab===k?" active":""}" onclick="setTab('${k}')">${v}</button>`).join("");
 }
 
@@ -429,8 +434,6 @@ function renderPage(){
   else if(tab==="dashboard")el.innerHTML=renderDash();
   else if(tab==="history")el.innerHTML=renderHist();
   else if(tab==="fwd")el.innerHTML=renderFWD();
-  else if(tab==="gi")el.innerHTML=renderGI();
-  else if(tab==="renewal")el.innerHTML=renderRenewal();
   else if(tab==="campaigns")el.innerHTML=renderCampaigns();
   else if(tab==="mdrt")el.innerHTML=renderMDRT();
   attachAll();
@@ -439,8 +442,13 @@ function renderPage(){
 function renderLog(){const shell=document.getElementById("logShell");if(shell)shell.innerHTML=buildLog();}
 
 function buildLog(){
+  const subBar="<div style='display:flex;gap:8px;margin-bottom:14px;'>"
+    +"<button onclick='setLogTab(\"life\")' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(logSubTab==="life"?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(logSubTab==="life"?"rgba(15,80,72,0.7)":"transparent")+";color:"+(logSubTab==="life"?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>🏥 Life & Health</button>"
+    +"<button onclick='setLogTab(\"gi\")' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(logSubTab==="gi"?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(logSubTab==="gi"?"rgba(15,80,72,0.7)":"transparent")+";color:"+(logSubTab==="gi"?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>🛡️ General & Group</button>"
+    +"</div>";
+  if(logSubTab==="gi")return subBar+buildGIForm();
   const gt=grandTot();
-  return "<div class='card'>"
+  return subBar+"<div class='card'>"
   +"<div style='margin-bottom:12px;'><label class='lbl'>📅 Date of Sale</label>"+buildCal()+"</div>"
   +"<div style='margin-bottom:20px;'><label class='lbl'>👤 Client Name</label><input class='inp' id='clientInp' type='text' placeholder='e.g. John Tan' value='"+esc(fClient)+"'/></div>"
   +"<div style='margin-bottom:12px;'>"
@@ -456,6 +464,91 @@ function buildLog(){
   +"<div class='val-err' id='valErr'>⚠️ Please fill in all required fields highlighted in red.</div>"
   +"<button class='btn-pri' onclick='doAddSale()'>💰 Close Deal!</button>"
   +"</div>";
+}
+
+function buildGIForm(){
+  const isGroup=giForm.category==="group";
+  const prods=isGroup?GROUP_PRODUCTS:GI_PRODUCTS;
+  const selProd=prods.find(p=>p.code===giForm.product)||null;
+  const ap=parseFloat(giForm.premium)||0;
+  const commRate=selProd?(giForm.isRenewal?selProd.renew:selProd.nb):0;
+  const comm=ap>0&&commRate>0?ap*commRate/100:0;
+  let recentHtml="";
+  const giYr=giSales.filter(s=>s.date.startsWith(String(selYear)));
+  if(giYr.length>0){
+    recentHtml="<div style='margin-top:16px;'><div style='font-size:14px;font-weight:700;color:#2dd4bf;margin-bottom:10px;'>📋 Recent GI Sales ("+giYr.length+")</div>";
+    giYr.slice(0,15).forEach(s=>{
+      const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+      recentHtml+="<div style='background:linear-gradient(135deg,rgba(5,28,26,0.9),rgba(4,18,18,0.95));border-radius:12px;padding:14px;border:1px solid rgba(13,148,136,0.3);margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,0.3);'>"
+      +"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+      +"<div>"
+      +"<div style='font-weight:700;color:#e2e8f0;font-size:14px;'>"+esc(s.clientName)+"</div>"
+      +"<div style='font-size:12px;color:#64748b;margin-top:2px;'>"+esc(s.product)+" · <span style='color:"+(s.isRenewal?"#a78bfa":"#34d399")+"'>"+(s.isRenewal?"Renewal":"New Biz")+"</span> · "+dt+"</div>"
+      +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>AP: "+$f(s.annualPremium)+" · Rate: <span style='color:#2dd4bf;'>"+s.commRate+"%</span></div>"
+      +"</div>"
+      +"<div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='text-align:right;'><div style='font-size:11px;color:#64748b;'>Commission</div><div style='font-size:18px;font-weight:800;color:#2dd4bf;'>"+$f(s.commission)+"</div></div>"
+      +"<button class='btn-del' onclick='doDelGISale(\""+s.fid+"\")'>✕</button>"
+      +"</div></div></div>";
+    });
+    recentHtml+="</div>";
+  }
+  return "<div class='card'>"
+  +"<div style='display:flex;gap:8px;margin-bottom:14px;'>"
+  +"<button onclick='setGiCat(\"gi\")' style='flex:1;padding:10px;border-radius:10px;border:1px solid "+(isGroup?"rgba(51,65,85,0.5)":"rgba(13,148,136,0.6)")+";background:"+(isGroup?"transparent":"rgba(15,80,72,0.7)")+";color:"+(isGroup?"#64748b":"#5eead4")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>🛡️ General Insurance</button>"
+  +"<button onclick='setGiCat(\"group\")' style='flex:1;padding:10px;border-radius:10px;border:1px solid "+(!isGroup?"rgba(51,65,85,0.5)":"rgba(13,148,136,0.6)")+";background:"+(!isGroup?"transparent":"rgba(15,80,72,0.7)")+";color:"+(!isGroup?"#64748b":"#5eead4")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>👥 Group Insurance</button>"
+  +"</div>"
+  +"<div class='g2' style='margin-bottom:12px;'>"
+  +"<div><label class='lbl'>📅 Date of Sale</label><input class='inp' id='giDateInp' type='text' placeholder='YYYY-MM-DD' value='"+giForm.date+"'/></div>"
+  +"<div><label class='lbl'>👤 Client Name</label><input class='inp' id='giClientInp' type='text' placeholder='e.g. ABC Company' value='"+esc(giForm.client)+"'/></div>"
+  +"</div>"
+  +"<div style='margin-bottom:12px;'><label class='lbl'>🏷️ Product</label>"
+  +"<select class='sel' onchange='setGiProd(this.value)' style='color:"+(giForm.product?"#e2e8f0":"#64748b")+";'>"
+  +"<option value=''>-- Select Product --</option>"
+  +prods.map(p=>"<option value='"+p.code+"'"+(giForm.product===p.code?" selected":"")+">"+esc(p.label)+"</option>").join("")
+  +"</select></div>"
+  +"<div style='margin-bottom:12px;'><label class='lbl'>📋 Type</label>"
+  +"<div style='display:flex;gap:8px;'>"
+  +"<button onclick='togGiRenewal(false)' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(!giForm.isRenewal?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(!giForm.isRenewal?"rgba(15,80,72,0.7)":"transparent")+";color:"+(!giForm.isRenewal?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>💼 New Business</button>"
+  +"<button onclick='togGiRenewal(true)' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(giForm.isRenewal?"rgba(167,139,250,0.6)":"rgba(51,65,85,0.5)")+";background:"+(giForm.isRenewal?"rgba(88,28,135,0.5)":"transparent")+";color:"+(giForm.isRenewal?"#c4b5fd":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>🔄 Renewal</button>"
+  +"</div></div>"
+  +"<div style='margin-bottom:14px;'><label class='lbl'>💰 Annual Premium (SGD)</label><input class='inp' id='giPremInp' type='number' placeholder='e.g. 1200' value='"+esc(giForm.premium)+"' style='font-size:16px;font-weight:600;'/></div>"
+  +"<div id='giPreview' style='background:linear-gradient(135deg,#071510,#041210);border-radius:12px;padding:14px;border:1px solid #166534;margin-bottom:14px;box-shadow:0 0 16px rgba(52,211,153,0.08);"+(selProd&&ap>0?"":"display:none;")+";'>"
+  +(selProd&&ap>0?"<div style='font-size:11px;color:#34d399;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:10px;'>⚡ Commission Preview</div>"
+  +"<div class='g3'>"
+  +"<div class='mc'><div class='ml'>Rate</div><div class='mv' style='color:#2dd4bf;font-size:18px;'>"+commRate+"%</div></div>"
+  +"<div class='mc'><div class='ml'>Premium</div><div class='mv' style='color:#e2e8f0;font-size:18px;'>"+$f(ap)+"</div></div>"
+  +"<div class='mc'><div class='ml'>Commission</div><div class='mv' style='color:#34d399;font-size:20px;font-weight:900;'>"+$f(comm)+"</div></div>"
+  +"</div>":"")
+  +"</div>"
+  +"<div class='val-err' id='giValErr'>⚠️ Please fill in all required fields.</div>"
+  +"<button class='btn-pri' style='background:linear-gradient(90deg,#0d9488 50%,#14b8a6 50%);background-size:210%;background-position:right center;' onclick='doAddGISale()'>✅ Add GI Sale</button>"
+  +"</div>"
+  +recentHtml;
+}
+
+function updateGIPreview(){
+  const prInp=document.getElementById("giPremInp");
+  if(prInp)giForm.premium=prInp.value;
+  const prods=giForm.category==="group"?GROUP_PRODUCTS:GI_PRODUCTS;
+  const selProd=prods.find(p=>p.code===giForm.product)||null;
+  const ap=parseFloat(giForm.premium)||0;
+  const commRate=selProd?(giForm.isRenewal?selProd.renew:selProd.nb):0;
+  const comm=ap>0&&commRate>0?ap*commRate/100:0;
+  const el=document.getElementById("giPreview");
+  if(!el)return;
+  if(selProd&&ap>0){
+    el.style.display="block";
+    el.innerHTML="<div style='font-size:11px;color:#34d399;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:10px;'>⚡ Commission Preview</div>"
+    +"<div class='g3'>"
+    +"<div class='mc'><div class='ml'>Rate</div><div class='mv' style='color:#2dd4bf;font-size:18px;'>"+commRate+"%</div></div>"
+    +"<div class='mc'><div class='ml'>Premium</div><div class='mv' style='color:#e2e8f0;font-size:18px;'>"+$f(ap)+"</div></div>"
+    +"<div class='mc'><div class='ml'>Commission</div><div class='mv' style='color:#34d399;font-size:20px;font-weight:900;'>"+$f(comm)+"</div></div>"
+    +"</div>";
+  } else {
+    el.style.display="none";
+    el.innerHTML="";
+  }
 }
 
 function buildCal(prefix=""){
@@ -762,7 +855,8 @@ function getQBonus(ys,q){
 function renderDash(){
   const ys=sales.filter(s=>s.date.startsWith(String(selYear)));
   const yrRenewals=renewalSales.filter(s=>s.date.startsWith(String(selYear)));
-  const qd=getQD(ys,activeQ,yrRenewals);
+  const yrGI=giSales.filter(s=>s.date.startsWith(String(selYear)));
+  const qd=getQD(ys,activeQ,yrRenewals,yrGI);
   const nt=TIERS.find(t=>t.min>qd.tc);
   const liveFwdAll=fwdSales.map(s=>({...s,...liveFWDComm(s)}));
   const fwdQ=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
@@ -797,7 +891,7 @@ function renderDash(){
   // Bonus months: Q1 bonus paid Apr, Q2→Jul, Q3→Oct, Q4→Jan
   const qKeys=["Q1","Q2","Q3","Q4"];
   const qRows=qKeys.map(q=>{
-    const d=getQD(ys,q);
+    const d=getQD(ys,q,yrRenewals,yrGI);
     const totalBonus=d.qb+d.eb;
     return{q,comm:d.tm,qb:d.qb,eb:d.eb,bonus:totalBonus,grand:d.tm+totalBonus,payout:QS[q].payout,credits:d.tc,tier:d.tier};
   });
@@ -983,39 +1077,96 @@ function renderDash(){
   +"</div>";
 
   if(dashSubTab==="renewal"){
+    const today2=new Date();
     const ytdRenewal=yrRenewals.reduce((a,s)=>a+s.totalComm,0);
     const qRenewals=yrRenewals.filter(s=>s.quarter===activeQ);
     const qRenewalTotal=qRenewals.reduce((a,s)=>a+s.totalComm,0);
+    // Auto-detect pending renewals
+    const pendingRenewals=[];
+    sales.forEach(s=>{
+      (s.policies||[]).forEach((pol,pi)=>{
+        if(!pol.product||!pol.ap)return;
+        const saleDate=new Date(s.date+"T00:00:00");
+        const yearsElapsed=Math.floor((today2-saleDate)/(365.25*24*3600*1000));
+        if(yearsElapsed<1)return;
+        const renewalYear=yearsElapsed+1;
+        if(renewalSales.some(r=>r.originalSaleFid===s.fid&&r.renewalYear===renewalYear))return;
+        const def=PROD[pol.product];
+        const term=def&&def.terms&&def.terms.find(t=>t.l===pol.term);
+        const rates=term?term.rates:null;
+        const commRate=getRenewalRate(rates,renewalYear);
+        if(commRate<=0)return;
+        const origAP=parseFloat(pol.ap)||0;
+        pendingRenewals.push({fid:s.fid,pi,clientName:s.clientName,product:pol.product,term:pol.term,origAP,commRate,expectedComm:origAP*commRate/100,renewalYear,saleDate:s.date});
+      });
+    });
+    let pendingHtml="<div style='font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:12px;'>⚡ Pending Renewals <span style='background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:12px;padding:2px 8px;font-size:12px;'>"+pendingRenewals.length+"</span></div>";
+    if(pendingRenewals.length===0){
+      pendingHtml+="<div style='text-align:center;color:#475569;padding:20px;background:rgba(15,23,42,0.5);border-radius:12px;border:1px solid #334155;margin-bottom:16px;font-size:13px;'>No pending renewals — all policies are less than 1 year old, or already logged.</div>";
+    } else {
+      pendingRenewals.forEach(r=>{
+        const key=r.fid+"-"+r.pi+"-"+r.renewalYear;
+        const isEditing=renewalEditing[key]&&renewalEditing[key].open;
+        const editPrem=isEditing?renewalEditing[key].premium:String(r.origAP);
+        const editAP=parseFloat(editPrem)||0;
+        const editComm=editAP*r.commRate/100;
+        pendingHtml+="<div style='background:linear-gradient(135deg,rgba(20,10,50,0.9),rgba(12,6,30,0.95));border-radius:12px;padding:14px;border:1px solid rgba(245,158,11,"+(isEditing?"0.6":"0.3")+");margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,0.3)"+(isEditing?",0 0 20px rgba(245,158,11,0.1)":"")+"'>"
+        +"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+        +"<div><div style='font-weight:700;color:#e2e8f0;font-size:14px;'>"+esc(r.clientName)+"</div>"
+        +"<div style='font-size:12px;color:#94a3b8;margin-top:2px;'>"+esc(r.product)+(r.term?" · "+esc(r.term):"")+"</div>"
+        +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Year "+r.renewalYear+" renewal · Rate: <span style='color:#f59e0b;font-weight:700;'>"+r.commRate+"%</span></div></div>"
+        +"<div style='text-align:right;'><div style='font-size:11px;color:#64748b;'>Expected</div>"
+        +"<div style='font-size:20px;font-weight:900;color:#f59e0b;'>"+$f(r.expectedComm)+"</div></div></div>"
+        +(isEditing
+          ?"<div style='margin-top:12px;'><label style='font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;'>✏️ Adjust Annual Premium (SGD)</label>"
+          +"<div style='display:flex;gap:8px;align-items:center;'>"
+          +"<input class='inp' style='flex:1;font-size:15px;font-weight:600;' type='number' value='"+editPrem+"' oninput='updateRenewalPrem(\""+key+"\",this.value)' placeholder='Annual Premium'/>"
+          +"<div style='text-align:right;min-width:80px;'><div style='font-size:10px;color:#64748b;'>Commission</div><div style='font-size:15px;font-weight:800;color:#34d399;'>"+$f(editComm)+"</div></div>"
+          +"</div>"
+          +"<div style='display:flex;gap:8px;margin-top:10px;'>"
+          +"<button class='btn-sm' style='flex:1;padding:10px;font-size:13px;background:rgba(15,80,72,0.9);border-color:rgba(45,212,191,0.7);' onclick='confirmRenewal(\""+r.fid+"\","+r.pi+","+r.renewalYear+")'>✅ Confirm & Log</button>"
+          +"<button class='btn-sm' style='padding:10px 14px;background:rgba(127,29,29,0.4);border-color:rgba(239,68,68,0.3);color:#f87171;' onclick='closeRenewalEdit(\""+key+"\")'>✕</button>"
+          +"</div></div>"
+          :"<div style='margin-top:10px;'>"
+          +"<button class='btn-sm' style='width:100%;padding:9px;font-size:12px;' onclick='openRenewalEdit(\""+key+"\","+r.origAP+")'>📝 Log Renewal Commission</button>"
+          +"</div>"
+        )+"</div>";
+      });
+    }
+    let loggedHtml="<div style='font-size:14px;font-weight:700;color:#a78bfa;margin:20px 0 10px;'>✅ Logged Renewals <span style='background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:12px;padding:2px 8px;font-size:12px;'>"+yrRenewals.length+"</span></div>";
+    if(yrRenewals.length===0){
+      loggedHtml+="<div style='text-align:center;color:#475569;padding:20px;background:rgba(15,23,42,0.5);border-radius:12px;border:1px solid #334155;font-size:13px;'>No renewals logged for "+selYear+" yet.</div>";
+    } else {
+      yrRenewals.forEach(r=>{
+        const dt=new Date(r.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+        loggedHtml+="<div style='background:rgba(30,10,60,0.8);border-radius:12px;padding:14px;border:1px solid rgba(124,58,237,0.3);margin-bottom:10px;'>"
+        +"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+        +"<div><div style='font-weight:700;color:#e2e8f0;'>"+esc(r.clientName)+"</div>"
+        +"<div style='font-size:12px;color:#64748b;'>"+esc(r.product)+" · Y"+r.renewalYear+" · "+dt+"</div>"
+        +"<div style='font-size:11px;color:#64748b;margin-top:1px;'>AP: "+$f(r.annualPremium)+" · Rate: "+r.commPct+"%</div></div>"
+        +"<div style='display:flex;align-items:center;gap:10px;'>"
+        +"<div style='font-size:18px;font-weight:800;color:#a78bfa;'>"+$f(r.totalComm)+"</div>"
+        +"<button class='btn-del' onclick='doDelRenewal(\""+r.fid+"\")'>✕</button>"
+        +"</div></div></div>";
+      });
+    }
     let renewHtml=dashSubHtml;
     renewHtml+="<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
     +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
     +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
     +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>";
-    renewHtml+="<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;'>"
-    +"<div style='background:linear-gradient(135deg,#1a103c,#231558);border-radius:12px;padding:16px;border:1px solid #7c3aed;text-align:center;'>"
-    +"<div style='font-size:11px;color:#c4b5fd;'>YTD Renewal Commission</div>"
-    +"<div style='font-size:24px;font-weight:900;color:#a78bfa;margin-top:6px;'>"+$f(ytdRenewal)+"</div>"
-    +"<div style='font-size:11px;color:#7a8fa6;margin-top:2px;'>"+yrRenewals.length+" renewal"+(yrRenewals.length!==1?"s":"")+"</div>"
+    renewHtml+="<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;'>"
+    +"<div style='background:linear-gradient(135deg,#1a103c,#231558);border-radius:12px;padding:16px;border:1px solid #7c3aed;text-align:center;box-shadow:0 0 18px rgba(124,58,237,0.12);'>"
+    +"<div style='font-size:11px;color:#c4b5fd;text-transform:uppercase;letter-spacing:0.05em;'>YTD Renewal Comm</div>"
+    +"<div style='font-size:26px;font-weight:900;color:#a78bfa;margin-top:6px;'>"+$f(ytdRenewal)+"</div>"
+    +"<div style='font-size:11px;color:#7a8fa6;margin-top:2px;'>"+yrRenewals.length+" logged · "+pendingRenewals.length+" pending</div>"
     +"</div>"
-    +"<div style='background:linear-gradient(135deg,#1a103c,#231558);border-radius:12px;padding:16px;border:1px solid #7c3aed;text-align:center;'>"
-    +"<div style='font-size:11px;color:#c4b5fd;'>"+QS[activeQ].label+" Renewal</div>"
-    +"<div style='font-size:24px;font-weight:900;color:#a78bfa;margin-top:6px;'>"+$f(qRenewalTotal)+"</div>"
+    +"<div style='background:linear-gradient(135deg,#1a103c,#231558);border-radius:12px;padding:16px;border:1px solid #7c3aed;text-align:center;box-shadow:0 0 18px rgba(124,58,237,0.12);'>"
+    +"<div style='font-size:11px;color:#c4b5fd;text-transform:uppercase;letter-spacing:0.05em;'>"+QS[activeQ].label+"</div>"
+    +"<div style='font-size:26px;font-weight:900;color:#a78bfa;margin-top:6px;'>"+$f(qRenewalTotal)+"</div>"
     +"<div style='font-size:11px;color:#7a8fa6;margin-top:2px;'>"+qRenewals.length+" renewal"+(qRenewals.length!==1?"s":"")+"</div>"
     +"</div></div>";
-    renewHtml+="<div style='font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:10px;'>🔄 Recent Renewals</div>";
-    if(yrRenewals.length===0){
-      renewHtml+="<div style='text-align:center;color:#475569;padding:30px;background:#1e293b;border-radius:12px;border:1px solid #334155;'>No renewals logged yet. Use the Renewal tab to add them.</div>";
-    } else {
-      yrRenewals.slice(0,10).forEach(r=>{
-        const dt=new Date(r.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
-        renewHtml+="<div style='background:rgba(30,10,60,0.8);border-radius:12px;padding:14px;border:1px solid rgba(124,58,237,0.3);margin-bottom:10px;'>"
-        +"<div style='display:flex;justify-content:space-between;align-items:center;'>"
-        +"<div><div style='font-weight:700;color:#e2e8f0;'>"+esc(r.clientName)+"</div>"
-        +"<div style='font-size:12px;color:#64748b;'>"+esc(r.product)+" · Y"+r.renewalYear+" · "+dt+"</div></div>"
-        +"<div style='font-size:16px;font-weight:800;color:#a78bfa;'>"+$f(r.totalComm)+"</div>"
-        +"</div></div>";
-      });
-    }
+    renewHtml+=pendingHtml+loggedHtml;
     return renewHtml;
   }
 
@@ -1053,10 +1204,11 @@ function renderDash(){
   +qTableHtml;
 }
 
-function getQD(ys,q,renewalYs=[]){
+function getQD(ys,q,renewalYs=[],giYs=[]){
   const qs=ys.filter(s=>s.quarter===q);
   const rqs=renewalYs.filter(s=>s.quarter===q);
-  const tm=qs.reduce((a,s)=>a+s.totalComm,0)+rqs.reduce((a,s)=>a+s.totalComm,0);
+  const gqs=giYs.filter(s=>s.quarter===q);
+  const tm=qs.reduce((a,s)=>a+s.totalComm,0)+rqs.reduce((a,s)=>a+s.totalComm,0)+gqs.reduce((a,s)=>a+s.totalComm,0);
   const bc=qs.reduce((a,s)=>a+s.baseComm,0);
   const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
   const tier=getTier(tc);
@@ -1400,8 +1552,26 @@ function playCelebrationSound(){
   }catch(e){}
 }
 
-function launchConfetti(){
-  playCelebrationSound();
+function playGICelebrationSound(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const t=ctx.currentTime;
+    [{freq:440,start:0,dur:0.09},{freq:554.37,start:0.12,dur:0.09},{freq:659.25,start:0.24,dur:0.09},{freq:880,start:0.36,dur:0.6}].forEach(n=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(n.freq,t+n.start);
+      g.gain.setValueAtTime(0,t+n.start);g.gain.linearRampToValueAtTime(0.28,t+n.start+0.02);g.gain.exponentialRampToValueAtTime(0.001,t+n.start+n.dur);
+      o.connect(g);g.connect(ctx.destination);o.start(t+n.start);o.stop(t+n.start+n.dur+0.05);
+    });
+    [[440,0.44],[659.25,0.44],[880,0.44]].forEach(([freq,start])=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(freq,t+start);
+      g.gain.setValueAtTime(0,t+start);g.gain.linearRampToValueAtTime(0.14,t+start+0.03);g.gain.exponentialRampToValueAtTime(0.001,t+start+0.85);
+      o.connect(g);g.connect(ctx.destination);o.start(t+start);o.stop(t+start+0.95);
+    });
+  }catch(e){}
+}
+function launchConfetti(customSound){
+  (customSound||playCelebrationSound)();
   const cv=document.getElementById("confetti");cv.style.display="block";cv.width=window.innerWidth;cv.height=window.innerHeight;
   const ctx=cv.getContext("2d"),cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
   const pieces=Array.from({length:180},()=>({x:Math.random()*cv.width,y:-10-Math.random()*200,w:8+Math.random()*8,h:5+Math.random()*5,color:cols[Math.floor(Math.random()*cols.length)],angle:Math.random()*360,spin:(-1+Math.random()*2)*4,vx:(-1+Math.random()*2)*3,vy:3+Math.random()*5,op:1}));
@@ -1428,6 +1598,12 @@ function attachAll(){
   if(fwdCalIco)fwdCalIco.addEventListener("click",e=>{e.stopPropagation();fwdForm.calOpen=!fwdForm.calOpen;if(fwdForm.calOpen&&fwdForm.date){fwdForm.calY=parseInt(fwdForm.date.split("-")[0]);fwdForm.calM=parseInt(fwdForm.date.split("-")[1])-1;}renderPage();});
   const fwdDateInp=document.getElementById("fwdDateInp");
   if(fwdDateInp)fwdDateInp.addEventListener("input",e=>{fwdForm.date=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(fwdForm.date)){const dt=new Date(fwdForm.date+"T00:00:00");if(!isNaN(dt)){fwdForm.calY=dt.getFullYear();fwdForm.calM=dt.getMonth();}}updateFWDPreview();});
+  const giPremInp=document.getElementById("giPremInp");
+  if(giPremInp)giPremInp.addEventListener("input",e=>{giForm.premium=e.target.value;updateGIPreview();});
+  const giClientInp2=document.getElementById("giClientInp");
+  if(giClientInp2)giClientInp2.addEventListener("input",e=>{giForm.client=e.target.value;});
+  const giDateInp2=document.getElementById("giDateInp");
+  if(giDateInp2)giDateInp2.addEventListener("input",e=>{giForm.date=e.target.value;});
 
   document.querySelectorAll(".pp-inp").forEach(inp=>{
     inp.addEventListener("input",e=>{const pid=e.target.dataset.pid;pols=pols.map(p=>p.id===pid?{...p,ap:e.target.value}:p);});
@@ -1553,6 +1729,27 @@ async function playDeleteSound(){
 window.doDelSale=async id=>{if(confirm("Delete this sale?")){playDeleteSound();await delSaleDB(id);}};
 window.doDelFWDSale=async id=>{if(confirm("Delete this FWD sale?")){playDeleteSound();await delFWDSaleDB(id);}};
 window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
+window.setLogTab=t=>{logSubTab=t;renderLog();attachAll();};
+window.openRenewalEdit=(key,origAP)=>{renewalEditing[key]={open:true,premium:String(origAP)};document.getElementById("app").innerHTML=renderDash();attachAll();};
+window.closeRenewalEdit=key=>{delete renewalEditing[key];document.getElementById("app").innerHTML=renderDash();attachAll();};
+window.updateRenewalPrem=(key,val)=>{if(renewalEditing[key])renewalEditing[key].premium=val;};
+window.confirmRenewal=async(fid,pi,yr)=>{
+  const key=fid+"-"+pi+"-"+yr;
+  const edit=renewalEditing[key];if(!edit)return;
+  const sale=sales.find(s=>s.fid===fid);if(!sale)return;
+  const pol=(sale.policies||[])[pi];if(!pol)return;
+  const ap=parseFloat(edit.premium)||0;if(ap<=0)return;
+  const def=PROD[pol.product];
+  const term=def&&def.terms&&def.terms.find(t=>t.l===pol.term);
+  const rates=term?term.rates:null;
+  const commRate=getRenewalRate(rates,yr);
+  const commission=ap*commRate/100;
+  const tod=todayStr();
+  const mo=new Date(tod+"T00:00:00").getMonth();
+  const obj={date:tod,clientName:sale.clientName,product:pol.product,term:pol.term,annualPremium:ap,commPct:commRate,totalComm:commission,totalCredit:0,quarter:getQ(mo),month:mo,renewalYear:yr,originalSaleFid:fid};
+  await addRenewalDB(obj);
+  delete renewalEditing[key];
+};
 window.setGiCat=v=>{giForm.category=v;giForm.product="";renderPage();};
 window.setGiProd=v=>{giForm.product=v;renderPage();};
 window.togGiRenewal=v=>{giForm.isRenewal=v;renderPage();};
@@ -1572,10 +1769,11 @@ window.doAddGISale=async()=>{
   const mo=new Date(giForm.date+"T00:00:00").getMonth();
   const obj={date:giForm.date,clientName:giForm.client,product:prod.label,productCode:prod.code,category:giForm.category,isRenewal:giForm.isRenewal,annualPremium:ap,commRate,commission,totalComm:commission,totalCredit:0,quarter:getQ(mo),month:mo};
   await addGISaleDB(obj);
+  launchConfetti(playGICelebrationSound);
   giForm={date:todayStr(),client:"",product:"",category:giForm.category,isRenewal:false,policyStartDate:"",premium:""};
-  renderPage();
+  renderLog();attachAll();
 };
-window.doDelGISale=async id=>{if(confirm("Delete this GI sale?"))await delGISaleDB(id);};
+window.doDelGISale=async id=>{if(confirm("Delete this GI sale?")){playDeleteSound();await delGISaleDB(id);}};
 window.renewalSearch=v=>{renewalForm.clientSearch=v;renewalForm.selectedSale=null;renderPage();};
 window.pickRenewalSale=(fid,policyIdx)=>{
   const s=sales.find(x=>x.fid===fid);
