@@ -365,19 +365,23 @@ function getYearTotals(yr){
   const ys=sales.filter(s=>s.date.startsWith(String(yr)));
   const rys=renewalSales.filter(s=>s.date.startsWith(String(yr)));
   const gys=giSales.filter(s=>s.date.startsWith(String(yr)));
-  let totalComm=0,totalBaseComm=0,totalBonus=0;
+  let incomeComm=0,renewalComm=0,giComm=0,totalBonus=0;
   Object.keys(QS).forEach(q=>{
     const qs=ys.filter(s=>s.quarter===q);
     const rqs=rys.filter(s=>s.quarter===q);
     const gqs=gys.filter(s=>s.quarter===q);
-    const tm=qs.reduce((a,s)=>a+s.totalComm,0)+rqs.reduce((a,s)=>a+s.totalComm,0)+gqs.reduce((a,s)=>a+s.totalComm,0);
+    const qIncome=qs.reduce((a,s)=>a+s.totalComm,0);
+    const qRenewal=rqs.reduce((a,s)=>a+s.totalComm,0);
+    const qGI=gqs.reduce((a,s)=>a+(s.commission||s.totalComm||0),0);
+    const tm=qIncome+qRenewal+qGI;
     const tc=qs.reduce((a,s)=>a+s.totalCredit,0);
     const tier=getTier(tc);
     const eb=tm>=3000?tm*0.25:0;
     const qb=tm*tier.bonus/100;
-    totalComm+=tm;totalBonus+=eb+qb;
+    incomeComm+=qIncome;renewalComm+=qRenewal;giComm+=qGI;totalBonus+=eb+qb;
   });
-  return{totalComm,totalBaseComm,totalBonus,grand:totalComm+totalBonus};
+  const totalComm=incomeComm+renewalComm+giComm;
+  return{incomeComm,renewalComm,giComm,totalComm,totalBonus,grand:totalComm+totalBonus};
 }
 
 function getTopProducts(){
@@ -1060,14 +1064,25 @@ function renderDash(){
   // ── YTD summary ──
   const ytd=getYearTotals(selYear);
   const ytdGrandAll=ytd.grand+fwdYrTotal;
-  const ytdHtml="<div style='background:linear-gradient(135deg,#0d1f3a,#0f2a4a,#112e52,#0a2040);border-radius:14px;padding:18px;border:1px solid rgba(96,165,250,0.3);box-shadow:0 0 32px rgba(96,165,250,0.1);margin-bottom:16px;position:relative;overflow:hidden;'>"
+  const ytdHtml="<div style='background:linear-gradient(135deg,#0d1f3a,#0f2a4a,#112e52,#0a2040);border-radius:14px;padding:16px;border:1px solid rgba(96,165,250,0.3);box-shadow:0 0 32px rgba(96,165,250,0.1);margin-bottom:16px;position:relative;overflow:hidden;'>"
   +"<div style='position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(96,165,250,0.04));pointer-events:none;'></div>"
-  +"<div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#60a5fa;margin-bottom:12px;'>📈 "+selYear+" Year-To-Date Earnings</div>"
-  +"<div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;'>"
-  +"<div style='text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 4px;'><div style='font-size:11px;color:#b0c4d4;margin-bottom:4px;'>Base Commission</div><div style='font-size:18px;font-weight:900;color:#f97316;'>"+$f(ytd.totalComm)+"</div><div style='font-size:10px;color:#7a8fa6;'>Income only</div></div>"
-  +"<div style='text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 4px;'><div style='font-size:11px;color:#b0c4d4;margin-bottom:4px;'>Inc. + Bonuses</div><div style='font-size:18px;font-weight:900;color:#a78bfa;'>"+$f(ytd.grand)+"</div><div style='font-size:10px;color:#7a8fa6;'>+"+$f(ytd.totalBonus)+"</div></div>"
-  +"<div style='text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 4px;'><div style='font-size:11px;color:#b0c4d4;margin-bottom:4px;'>FWD (3rd Party)</div><div style='font-size:18px;font-weight:900;color:#34d399;'>"+$f(fwdYrTotal)+"</div><div style='font-size:10px;color:#7a8fa6;'>FWD comm</div></div>"
-  +"<div style='text-align:center;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:8px 4px;'><div style='font-size:11px;color:#93c5fd;font-weight:700;margin-bottom:4px;'>Grand Total YTD</div><div style='font-size:20px;font-weight:900;color:#60a5fa;'>"+$f(ytdGrandAll)+"</div><div style='font-size:10px;color:#7a8fa6;'>All sources</div></div>"
+  +"<div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#60a5fa;margin-bottom:10px;'>📈 "+selYear+" Year-To-Date Earnings</div>"
+  +"<div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:8px;'>"
+  +"<div style='text-align:center;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:8px 4px;'>"
+  +"<div style='font-size:10px;color:#fdba74;margin-bottom:3px;'>Income Comm</div><div style='font-size:16px;font-weight:900;color:#f97316;'>"+$f(ytd.incomeComm)+"</div>"
+  +"<div style='font-size:9px;color:#7a8fa6;'>+bonus "+$f(ytd.totalBonus)+"</div></div>"
+  +"<div style='text-align:center;background:rgba(13,148,136,0.1);border:1px solid rgba(13,148,136,0.2);border-radius:8px;padding:8px 4px;'>"
+  +"<div style='font-size:10px;color:#5eead4;margin-bottom:3px;'>GI Commission</div><div style='font-size:16px;font-weight:900;color:#2dd4bf;'>"+$f(ytd.giComm)+"</div>"
+  +"<div style='font-size:9px;color:#7a8fa6;'>General &amp; Group</div></div>"
+  +"<div style='text-align:center;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:8px 4px;'>"
+  +"<div style='font-size:10px;color:#c4b5fd;margin-bottom:3px;'>Renewal Comm</div><div style='font-size:16px;font-weight:900;color:#a78bfa;'>"+$f(ytd.renewalComm)+"</div>"
+  +"<div style='font-size:9px;color:#7a8fa6;'>Life renewals</div></div>"
+  +"<div style='text-align:center;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.15);border-radius:8px;padding:8px 4px;'>"
+  +"<div style='font-size:10px;color:#6ee7b7;margin-bottom:3px;'>FWD (3rd Party)</div><div style='font-size:16px;font-weight:900;color:#34d399;'>"+$f(fwdYrTotal)+"</div>"
+  +"<div style='font-size:9px;color:#7a8fa6;'>FWD comm</div></div>"
+  +"<div style='text-align:center;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:8px 4px;'>"
+  +"<div style='font-size:10px;color:#93c5fd;font-weight:700;margin-bottom:3px;'>Grand Total YTD</div><div style='font-size:18px;font-weight:900;color:#60a5fa;'>"+$f(ytdGrandAll)+"</div>"
+  +"<div style='font-size:9px;color:#7a8fa6;'>All sources</div></div>"
   +"</div>"
   +"</div>";
 
@@ -1086,7 +1101,7 @@ function renderDash(){
     const pendingRenewals=[];
     sales.forEach(s=>{
       (s.policies||[]).forEach((pol,pi)=>{
-        if(!pol.product||!pol.ap)return;
+        if(!pol.product||!pol.annualPremium)return;
         const saleDate=new Date(s.date+"T00:00:00");
         const yearsElapsed=Math.floor((today2-saleDate)/(365.25*24*3600*1000));
         if(yearsElapsed<1)return;
@@ -1097,7 +1112,7 @@ function renderDash(){
         const rates=term?term.rates:null;
         const commRate=getRenewalRate(rates,renewalYear);
         if(commRate<=0)return;
-        const origAP=parseFloat(pol.ap)||0;
+        const origAP=parseFloat(pol.annualPremium)||0;
         pendingRenewals.push({fid:s.fid,pi,clientName:s.clientName,product:pol.product,term:pol.term,origAP,commRate,expectedComm:origAP*commRate/100,renewalYear,saleDate:s.date});
       });
     });
@@ -1223,6 +1238,45 @@ function renderDash(){
       +"<div style='font-size:11px;color:"+(activeQ===q?"#2dd4bf":"#64748b")+";margin-top:4px;font-weight:"+(activeQ===q?"700":"400")+";'>"+q+"</div></div>";
     });
     giHtml+="</div></div>";
+    // Monthly payout timeline
+    const MO_NAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const todayGI=new Date();
+    const todayMoGI=todayGI.getMonth();
+    const todayYrGI=todayGI.getFullYear();
+    const nextPayMo=(todayMoGI+1)%12;
+    const nextPayYr=todayMoGI===11?todayYrGI+1:todayYrGI;
+    const monthRows=Array.from({length:12},(_,m)=>{
+      const ms=yrGI.filter(s=>s.month===m);
+      return{m,cnt:ms.length,comm:ms.reduce((a,s)=>a+(s.commission||0),0)};
+    }).filter(r=>r.comm>0||(selYear===todayYrGI&&r.m<=todayMoGI));
+    if(monthRows.length>0){
+      giHtml+="<div class='card-dark' style='margin-bottom:12px;'>"
+      +"<div style='font-size:13px;font-weight:700;color:#5eead4;margin-bottom:4px;'>📅 Monthly GI Payout Timeline</div>"
+      +"<div style='font-size:11px;color:#64748b;margin-bottom:10px;'>GI commissions are paid the following month.</div>"
+      +"<div style='overflow-x:auto;'><table style='width:100%;border-collapse:collapse;font-size:12px;'>"
+      +"<thead><tr style='border-bottom:1px solid rgba(13,148,136,0.3);'>"
+      +"<th style='text-align:left;padding:6px 8px;color:#64748b;font-weight:600;'>Sale Month</th>"
+      +"<th style='text-align:right;padding:6px 8px;color:#64748b;font-weight:600;'>Sales</th>"
+      +"<th style='text-align:right;padding:6px 8px;color:#64748b;font-weight:600;'>Commission</th>"
+      +"<th style='text-align:right;padding:6px 8px;color:#64748b;font-weight:600;'>Paid In</th>"
+      +"</tr></thead><tbody>";
+      monthRows.forEach(({m,cnt,comm})=>{
+        const payMo=(m+1)%12,payYr=m===11?selYear+1:selYear;
+        const isNextPayout=payMo===nextPayMo&&payYr===nextPayYr;
+        const isCurrSaleMo=m===todayMoGI&&selYear===todayYrGI;
+        const hasData=comm>0;
+        giHtml+="<tr style='border-bottom:1px solid rgba(13,148,136,0.1);background:"+(isNextPayout?"rgba(245,158,11,0.06)":"transparent")+"'>"
+        +"<td style='padding:7px 8px;color:"+(isCurrSaleMo?"#2dd4bf":hasData?"#e2e8f0":"#475569")+";font-weight:"+(isCurrSaleMo?"700":"400")+"'>"+MO_NAMES[m]+" "+selYear+"</td>"
+        +"<td style='text-align:right;padding:7px 8px;color:"+(hasData?"#94a3b8":"#334155")+";'>"+(hasData?cnt:"-")+"</td>"
+        +"<td style='text-align:right;padding:7px 8px;color:"+(hasData?"#2dd4bf":"#334155")+";font-weight:"+(hasData?"700":"400")+"'>"+(hasData?$f(comm):"-")+"</td>"
+        +"<td style='text-align:right;padding:7px 8px;'>"
+        +(isNextPayout?"<span style='color:#f59e0b;font-weight:700;background:rgba(245,158,11,0.12);border-radius:4px;padding:2px 7px;'>"+MO_NAMES[payMo]+" "+payYr+" ⭐</span>"
+          :hasData?"<span style='color:#64748b;'>"+MO_NAMES[payMo]+" "+payYr+"</span>"
+          :"<span style='color:#334155;'>-</span>")
+        +"</td></tr>";
+      });
+      giHtml+="</tbody></table></div></div>";
+    }
     // Sales list for active quarter
     if(qGI.length>0){
       giHtml+="<div style='font-size:14px;font-weight:700;color:#2dd4bf;margin-bottom:10px;'>📋 "+QS[activeQ].label+" Sales ("+qGI.length+")</div>";
