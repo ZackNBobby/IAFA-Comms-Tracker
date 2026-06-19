@@ -156,6 +156,8 @@ button,input,select{font-family:inherit;}
 .month-detail{background:rgba(5,12,20,0.8);border-radius:12px;padding:16px;border:1px solid rgba(5,150,105,0.4);margin-bottom:16px;}
 @keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
 @keyframes riseIn{0%{opacity:0;transform:translateY(18px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes pageIn{0%{opacity:0;transform:translateY(10px) scale(0.99);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes subTabIn{0%{opacity:0;transform:translateX(6px);}100%{opacity:1;transform:translateX(0);}}
 @keyframes goldBob{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-5px) scale(1.15);}}
 @keyframes diamondBob{0%,100%{transform:rotate(-6deg) scale(1);}50%{transform:rotate(6deg) scale(1.18);}}
 @keyframes crownBob{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-6px) rotate(4deg);}}
@@ -432,14 +434,28 @@ function renderTabs(){
   document.getElementById("tabBar").innerHTML=TABS.map(([k,v])=>`<button class="tab-btn${tab===k?" active":""}" onclick="setTab('${k}')">${v}</button>`).join("");
 }
 
+function animFade(el,type){
+  if(!el)return;
+  const anim=type==="sub"?"subTabIn 0.16s cubic-bezier(0.4,0,0.2,1) both":"pageIn 0.2s cubic-bezier(0.4,0,0.2,1) both";
+  el.style.animation="none";
+  void el.offsetWidth;
+  el.style.animation=anim;
+}
 function renderPage(){
   const el=document.getElementById("app");
-  if(tab==="log"){if(!document.getElementById("logShell"))el.innerHTML="<div id='logShell'></div>";renderLog();}
-  else if(tab==="dashboard")el.innerHTML=renderDash();
-  else if(tab==="history")el.innerHTML=renderHist();
-  else if(tab==="fwd")el.innerHTML=renderFWD();
-  else if(tab==="campaigns")el.innerHTML=renderCampaigns();
-  else if(tab==="mdrt")el.innerHTML=renderMDRT();
+  if(tab==="log"){
+    const isNew=!document.getElementById("logShell");
+    if(isNew)el.innerHTML="<div id='logShell'></div>";
+    renderLog();
+    if(isNew)animFade(el);
+  } else {
+    if(tab==="dashboard")el.innerHTML=renderDash();
+    else if(tab==="history")el.innerHTML=renderHist();
+    else if(tab==="fwd")el.innerHTML=renderFWD();
+    else if(tab==="campaigns")el.innerHTML=renderCampaigns();
+    else if(tab==="mdrt")el.innerHTML=renderMDRT();
+    animFade(el);
+  }
   attachAll();
 }
 
@@ -1770,7 +1786,7 @@ document.addEventListener("keydown",e=>{
 
 window.setTab=t=>{tab=t;if(t!=="log")document.getElementById("app").innerHTML="";renderAll();window.scrollTo(0,0);};
 window.togTimeline=()=>{incomeTimelineExpanded=!incomeTimelineExpanded;document.getElementById("app").innerHTML=renderDash();attachAll();};
-window.setCampTab=t=>{campTab=t;renderPage();};
+window.setCampTab=t=>{campTab=t;renderPage();}; // renderPage animates #app
 window.setQ=q=>{activeQ=q;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.selYr=y=>{selYear=y;fwdSelMonth=null;document.getElementById("app").innerHTML="";renderPage();};
 window.togYrDD=()=>{const d=document.getElementById("yrDD");if(d)d.style.display=d.style.display==="none"?"block":"none";};
@@ -1883,8 +1899,8 @@ window.saveAPEdit=async(fid,pi)=>{
   try{await updateDoc(doc(db,COLL,fid),updObj);delete apEditing[fid+"_"+pi];}
   catch(e){alert("Update error: "+e.message);}
 };;
-window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
-window.setLogTab=t=>{logSubTab=t;renderLog();attachAll();};
+window.setDashTab=t=>{dashSubTab=t;const _da=document.getElementById("app");_da.innerHTML=renderDash();animFade(_da,"sub");attachAll();};
+window.setLogTab=t=>{logSubTab=t;renderLog();animFade(document.getElementById("logShell"),"sub");attachAll();};
 window.openRenewalEdit=(key,origAP)=>{renewalEditing[key]={open:true,premium:String(origAP)};document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.closeRenewalEdit=key=>{delete renewalEditing[key];document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.updateRenewalPrem=(key,val)=>{if(renewalEditing[key])renewalEditing[key].premium=val;};
