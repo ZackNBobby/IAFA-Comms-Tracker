@@ -30,12 +30,12 @@ button,input,select{font-family:inherit;}
 .card{background:rgba(8,24,30,0.8);backdrop-filter:blur(12px);border-radius:16px;padding:16px;border:1px solid rgba(20,184,166,0.12);margin-bottom:12px;box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.03);}
 .card-dark{background:rgba(8,15,30,0.85);backdrop-filter:blur(8px);border-radius:16px;padding:16px;border:1px solid rgba(51,65,85,0.35);margin-bottom:12px;}
 .lbl{font-size:13px;color:#8ab0c8;display:block;margin-bottom:4px;}
-.inp{width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(51,65,85,0.5);background:rgba(22,38,46,0.9);color:#f1f5f9;font-size:14px;transition:all 0.2s;}
-.inp:hover{background:rgba(18,42,44,0.92);border-color:rgba(20,184,166,0.35);}
-.inp:focus{outline:none;border-color:rgba(20,184,166,0.65);background:rgba(18,42,44,0.95);box-shadow:0 0 0 3px rgba(20,184,166,0.08);}
-.sel{width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(51,65,85,0.5);background:rgba(22,38,46,0.9);color:#f1f5f9;font-size:14px;transition:all 0.2s;}
-.sel:hover{background:rgba(18,42,44,0.92);border-color:rgba(20,184,166,0.35);}
-.sel:focus{outline:none;border-color:rgba(20,184,166,0.65);background:rgba(18,42,44,0.95);box-shadow:0 0 0 3px rgba(20,184,166,0.08);}
+.inp{width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(51,65,85,0.5);background:rgba(12,24,55,0.9);color:#f1f5f9;font-size:14px;transition:all 0.2s;}
+.inp:hover{background:rgba(15,32,72,0.92);border-color:rgba(96,165,250,0.3);}
+.inp:focus{outline:none;border-color:rgba(96,165,250,0.65);background:rgba(15,32,72,0.95);box-shadow:0 0 0 3px rgba(59,130,246,0.08);}
+.sel{width:100%;padding:9px 12px;border-radius:10px;border:1px solid rgba(51,65,85,0.5);background:rgba(12,24,55,0.9);color:#f1f5f9;font-size:14px;transition:all 0.2s;}
+.sel:hover{background:rgba(15,32,72,0.92);border-color:rgba(96,165,250,0.3);}
+.sel:focus{outline:none;border-color:rgba(96,165,250,0.65);background:rgba(15,32,72,0.95);box-shadow:0 0 0 3px rgba(59,130,246,0.08);}
 @keyframes flashRed{0%{border-color:#ef4444;background:#2d0a0a;}50%{border-color:#f87171;background:#450f0f;}100%{border-color:#ef4444;background:#2d0a0a;}}
 .inp.field-error{border-color:#ef4444!important;background:#2d0a0a!important;animation:flashRed 0.4s ease 3;}
 .sel.field-error{border-color:#ef4444!important;background:#2d0a0a!important;animation:flashRed 0.4s ease 3;}
@@ -250,7 +250,7 @@ button,input,select{font-family:inherit;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const FB={apiKey:"AIzaSyB1rNNjgnpI6p6xYFxdXCD-k8sdq2SHoBw",authDomain:"zack-comms-tracker-iafa.firebaseapp.com",projectId:"zack-comms-tracker-iafa",storageBucket:"zack-comms-tracker-iafa.firebasestorage.app",messagingSenderId:"889861149236",appId:"1:889861149236:web:8488f5336ab9d2475bb061"};
@@ -387,7 +387,7 @@ function getTopProducts(){
 }
 
 let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
-let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life";
+let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={};
 let campTab="ignite";
 let giForm={date:todayStr(),client:"",product:"",category:"gi",isRenewal:false,policyStartDate:"",premium:""};
 let renewalForm={date:todayStr(),clientSearch:"",selectedSale:null,annualPremium:"",commRate:0,renewalYear:1};
@@ -443,7 +443,7 @@ function renderLog(){const shell=document.getElementById("logShell");if(shell)sh
 
 function buildLog(){
   const subBar="<div style='display:flex;gap:8px;margin-bottom:14px;'>"
-    +"<button onclick='setLogTab(\"life\")' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(logSubTab==="life"?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(logSubTab==="life"?"rgba(15,80,72,0.7)":"transparent")+";color:"+(logSubTab==="life"?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>🏥 Life & Health</button>"
+    +"<button onclick='setLogTab(\"life\")' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(logSubTab==="life"?"rgba(96,165,250,0.7)":"rgba(51,65,85,0.5)")+";background:"+(logSubTab==="life"?"rgba(30,58,138,0.75)":"transparent")+";color:"+(logSubTab==="life"?"#93c5fd":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;box-shadow:"+(logSubTab==="life"?"0 0 14px rgba(59,130,246,0.2)":"none")+";'>🏥 Life & Health</button>"
     +"<button onclick='setLogTab(\"gi\")' style='flex:1;padding:9px;border-radius:10px;border:1px solid "+(logSubTab==="gi"?"rgba(13,148,136,0.6)":"rgba(51,65,85,0.5)")+";background:"+(logSubTab==="gi"?"rgba(15,80,72,0.7)":"transparent")+";color:"+(logSubTab==="gi"?"#5eead4":"#64748b")+";font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;'>🛡️ General & Group</button>"
     +"</div>";
   if(logSubTab==="gi")return subBar+buildGIForm();
@@ -1073,8 +1073,8 @@ function renderDash(){
 
   const dashSubHtml="<div style='display:flex;gap:8px;margin-bottom:16px;'>"
   +"<button class='dash-sub-btn"+(dashSubTab==="active"?" dash-sub-active":"")+"' onclick='setDashTab(\"active\")'>📈 Active</button>"
-  +"<button class='dash-sub-btn"+(dashSubTab==="renewal"?" dash-sub-active":"")+"' onclick='setDashTab(\"renewal\")'>🔄 Renewal</button>"
   +"<button class='dash-sub-btn"+(dashSubTab==="gi"?" dash-sub-active":"")+"' onclick='setDashTab(\"gi\")'>🛡️ GI</button>"
+  +"<button class='dash-sub-btn"+(dashSubTab==="renewal"?" dash-sub-active":"")+"' onclick='setDashTab(\"renewal\")'>🔄 Renewal</button>"
   +"</div>";
 
   if(dashSubTab==="renewal"){
@@ -1309,90 +1309,89 @@ function renderHist(){
   const totalComm=yrSales.reduce((a,s)=>a+s.totalComm,0);
   const totalCred=yrSales.reduce((a,s)=>a+s.totalCredit,0);
 
-  // Year selector + summary
-  let html="<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>"
+  let html="<div style='display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;'>"
   +"<div style='font-size:16px;font-weight:700;color:#60a5fa;'>📋 All Sales</div>"
   +"<div style='position:relative;margin-left:auto;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
   +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
   +"</div>";
 
-  // Year summary strip
-  html+="<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;'>"
-  +"<div style='background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;text-align:center;'><div style='font-size:11px;color:#64748b;'>Total Sales</div><div style='font-size:18px;font-weight:800;color:#e2e8f0;margin-top:3px;'>"+yrSales.length+"</div></div>"
-  +"<div style='background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;text-align:center;'><div style='font-size:11px;color:#64748b;'>Total Commission</div><div style='font-size:18px;font-weight:800;color:#34d399;margin-top:3px;'>"+$f(totalComm)+"</div></div>"
-  +"<div style='background:#1e293b;border-radius:10px;padding:12px;border:1px solid #334155;text-align:center;'><div style='font-size:11px;color:#64748b;'>Total Credits</div><div style='font-size:18px;font-weight:800;color:#60a5fa;margin-top:3px;'>"+$c(totalCred)+"</div></div>"
+  html+="<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;'>"
+  +"<div style='background:#1e293b;border-radius:10px;padding:10px 12px;border:1px solid #334155;text-align:center;'><div style='font-size:10px;color:#64748b;'>Total Sales</div><div style='font-size:17px;font-weight:800;color:#e2e8f0;margin-top:2px;'>"+yrSales.length+"</div></div>"
+  +"<div style='background:#1e293b;border-radius:10px;padding:10px 12px;border:1px solid #334155;text-align:center;'><div style='font-size:10px;color:#64748b;'>Total Commission</div><div style='font-size:17px;font-weight:800;color:#34d399;margin-top:2px;'>"+$f(totalComm)+"</div></div>"
+  +"<div style='background:#1e293b;border-radius:10px;padding:10px 12px;border:1px solid #334155;text-align:center;'><div style='font-size:10px;color:#64748b;'>Total Credits</div><div style='font-size:17px;font-weight:800;color:#60a5fa;margin-top:2px;'>"+$c(totalCred)+"</div></div>"
   +"</div>";
 
   if(yrSales.length===0){
     return html+"<div style='text-align:center;color:#64748b;padding:40px;background:#1e293b;border-radius:12px;border:1px solid #334155;'>No sales logged for "+selYear+".</div>";
   }
 
-  // Render each quarter as a section
   Object.keys(QS).forEach(q=>{
     const qs=yrSales.filter(s=>s.quarter===q).sort((a,b)=>a.date<b.date?1:-1);
     const qComm=qs.reduce((a,s)=>a+s.totalComm,0);
     const qCred=qs.reduce((a,s)=>a+s.totalCredit,0);
-
-    // Quarter header — always show, grey out if empty
     const hasData=qs.length>0;
-    html+="<div style='margin-bottom:20px;'>"
-    // Quarter title bar
-    +"<div style='display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;row-gap:6px;background:"+(hasData?"linear-gradient(135deg,#1e3a5f,#0f2942)":"#1a2030")+";border-radius:10px 10px "+(hasData?"0 0":"10px 10px")+";padding:12px 16px;border:1px solid "+(hasData?"#1e40af":"#2a3550")+";'>"
-    +"<div style='display:flex;align-items:center;gap:10px;'>"
-    +"<span style='font-size:15px;font-weight:800;color:"+(hasData?"#60a5fa":"#475569")+";'>"+q+"</span>"
-    +"<span style='font-size:12px;color:"+(hasData?"#94a3b8":"#374151")+";'>"+QS[q].label+"</span>"
-    +"<span style='background:"+(hasData?"#0f2942":"#111827")+";border-radius:20px;padding:2px 10px;font-size:11px;color:"+(hasData?"#60a5fa":"#374151")+";font-weight:700;'>"+qs.length+" sale"+(qs.length!==1?"s":"")+"</span>"
+
+    html+="<div style='margin-bottom:14px;'>"
+    +"<div style='display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;row-gap:6px;background:"+(hasData?"linear-gradient(135deg,#1e3a5f,#0f2942)":"#1a2030")+";border-radius:"+(hasData?"10px 10px 0 0":"10px")+";padding:10px 16px;border:1px solid "+(hasData?"#1e40af":"#2a3550")+";'>"
+    +"<div style='display:flex;align-items:center;gap:8px;'>"
+    +"<span style='font-size:14px;font-weight:800;color:"+(hasData?"#60a5fa":"#475569")+";'>"+q+"</span>"
+    +"<span style='font-size:11px;color:"+(hasData?"#94a3b8":"#374151")+";'>"+QS[q].label+"</span>"
+    +"<span style='background:"+(hasData?"#0f2942":"#111827")+";border-radius:20px;padding:1px 9px;font-size:11px;color:"+(hasData?"#60a5fa":"#374151")+";font-weight:700;'>"+qs.length+"</span>"
     +"</div>"
     +(hasData
-      ?"<div style='display:flex;gap:16px;'>"
+      ?"<div style='display:flex;gap:14px;'>"
       +"<span style='font-size:12px;color:#94a3b8;'>Comm: <strong style='color:#34d399;'>"+$f(qComm)+"</strong></span>"
       +"<span style='font-size:12px;color:#94a3b8;'>Credits: <strong style='color:#60a5fa;'>"+$c(qCred)+"</strong></span>"
       +"</div>"
-      :"<span style='font-size:12px;color:#374151;font-style:italic;'>No sales</span>")
+      :"<span style='font-size:11px;color:#374151;font-style:italic;'>No sales</span>")
     +"</div>";
 
     if(hasData){
       html+="<div style='border:1px solid #1e40af;border-top:none;border-radius:0 0 10px 10px;overflow:hidden;'>";
       qs.forEach((s,si)=>{
-        const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+        const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short"});
         const isLast=si===qs.length-1;
-        html+="<div style='background:"+(si%2===0?"#0f172a":"#111827")+";padding:14px 16px;"+(isLast?"":"border-bottom:1px solid #1e293b;")+";'>"
-        // Client row
-        +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>"
-        +"<div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap;'>"
-        +"<span style='font-weight:700;font-size:14px;color:#e2e8f0;'>👤 "+esc(s.clientName)+"</span>"
-        +"<span style='font-size:11px;color:#64748b;background:#1e293b;padding:2px 8px;border-radius:4px;'>📅 "+dt+"</span>"
-        +"<span style='font-size:11px;color:#64748b;'>"+s.policies.length+" polic"+(s.policies.length>1?"ies":"y")+"</span>"
-        +"</div>"
-        +"<div style='display:flex;align-items:center;gap:10px;'>"
-        +"<div style='text-align:right;'>"
-        +"<div style='font-size:11px;color:#64748b;'>Total Comm</div>"
-        +"<div style='font-size:15px;font-weight:800;color:#34d399;'>"+$f(s.totalComm)+"</div>"
-        +"</div>"
-        +"<button class='btn-del' onclick='doDelSale(\""+s.fid+"\")'>✕</button>"
-        +"</div></div>"
-        // Policy rows
-        +s.policies.map((p,pi)=>{
-          return "<div style='background:#0a1929;border-radius:8px;padding:10px 12px;margin-bottom:"+(pi<s.policies.length-1?"6px":"0")+"px;border-left:3px solid #1e40af;'>"
-          +"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;'>"
-          +"<span style='font-size:12px;font-weight:700;color:#93c5fd;'>📋 "+esc(p.product)+"</span>"
-          +"<span style='font-size:11px;color:#475569;background:#0f172a;padding:2px 8px;border-radius:4px;'>"+esc(p.term)+"</span>"
-          +"</div>"
-          +"<div style='display:flex;gap:12px;flex-wrap:wrap;font-size:11px;'>"
-          +"<span>AP: <strong style='color:#e2e8f0;'>"+$f(p.annualPremium)+"</strong></span>"
-          +"<span>Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
-          +"<span>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span>"
-          +"</div>"
+
+        const polRows=s.policies.map((p,pi)=>{
+          const ek=s.fid+"_"+pi;
+          const editing=!!apEditing[ek];
+          const apPart=editing
+            ?"<span style='display:inline-flex;align-items:center;gap:4px;'>"
+              +"<input id='apedit-"+s.fid+"-"+pi+"' type='number' step='0.01' value='"+p.annualPremium+"' style='width:90px;padding:3px 6px;border-radius:6px;border:1px solid rgba(96,165,250,0.5);background:rgba(12,24,55,0.95);color:#93c5fd;font-size:12px;font-family:inherit;outline:none;'/>"
+              +"<button onclick='saveAPEdit(\""+s.fid+"\","+pi+")' style='background:#1e3a8a;border:1px solid #3b82f6;border-radius:5px;color:#93c5fd;font-size:11px;padding:2px 7px;cursor:pointer;font-weight:700;'>✓</button>"
+              +"<button onclick='cancelAPEdit(\""+s.fid+"\","+pi+")' style='background:rgba(127,29,29,0.8);border:1px solid rgba(239,68,68,0.4);border-radius:5px;color:#fca5a5;font-size:11px;padding:2px 7px;cursor:pointer;'>✕</button>"
+              +"</span>"
+            :"<span style='color:#e2e8f0;font-weight:600;'>"+$f(p.annualPremium)+"</span>"
+              +" <button onclick='openAPEdit(\""+s.fid+"\","+pi+","+p.annualPremium+")' title='Edit premium' style='background:none;border:none;cursor:pointer;font-size:11px;padding:0 2px;opacity:0.55;line-height:1;vertical-align:middle;'>✏️</button>";
+
+          return "<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;background:#0a1929;border-radius:8px;padding:8px 12px;margin-bottom:"+(pi<s.policies.length-1?"5":"0")+"px;border-left:3px solid #1e40af;'>"
+          +"<span style='font-size:12px;font-weight:700;color:#93c5fd;flex:1;min-width:120px;'>📋 "+esc(p.product)+"</span>"
+          +"<span style='font-size:10px;color:#475569;background:#0f172a;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;'>"+esc(p.term)+"</span>"
+          +"<span style='font-size:11px;color:#94a3b8;white-space:nowrap;'>AP: "+apPart+"</span>"
+          +"<span style='font-size:11px;white-space:nowrap;'>Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
+          +"<span style='font-size:11px;white-space:nowrap;'>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span>"
           +(p.riders&&p.riders.length>0
-            ?"<div style='margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;'>"
-            +p.riders.map(r=>"<div style='background:#0f172a;border-radius:6px;padding:4px 10px;border:1px solid #4f46e5;display:flex;align-items:center;gap:6px;'>"
-              +"<span style='font-size:10px;color:#a78bfa;font-weight:700;'>🔗 "+esc(r.name)+"</span>"
-              +"<span style='font-size:10px;color:#64748b;'>"+$f(r.premium)+"</span>"
-              +"<span style='font-size:10px;color:#a78bfa;'>→ "+$f(r.comm)+"</span>"
-              +"</div>").join("")+"</div>"
+            ?"<div style='width:100%;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;'>"
+              +p.riders.map(r=>"<span style='background:#0f172a;border-radius:5px;padding:2px 8px;border:1px solid #4f46e5;font-size:10px;color:#a78bfa;'>🔗 "+esc(r.name)+" "+$f(r.premium)+" → "+$f(r.comm)+"</span>").join("")
+              +"</div>"
             :"")
           +"</div>";
-        }).join("")
+        }).join("");
+
+        html+="<div style='background:"+(si%2===0?"#0f172a":"#111827")+";padding:10px 14px;"+(isLast?"":"border-bottom:1px solid #1e293b;")+";'>"
+        +"<div style='display:flex;align-items:center;gap:8px;margin-bottom:"+(s.policies.length>0?"7":"0")+"px;'>"
+        +"<div style='flex:1;min-width:0;'>"
+        +"<span style='font-weight:700;font-size:13px;color:#e2e8f0;'>👤 "+esc(s.clientName)+"</span>"
+        +"<span style='font-size:11px;color:#64748b;margin-left:8px;'>📅 "+dt+"</span>"
+        +"<span style='font-size:11px;color:#475569;margin-left:6px;'>· "+s.policies.length+" polic"+(s.policies.length!==1?"ies":"y")+"</span>"
+        +"</div>"
+        +"<div style='text-align:right;flex-shrink:0;'>"
+        +"<div style='font-size:10px;color:#64748b;'>Total Comm</div>"
+        +"<div style='font-size:14px;font-weight:800;color:#34d399;'>"+$f(s.totalComm)+"</div>"
+        +"</div>"
+        +"<button class='btn-del' onclick='doDelSale(\""+s.fid+"\")'>✕</button>"
+        +"</div>"
+        +polRows
         +"</div>";
       });
       html+="</div>";
@@ -1809,6 +1808,27 @@ async function playDeleteSound(){
 
 window.doDelSale=async id=>{if(confirm("Delete this sale?")){playDeleteSound();await delSaleDB(id);}};
 window.doDelFWDSale=async id=>{if(confirm("Delete this FWD sale?")){playDeleteSound();await delFWDSaleDB(id);}};
+window.openAPEdit=(fid,pi,curAP)=>{apEditing={};apEditing[fid+"_"+pi]={value:String(curAP)};renderPage();};
+window.cancelAPEdit=(fid,pi)=>{delete apEditing[fid+"_"+pi];renderPage();};
+window.saveAPEdit=async(fid,pi)=>{
+  const inp=document.getElementById("apedit-"+fid+"-"+pi);
+  const newAP=parseFloat(inp?.value);
+  if(!newAP||newAP<=0){alert("Please enter a valid premium amount.");return;}
+  const sale=sales.find(s=>s.fid===fid);
+  if(!sale)return;
+  const pol=sale.policies[pi];
+  const oldAP=pol.annualPremium||0;
+  const def=PROD[pol.product],term=def&&def.terms&&def.terms.find(t=>t.l===pol.term);
+  const creditMult=term?term.c:(oldAP>0?(pol.baseCred||0)/oldAP:0);
+  const newBaseComm=newAP*(pol.commPct||0)/100;
+  const newBaseCred=newAP*creditMult;
+  const rC=(pol.riders||[]).reduce((a,r)=>a+(r.comm||0),0);
+  const rCr=(pol.riders||[]).reduce((a,r)=>a+(r.credit||0),0);
+  const newPolicies=sale.policies.map((p,idx)=>idx!==pi?p:{...p,annualPremium:newAP,baseComm:newBaseComm,baseCred:newBaseCred,totalComm:newBaseComm+rC,totalCredit:newBaseCred+rCr});
+  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+p.totalComm,0),baseComm:newPolicies.reduce((a,p)=>a+p.baseComm,0),totalCredit:newPolicies.reduce((a,p)=>a+p.totalCredit,0)};
+  try{await updateDoc(doc(db,COLL,fid),updObj);delete apEditing[fid+"_"+pi];}
+  catch(e){alert("Update error: "+e.message);}
+};;
 window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.setLogTab=t=>{logSubTab=t;renderLog();attachAll();};
 window.openRenewalEdit=(key,origAP)=>{renewalEditing[key]={open:true,premium:String(origAP)};document.getElementById("app").innerHTML=renderDash();attachAll();};
