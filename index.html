@@ -1969,8 +1969,10 @@ window.confirmRenewal=async(fid,pi,yr)=>{
   const rates=term?term.rates:null;
   const commRate=getRenewalRate(rates,yr);
   const commission=ap*commRate/100;
-  const tod=todayStr();
-  const mo=new Date(tod+"T00:00:00").getMonth();
+  const saleDateObj=new Date(sale.date+"T00:00:00");
+  const annexObj=new Date(saleDateObj);annexObj.setFullYear(saleDateObj.getFullYear()+yr-1);
+  const tod=annexObj.toISOString().slice(0,10);
+  const mo=annexObj.getMonth();
   const obj={date:tod,clientName:sale.clientName,product:pol.product,term:pol.term,annualPremium:ap,commPct:commRate,totalComm:commission,totalCredit:0,quarter:getQ(mo),month:mo,renewalYear:yr,originalSaleFid:fid};
   await addRenewalDB(obj);
   delete renewalEditing[key];
@@ -2056,8 +2058,10 @@ window.confirmGIRenewal=async(fid,renewalYear,category)=>{
   const newPremium=parseFloat(premVal)||0;
   if(!newPremium||newPremium<=0){alert("Please enter a valid renewal premium.");return;}
   const commission=newPremium*renewRate/100;
-  const tod=todayStr();
-  const mo=new Date(tod+"T00:00:00").getMonth();
+  const giSaleDateObj=new Date(origSale.date+"T00:00:00");
+  const giAnnexObj=new Date(giSaleDateObj);giAnnexObj.setFullYear(giSaleDateObj.getFullYear()+renewalYear-1);
+  const tod=giAnnexObj.toISOString().slice(0,10);
+  const mo=giAnnexObj.getMonth();
   const obj={date:tod,clientName:origSale.clientName,product:origSale.product,productCode:origSale.productCode,category:category||"gi",isRenewal:true,originalSaleFid:fid,renewalYear,annualPremium:newPremium,commRate:renewRate,commission,totalComm:commission,totalCredit:0,quarter:getQ(mo),month:mo};
   await addGISaleDB(obj);
   delete giRenewalPrems[key];
