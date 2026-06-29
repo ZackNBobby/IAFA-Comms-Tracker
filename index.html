@@ -1098,6 +1098,7 @@ function renderDash(){
     const qRenewals=yrRenewals.filter(s=>s.quarter===activeQ);
     const qRenewalTotal=qRenewals.reduce((a,s)=>a+s.totalComm,0);
     // Auto-detect pending renewals
+    const dismissedKeys=new Set(JSON.parse(localStorage.getItem("dismissed_renewals")||"[]"));
     const pendingRenewals=[];
     sales.forEach(s=>{
       (s.policies||[]).forEach((pol,pi)=>{
@@ -1105,6 +1106,7 @@ function renderDash(){
         const saleDate=new Date(s.date+"T00:00:00");
         const yearsElapsed=Math.floor((today2-saleDate)/(365.25*24*3600*1000));
         const renewalYear=Math.max(2,yearsElapsed+1);
+        if(dismissedKeys.has(s.fid+"_"+renewalYear))return;
         if(renewalSales.some(r=>r.originalSaleFid===s.fid&&r.renewalYear===renewalYear))return;
         const def=PROD[pol.product];
         const term=def&&def.terms&&def.terms.find(t=>t.l===pol.term);
@@ -1164,8 +1166,9 @@ function renderDash(){
           +"<button class='btn-sm' style='flex:1;padding:10px;font-size:13px;background:rgba(15,80,72,0.9);border-color:rgba(45,212,191,0.7);' onclick='confirmRenewal(\""+r.fid+"\","+r.pi+","+r.renewalYear+")'>✅ Confirm & Log</button>"
           +"<button class='btn-sm' style='padding:10px 14px;background:rgba(127,29,29,0.4);border-color:rgba(239,68,68,0.3);color:#f87171;' onclick='closeRenewalEdit(\""+key+"\")'>✕</button>"
           +"</div></div>"
-          :"<div style='margin-top:10px;'>"
-          +"<button class='btn-sm' style='width:100%;padding:9px;font-size:12px;' onclick='openRenewalEdit(\""+key+"\","+r.origAP+")'>📝 Log Renewal Commission</button>"
+          :"<div style='margin-top:10px;display:flex;gap:8px;'>"
+          +"<button class='btn-sm' style='flex:1;padding:9px;font-size:12px;' onclick='openRenewalEdit(\""+key+"\","+r.origAP+")'>📝 Log Renewal Commission</button>"
+          +"<button class='btn-sm' style='padding:9px 14px;background:rgba(51,65,85,0.4);border-color:rgba(100,116,139,0.4);color:#94a3b8;font-size:12px;' onclick='dismissRenewal(\""+r.fid+"\","+r.renewalYear+")' title='Dismiss this renewal'>✕ Dismiss</button>"
           +"</div>"
         )+"</div>";
       });
@@ -2034,6 +2037,13 @@ window.doAddRenewal=async()=>{
   renderPage();
 };
 window.doDelRenewal=async id=>{if(confirm("Delete this renewal?"))await delRenewalDB(id);};
+window.dismissRenewal=(fid,renewalYear)=>{
+  const dismissed=JSON.parse(localStorage.getItem("dismissed_renewals")||"[]");
+  const key=fid+"_"+renewalYear;
+  if(!dismissed.includes(key))dismissed.push(key);
+  localStorage.setItem("dismissed_renewals",JSON.stringify(dismissed));
+  renderPage();
+};
 window.confirmGIRenewal=async(fid,renewalYear,category)=>{
   const key=fid+"-"+renewalYear;
   const origSale=giSales.find(s=>s.fid===fid);
