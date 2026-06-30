@@ -391,7 +391,7 @@ function getTopProducts(){
 }
 
 let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
-let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={};
+let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={},showNextYear=false;
 let campTab="ignite";
 let giForm={date:todayStr(),client:"",product:"",category:"gi",isRenewal:false,policyStartDate:"",premium:""};
 let renewalForm={date:todayStr(),clientSearch:"",selectedSale:null,annualPremium:"",commRate:0,renewalYear:1};
@@ -1109,7 +1109,7 @@ function renderDash(){
         if(dismissedKeys.has(s.fid+"_"+renewalYear+"_"+pi))return;
         if(renewalSales.some(r=>r.originalSaleFid===s.fid&&r.renewalYear===renewalYear&&r.product===pol.product))return;
         const def=PROD[pol.product];
-        const term=def&&def.terms&&def.terms.find(t=>t.l===pol.term);
+        const term=def&&def.terms&&(def.terms.find(t=>t.l===pol.term)||def.terms.find(t=>t.rates&&Math.abs(t.y-(pol.commPct||0))<0.1));
         const rates=term?term.rates:null;
         const commRate=getRenewalRate(rates,renewalYear);
         if(commRate<=0)return;
@@ -1138,11 +1138,17 @@ function renderDash(){
     const ytdGIRenewal=yrGIRenewals.reduce((a,s)=>a+(s.commission||0),0);
     pendingRenewals.sort((a,b)=>a.annexDate-b.annexDate);
     pendingGIRenewals.sort((a,b)=>a.annexDate-b.annexDate);
-    let pendingHtml="<div style='font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:12px;'>⚡ Pending Income Renewals <span style='background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:12px;padding:2px 8px;font-size:12px;'>"+pendingRenewals.length+"</span></div>";
-    if(pendingRenewals.length===0){
-      pendingHtml+="<div style='text-align:center;color:#475569;padding:20px;background:rgba(15,23,42,0.5);border-radius:12px;border:1px solid #334155;margin-bottom:16px;font-size:13px;'>No pending income renewals — no policies logged or all renewals already confirmed.</div>";
+    const nextYr=selYear+1;
+    const thisYearPending=pendingRenewals.filter(r=>r.annexDate.getFullYear()<=selYear);
+    const nextYearPending=pendingRenewals.filter(r=>r.annexDate.getFullYear()===nextYr);
+    let pendingHtml="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;'>"
+    +"<div style='font-size:14px;font-weight:700;color:#f59e0b;'>⚡ Pending Income Renewals <span style='background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:12px;padding:2px 8px;font-size:12px;'>"+thisYearPending.length+"</span></div>"
+    +"<button onclick='showNextYear=!showNextYear;renderPage();' style='font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid "+(showNextYear?"rgba(168,85,247,0.7)":"rgba(100,116,139,0.4)")+";background:"+(showNextYear?"rgba(88,28,135,0.5)":"rgba(30,41,59,0.5)")+";color:"+(showNextYear?"#c084fc":"#94a3b8")+";cursor:pointer;'>📅 "+nextYr+" Renewals"+(nextYearPending.length?" ("+nextYearPending.length+")":"")+"</button>"
+    +"</div>";
+    if(thisYearPending.length===0){
+      pendingHtml+="<div style='text-align:center;color:#475569;padding:20px;background:rgba(15,23,42,0.5);border-radius:12px;border:1px solid #334155;margin-bottom:16px;font-size:13px;'>No pending income renewals for "+selYear+" — check "+nextYr+" view above.</div>";
     } else {
-      pendingRenewals.forEach(r=>{
+      thisYearPending.forEach(r=>{
         const key=r.fid+"-"+r.pi+"-"+r.renewalYear;
         const isEditing=renewalEditing[key]&&renewalEditing[key].open;
         const editPrem=isEditing?renewalEditing[key].premium:String(r.origAP);
@@ -1153,7 +1159,9 @@ function renderDash(){
         +"<div><div style='font-weight:700;color:#e2e8f0;font-size:14px;'>"+esc(r.clientName)+"</div>"
         +"<div style='font-size:12px;color:#94a3b8;margin-top:2px;'>"+esc(r.product)+(r.term?" · "+esc(r.term):"")+"</div>"
         +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Year "+r.renewalYear+" renewal · Rate: <span style='color:#f59e0b;font-weight:700;'>"+r.commRate+"%</span></div>"
-        +"<div style='font-size:11px;margin-top:3px;'><span style='background:"+(r.isPast?"rgba(239,68,68,0.15)":"rgba(59,130,246,0.12)")+";color:"+(r.isPast?"#f87171":"#60a5fa")+";border:1px solid "+(r.isPast?"rgba(239,68,68,0.4)":"rgba(59,130,246,0.35)")+";border-radius:6px;padding:1px 7px;font-weight:600;'>"+(r.isPast?"⚠️ Overdue · ":"📅 Due · ")+r.annexDate.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"})+"</span></div></div>"
+        +"<div style='margin-top:5px;'><span style='font-size:13px;font-weight:800;color:"+(r.isPast?"#f87171":"#818cf8")+"'>📅 "+r.annexDate.toLocaleDateString("en-SG",{month:"long",year:"numeric"})+"</span></div>"
+        +(r.isPast?"<div style='margin-top:2px;'><span style='background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.4);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:600;'>⚠️ Overdue · "+r.annexDate.toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"})+"</span></div>":"")
+        +"</div>"
         +"<div style='text-align:right;'><div style='font-size:11px;color:#64748b;'>Expected</div>"
         +"<div style='font-size:20px;font-weight:900;color:#f59e0b;'>"+$f(r.expectedComm)+"</div></div></div>"
         +(isEditing
@@ -1172,6 +1180,30 @@ function renderDash(){
           +"</div>"
         )+"</div>";
       });
+    }
+    // ── Next year pending ──
+    if(showNextYear){
+      pendingHtml+="<div style='font-size:14px;font-weight:700;color:#c084fc;margin:20px 0 12px;'>📅 "+nextYr+" Income Renewals <span style='background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.4);border-radius:12px;padding:2px 8px;font-size:12px;'>"+nextYearPending.length+"</span></div>";
+      if(nextYearPending.length===0){
+        pendingHtml+="<div style='text-align:center;color:#475569;padding:20px;background:rgba(15,23,42,0.5);border-radius:12px;border:1px solid #334155;margin-bottom:16px;font-size:13px;'>No "+nextYr+" renewals detected yet.</div>";
+      } else {
+        nextYearPending.forEach(r=>{
+          const key=r.fid+"-"+r.pi+"-"+r.renewalYear;
+          pendingHtml+="<div style='background:linear-gradient(135deg,rgba(30,10,60,0.85),rgba(15,6,40,0.9));border-radius:12px;padding:14px;border:1px solid rgba(192,132,252,0.25);margin-bottom:10px;'>"
+          +"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+          +"<div><div style='font-weight:700;color:#e2e8f0;font-size:14px;'>"+esc(r.clientName)+"</div>"
+          +"<div style='font-size:12px;color:#94a3b8;margin-top:2px;'>"+esc(r.product)+(r.term?" · "+esc(r.term):"")+"</div>"
+          +"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Year "+r.renewalYear+" renewal · Rate: <span style='color:#c084fc;font-weight:700;'>"+r.commRate+"%</span></div>"
+          +"<div style='margin-top:5px;'><span style='font-size:13px;font-weight:800;color:#c084fc;'>📅 "+r.annexDate.toLocaleDateString("en-SG",{month:"long",year:"numeric"})+"</span></div>"
+          +"</div>"
+          +"<div style='text-align:right;'><div style='font-size:11px;color:#64748b;'>Expected</div>"
+          +"<div style='font-size:20px;font-weight:900;color:#c084fc;'>"+$f(r.expectedComm)+"</div></div></div>"
+          +"<div style='margin-top:10px;display:flex;gap:8px;'>"
+          +"<button class='btn-sm' style='flex:1;padding:9px;font-size:12px;border-color:rgba(192,132,252,0.5);' onclick='openRenewalEdit(\""+key+"\","+r.origAP+")'>📝 Log Early</button>"
+          +"<button class='btn-sm' style='padding:9px 14px;background:rgba(51,65,85,0.4);border-color:rgba(100,116,139,0.4);color:#94a3b8;font-size:12px;' onclick='dismissRenewal(\""+r.fid+"\","+r.renewalYear+","+r.pi+")'>✕ Dismiss</button>"
+          +"</div></div>";
+        });
+      }
     }
     // ── GI pending HTML ──
     let giPendingHtml="<div style='font-size:14px;font-weight:700;color:#14b8a6;margin:20px 0 12px;'>⚡ Pending GI / Group Renewals <span style='background:rgba(20,184,166,0.15);border:1px solid rgba(20,184,166,0.4);border-radius:12px;padding:2px 8px;font-size:12px;'>"+pendingGIRenewals.length+"</span></div>";
