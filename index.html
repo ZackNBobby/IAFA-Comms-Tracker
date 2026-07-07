@@ -2136,6 +2136,27 @@ function pipEstimate(product,term,premium){
   return{comm:ap*t.y/100,credit:ap*t.c,rate:t.y};
 }
 
+// Pipeline window functions — all state mutations go through window.*
+window.openPipForm=()=>{pipFormOpen=true;renderPage();};
+window.closePipForm=()=>{pipFormOpen=false;pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:""};pipSrch={query:"",open:false};renderPage();};
+window.setPipFilter=f=>{pipFilter=f;renderPage();};
+window.pipInput=q=>{pipSrch.query=q;pipSrch.open=true;renderPage();};
+window.pipSrchFocus=()=>{pipSrch.open=true;renderPage();};
+window.pipPickProd=p=>{pipForm.product=p;pipForm.term="";pipSrch.query="";pipSrch.open=false;renderPage();};
+window.setPipTerm=t=>{pipForm.term=t;renderPage();};
+window.setPipPrem=v=>{pipForm.estPremium=v;renderPage();};
+window.setPipStage=s=>{pipForm.stage=s;renderPage();};
+window.setPipFormStr=(k,v)=>{pipForm[k]=v;};
+window.setPipelineStage=(fid,stage)=>updatePipelineDB(fid,{stage});
+window.startFollowUp=fid=>{followPid=fid;pipFollowNote="";closingPid=null;renderPage();};
+window.cancelFollowUp=()=>{followPid=null;pipFollowNote="";renderPage();};
+window.setPipFollowNote=v=>{pipFollowNote=v;};
+window.startClosePipeline=fid=>{closingPid=fid;followPid=null;pipCloseForm={premium:"",product:"",term:""};renderPage();};
+window.cancelClosePipeline=()=>{closingPid=null;pipCloseForm={premium:"",product:"",term:""};renderPage();};
+window.setPipClosePrem=v=>{pipCloseForm.premium=v;renderPage();};
+window.setPipCloseTerm=v=>{pipCloseForm.term=v;renderPage();};
+window.deletePipeline=fid=>{if(confirm("Remove this pipeline case?"))delPipelineDB(fid);};
+
 function renderPipeline(){
   const now=Date.now();
   const cases=pipelineCases.filter(c=>pipFilter==="all"||c.stage===pipFilter);
@@ -2204,18 +2225,18 @@ function renderPipeline(){
 
   // ── Add new case button ──
   if(!pipFormOpen){
-    html+="<button onclick='pipFormOpen=true;renderPage();' style='width:100%;padding:12px;border-radius:12px;border:2px dashed #334155;background:rgba(30,41,59,0.5);color:#60a5fa;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;transition:all 0.2s;'>＋ Add New Pipeline Case</button>";
+    html+="<button onclick='openPipForm()' style='width:100%;padding:12px;border-radius:12px;border:2px dashed #334155;background:rgba(30,41,59,0.5);color:#60a5fa;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;transition:all 0.2s;'>＋ Add New Pipeline Case</button>";
   } else {
     html+=buildPipForm();
   }
 
   // ── Stage filter pills ──
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;'>";
-  html+="<button class='pip-filter-btn"+(pipFilter==="all"?" active":"")+"' style='"+(pipFilter==="all"?"background:#1e40af;border-color:#3b82f6;color:#fff;":"")+"' onclick='pipFilter=\"all\";renderPage();'>All ("+allCases.length+")</button>";
+  html+="<button class='pip-filter-btn"+(pipFilter==="all"?" active":"")+"' style='"+(pipFilter==="all"?"background:#1e40af;border-color:#3b82f6;color:#fff;":"")+"' onclick='setPipFilter(\"all\")'>All ("+allCases.length+")</button>";
   Object.entries(PIPE_STAGES).forEach(([k,s])=>{
     const cnt=allCases.filter(c=>c.stage===k).length;
     if(cnt===0)return;
-    html+="<button class='pip-filter-btn"+(pipFilter===k?" active":"")+"' style='"+(pipFilter===k?"background:"+s.bg+";border-color:"+s.color+";color:"+s.color+";":"")+"' onclick='pipFilter=\""+k+"\";renderPage();'>"+s.label+" ("+cnt+")</button>";
+    html+="<button class='pip-filter-btn"+(pipFilter===k?" active":"")+"' style='"+(pipFilter===k?"background:"+s.bg+";border-color:"+s.color+";color:"+s.color+";":"")+"' onclick='setPipFilter(\""+k+"\")'>"+s.label+" ("+cnt+")</button>";
   });
   html+="</div>";
 
@@ -2247,9 +2268,9 @@ function renderPipeline(){
         closePanelHtml="<div style='margin-top:12px;background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;border:1px solid rgba(52,211,153,0.3);'>"
         +"<div style='font-size:12px;font-weight:700;color:#34d399;margin-bottom:10px;'>✅ Confirm Close — Adjust if needed</div>"
         +"<label style='font-size:11px;color:#94a3b8;'>Annual Premium (SGD)</label>"
-        +"<input class='inp' type='number' value='"+clPrem+"' oninput='pipCloseForm.premium=this.value;renderPage();' style='width:100%;margin:4px 0 8px;'/>"
+        +"<input class='inp' type='number' value='"+clPrem+"' oninput='setPipClosePrem(this.value)' style='width:100%;margin:4px 0 8px;'/>"
         +(def?"<label style='font-size:11px;color:#94a3b8;'>Term</label>"
-        +"<select class='inp' onchange='pipCloseForm.term=this.value;renderPage();' style='width:100%;margin:4px 0 8px;'>"
+        +"<select class='inp' onchange='setPipCloseTerm(this.value)' style='width:100%;margin:4px 0 8px;'>"
         +def.terms.map(t=>"<option value='"+t.l+"'"+(t.l===clTerm?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
         +"</select>":"")
         +"<div style='display:flex;gap:10px;margin-bottom:10px;'>"
@@ -2260,7 +2281,7 @@ function renderPipeline(){
         +(nextT&&clEst.credit>0?"<div style='font-size:11px;color:#f59e0b;margin-bottom:8px;'>⚡ "+$c(nextT.min-(qCredNow+clEst.credit))+" more credits to reach "+nextT.bonus+"% tier</div>":"")
         +"<div style='display:flex;gap:8px;'>"
         +"<button class='btn-sm' style='flex:1;padding:11px;font-size:13px;font-weight:700;background:rgba(15,80,72,0.9);border-color:rgba(52,211,153,0.7);' onclick='confirmClosePipeline(\""+c.fid+"\")'>🏆 Close Case & Log Sale!</button>"
-        +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='closingPid=null;pipCloseForm={premium:\"\",product:\"\",term:\"\"};renderPage();'>✕</button>"
+        +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='cancelClosePipeline()'>✕</button>"
         +"</div></div>";
       }
 
@@ -2269,10 +2290,10 @@ function renderPipeline(){
       if(isFollowing){
         fuPanelHtml="<div style='margin-top:10px;background:rgba(0,0,0,0.25);border-radius:10px;padding:12px;border:1px solid rgba(96,165,250,0.3);'>"
         +"<div style='font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:700;'>📞 Log Follow-up Note</div>"
-        +"<input class='inp' type='text' placeholder='e.g. Called, will think about it...' value='"+esc(pipFollowNote)+"' oninput='pipFollowNote=this.value;' style='width:100%;margin-bottom:8px;color:#ffffff;'/>"
+        +"<input class='inp' type='text' placeholder='e.g. Called, will think about it...' value='"+esc(pipFollowNote)+"' oninput='setPipFollowNote(this.value)' style='width:100%;margin-bottom:8px;color:#ffffff;'/>"
         +"<div style='display:flex;gap:8px;'>"
         +"<button class='btn-sm' style='flex:1;padding:8px;font-size:12px;background:rgba(30,58,138,0.7);border-color:#3b82f6;' onclick='confirmFollowUp(\""+c.fid+"\")'>✅ Save</button>"
-        +"<button class='btn-sm' style='padding:8px 12px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='followPid=null;pipFollowNote=\"\";renderPage();'>✕</button>"
+        +"<button class='btn-sm' style='padding:8px 12px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='cancelFollowUp()'>✕</button>"
         +"</div></div>";
       }
 
@@ -2298,7 +2319,7 @@ function renderPipeline(){
       +"<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>"
       +"<div style='font-size:15px;font-weight:800;color:#f1f5f9;'>"+esc(c.clientName)+"</div>"
       +"<span style='font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:"+s.bg+";color:"+s.color+";border:1px solid "+s.color+"55;'>"+s.label+"</span>"
-      +"<select onchange='updatePipelineDB(\""+c.fid+"\",{stage:this.value});' style='font-size:10px;background:#1e293b;color:#64748b;border:1px solid #334155;border-radius:6px;padding:1px 4px;cursor:pointer;'>"
+      +"<select onchange='setPipelineStage(\""+c.fid+"\",this.value)' style='font-size:10px;background:#1e293b;color:#64748b;border:1px solid #334155;border-radius:6px;padding:1px 4px;cursor:pointer;'>"
       +Object.entries(PIPE_STAGES).map(([k,st])=>"<option value='"+k+"'"+(c.stage===k?" selected":"")+">"+st.label+"</option>").join("")
       +"</select>"
       +"</div>"
@@ -2319,9 +2340,9 @@ function renderPipeline(){
       +fuHistHtml
       // Action buttons
       +"<div style='display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;'>"
-      +"<button class='btn-sm' style='flex:1;padding:9px;font-size:12px;background:rgba(30,58,138,0.6);border-color:#3b82f6;' onclick='followPid=\""+c.fid+"\";pipFollowNote=\"\";closingPid=null;renderPage();'>📞 Log Follow-up</button>"
-      +"<button class='btn-sm' style='flex:1;padding:9px;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(15,80,40,0.9),rgba(6,40,20,0.95));border-color:rgba(52,211,153,0.7);color:#34d399;' onclick='closingPid=\""+c.fid+"\";followPid=null;pipCloseForm={premium:\"\",product:\"\",term:\"\"};renderPage();'>🏆 Close Case!</button>"
-      +"<button class='btn-sm' style='padding:9px 12px;background:rgba(127,29,29,0.3);border-color:rgba(239,68,68,0.3);color:#f87171;font-size:12px;' onclick='if(confirm(\"Remove this pipeline case?\"))delPipelineDB(\""+c.fid+"\")'>✕</button>"
+      +"<button class='btn-sm' style='flex:1;padding:9px;font-size:12px;background:rgba(30,58,138,0.6);border-color:#3b82f6;' onclick='startFollowUp(\""+c.fid+"\")'>📞 Log Follow-up</button>"
+      +"<button class='btn-sm' style='flex:1;padding:9px;font-size:12px;font-weight:700;background:linear-gradient(135deg,rgba(15,80,40,0.9),rgba(6,40,20,0.95));border-color:rgba(52,211,153,0.7);color:#34d399;' onclick='startClosePipeline(\""+c.fid+"\")'>🏆 Close Case!</button>"
+      +"<button class='btn-sm' style='padding:9px 12px;background:rgba(127,29,29,0.3);border-color:rgba(239,68,68,0.3);color:#f87171;font-size:12px;' onclick='deletePipeline(\""+c.fid+"\")'>✕</button>"
       +"</div>"
       +fuPanelHtml
       +closePanelHtml
@@ -2347,21 +2368,21 @@ function buildPipForm(){
   // Product search
   +"<label style='font-size:11px;color:#94a3b8;'>Product <span style='color:#475569;'>(optional — for commission estimate)</span></label>"
   +"<div style='position:relative;margin:4px 0 10px;'>"
-  +"<input class='inp' type='text' placeholder='Search product...' value='"+(pipSrch.query||esc(pipForm.product))+"' oninput='pipSrch.query=this.value;pipSrch.open=true;renderPage();' onfocus='pipSrch.open=true;renderPage();' style='width:100%;color:#ffffff;'/>"
+  +"<input class='inp' type='text' placeholder='Search product...' value='"+(pipSrch.query||esc(pipForm.product))+"' oninput='pipInput(this.value)' onfocus='pipSrchFocus()' style='width:100%;color:#ffffff;'/>"
   +(pipForm.product?"<div style='font-size:11px;color:#34d399;margin-top:3px;'>✓ "+esc(pipForm.product)+"</div>":"")
   +(pipSrch.open&&filtered.length?"<div style='position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;z-index:99;max-height:180px;overflow-y:auto;'>"
-  +filtered.map(p=>"<div onclick='pipForm.product=\""+p.replace(/'/g,"\\'")+"\";"+"pipForm.term=\"\";pipSrch.query=\"\";pipSrch.open=false;renderPage();' style='padding:8px 12px;font-size:12px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a;'>"+esc(p)+"</div>").join("")
+  +filtered.map(p=>"<div onclick='pipPickProd(\""+p.replace(/\\/g,"\\\\").replace(/"/g,"&quot;").replace(/'/g,"\\'")+"\")'  style='padding:8px 12px;font-size:12px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a;'>"+esc(p)+"</div>").join("")
   +"</div>":"")
   +"</div>"
   // Term (if product selected)
   +(def&&def.terms&&def.terms.length>1?"<label style='font-size:11px;color:#94a3b8;'>Term <span style='color:#475569;'>(optional)</span></label>"
-  +"<select class='inp' onchange='pipForm.term=this.value;renderPage();' style='width:100%;margin:4px 0 10px;'>"
+  +"<select class='inp' onchange='setPipTerm(this.value)' style='width:100%;margin:4px 0 10px;'>"
   +"<option value=''>— Select term —</option>"
   +def.terms.map(t=>"<option value='"+t.l+"'"+(pipForm.term===t.l?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
   +"</select>":"")
   // Est premium
   +"<label style='font-size:11px;color:#94a3b8;'>Estimated Annual Premium (SGD)</label>"
-  +"<input class='inp' type='number' placeholder='e.g. 5000' value='"+pipForm.estPremium+"' oninput='pipForm.estPremium=this.value;renderPage();' style='width:100%;margin:4px 0 10px;'/>"
+  +"<input class='inp' type='number' placeholder='e.g. 5000' value='"+pipForm.estPremium+"' oninput='setPipPrem(this.value)' style='width:100%;margin:4px 0 10px;'/>"
   // Est commission preview
   +(est.comm>0?"<div style='background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;gap:16px;'>"
   +"<span style='font-size:12px;color:#64748b;'>Est Comm: <strong style='color:#34d399;'>"+$f(est.comm)+"</strong></span>"
@@ -2370,7 +2391,7 @@ function buildPipForm(){
   // Stage
   +"<label style='font-size:11px;color:#94a3b8;'>Stage</label>"
   +"<div style='display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px;'>"
-  +Object.entries(PIPE_STAGES).map(([k,s])=>"<button onclick='pipForm.stage=\""+k+"\";renderPage();' style='padding:5px 12px;border-radius:16px;border:1px solid "+(pipForm.stage===k?s.color:"#334155")+";background:"+(pipForm.stage===k?s.bg:"transparent")+";color:"+(pipForm.stage===k?s.color:"#64748b")+";font-size:12px;font-weight:600;cursor:pointer;'>"+s.label+"</button>").join("")
+  +Object.entries(PIPE_STAGES).map(([k,s])=>"<button onclick='setPipStage(\""+k+"\")' style='padding:5px 12px;border-radius:16px;border:1px solid "+(pipForm.stage===k?s.color:"#334155")+";background:"+(pipForm.stage===k?s.bg:"transparent")+";color:"+(pipForm.stage===k?s.color:"#64748b")+";font-size:12px;font-weight:600;cursor:pointer;'>"+s.label+"</button>").join("")
   +"</div>"
   // Last meeting
   +"<label style='font-size:11px;color:#94a3b8;'>Last Meeting Date <span style='color:#475569;'>(optional)</span></label>"
@@ -2381,7 +2402,7 @@ function buildPipForm(){
   // Buttons
   +"<div style='display:flex;gap:8px;'>"
   +"<button class='btn-sm' style='flex:1;padding:11px;font-size:13px;font-weight:700;' onclick='doAddPipeline()'>＋ Add to Pipeline</button>"
-  +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='pipFormOpen=false;pipForm={client:\"\",product:\"\",term:\"\",estPremium:\"\",stage:\"hot\",lastMeeting:\"\",notes:\"\"};pipSrch={query:\"\",open:false};renderPage();'>Cancel</button>"
+  +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='closePipForm()'>Cancel</button>"
   +"</div></div>";
   return html;
 }
