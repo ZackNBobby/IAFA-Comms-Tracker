@@ -622,7 +622,7 @@ function buildPipCal(){
   const disp=sd?String(sd.getDate()).padStart(2,"0")+"/"+String(sd.getMonth()+1).padStart(2,"0")+"/"+sd.getFullYear():"";
   return "<div class='cal-wrap' id='pipCalWrap'>"
   +"<div class='cal-row'>"
-  +"<input class='inp' id='pipDateInp' type='text' placeholder='dd/mm/yyyy' value='"+esc(disp)+"' onblur='pipMeetingBlur(this.value)' style='flex:1;' autocomplete='off' autocorrect='off' autocapitalize='none'/>"
+  +"<input class='inp' id='pipDateInp' type='text' placeholder='dd/mm/yyyy' value='"+esc(disp)+"' oninput='pipMeetingInput(this.value)' onblur='pipMeetingBlur(this.value)' style='flex:1;' autocomplete='off' autocorrect='off' autocapitalize='none' inputmode='numeric'/>"
   +"<button class='cal-ico"+(pipCalOpen?" open":"")+"' onclick='pipToggleCal()'>📅</button>"
   +"</div>"
   +(pipCalOpen?buildPipCalPop():"")
@@ -2208,6 +2208,15 @@ window.pipNavM=d=>{pipCalM+=d;if(pipCalM<0){pipCalM=11;pipCalY--;}else if(pipCal
 window.pipJumpY=y=>{pipCalY=y;renderPage();};
 window.pipPickDay=d=>{pipForm.lastMeeting=pipCalY+"-"+String(pipCalM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");pipCalOpen=false;renderPage();};
 window.pipPickToday=()=>{const t=new Date();pipForm.lastMeeting=t.toISOString().slice(0,10);pipCalY=t.getFullYear();pipCalM=t.getMonth();pipCalOpen=false;renderPage();};
+window.pipMeetingInput=v=>{
+  const el=document.getElementById("pipDateInp");
+  if(!el)return;
+  const digits=v.replace(/\D/g,"").slice(0,8);
+  let fmt=digits;
+  if(digits.length>2)fmt=digits.slice(0,2)+"/"+digits.slice(2);
+  if(digits.length>4)fmt=digits.slice(0,2)+"/"+digits.slice(2,4)+"/"+digits.slice(4);
+  el.value=fmt;
+};
 window.pipMeetingBlur=v=>{
   if(!v.trim()){pipForm.lastMeeting="";renderPage();return;}
   const m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
