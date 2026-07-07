@@ -2152,7 +2152,17 @@ window.openPipForm=()=>{pipFormOpen=true;renderPage();};
 window.closePipForm=()=>{pipFormOpen=false;pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};srch["pip"]={open:false,query:""};renderPage();};
 window.setPipFilter=f=>{pipFilter=f;renderPage();};
 window.setPipTerm=t=>{pipForm.term=t;renderPage();};
-window.setPipPrem=v=>{pipForm.estPremium=v;renderPage();};
+window.setPipPrem=v=>{
+  pipForm.estPremium=v;
+  const est=pipEstimate(pipForm.product,pipForm.term,v);
+  const el=document.getElementById("pip-comm-preview");
+  if(!el)return;
+  el.innerHTML=est.comm>0
+    ?"<div style='background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;gap:16px;'>"
+    +"<span style='font-size:12px;color:#64748b;'>Est Comm: <strong style='color:#34d399;'>"+$f(est.comm)+"</strong></span>"
+    +"<span style='font-size:12px;color:#64748b;'>Est Credits: <strong style='color:#60a5fa;'>"+$c(est.credit)+"</strong></span>"
+    +"</div>":"";
+};
 window.setPipStage=s=>{pipForm.stage=s;renderPage();};
 window.setPipFormStr=(k,v)=>{pipForm[k]=v;};
 window.setPipTargetQ=v=>{pipForm.targetQ=v;renderPage()};
@@ -2416,11 +2426,13 @@ function buildPipForm(){
   // Est premium
   +"<label style='font-size:11px;color:#94a3b8;'>Estimated Annual Premium (SGD)</label>"
   +"<input class='inp' type='number' placeholder='e.g. 5000' value='"+pipForm.estPremium+"' oninput='setPipPrem(this.value)' style='width:100%;margin:4px 0 10px;'/>"
-  // Est commission preview
+  // Est commission preview — stable id so setPipPrem swaps only this, no full re-render
+  +"<div id='pip-comm-preview'>"
   +(est.comm>0?"<div style='background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;gap:16px;'>"
   +"<span style='font-size:12px;color:#64748b;'>Est Comm: <strong style='color:#34d399;'>"+$f(est.comm)+"</strong></span>"
   +"<span style='font-size:12px;color:#64748b;'>Est Credits: <strong style='color:#60a5fa;'>"+$c(est.credit)+"</strong></span>"
   +"</div>":"")
+  +"</div>"
   // Stage + Target Quarter row
   +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;'>"
   +"<div><label style='font-size:11px;color:#94a3b8;'>Stage</label>"
