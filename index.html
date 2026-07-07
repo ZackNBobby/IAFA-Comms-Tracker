@@ -2023,7 +2023,12 @@ window.doAddSale=async()=>{
     return{product:b.product,term:b.term,annualPremium:ap,commPct:t.y,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
   });
   const obj={date:fDate,clientName:fClient,policies:saved,totalComm:saved.reduce((a,p)=>a+p.totalComm,0),baseComm:saved.reduce((a,p)=>a+p.baseComm,0),totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),quarter:getQ(mo),month:mo};
-  await addSaleDB(obj);launchConfetti();fClient="";pols=[newPol()];srch={};tab="dashboard";renderAll();
+  const prevIncome=getYearTotals(selYear).incomeComm;
+  await addSaleDB(obj);
+  launchCommFloat(obj.totalComm);
+  launchConfetti();
+  fClient="";pols=[newPol()];srch={};tab="dashboard";renderAll();
+  setTimeout(()=>animateJackpot(document.getElementById("dash-income-val"),prevIncome+obj.totalComm,prevIncome),60);
 };
 
 window.doAddFWDSale=async()=>{
