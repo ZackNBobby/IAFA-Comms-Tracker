@@ -401,6 +401,7 @@ function getTopProducts(){
 let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
 let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={},showNextYear=false;
 let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipFormOpen=false;
+let pipCalOpen=false,pipCalY=new Date().getFullYear(),pipCalM=new Date().getMonth();
 let pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};
 let pipCloseForm={premium:"",product:"",term:""};
 let pipFollowNote="";
@@ -613,6 +614,40 @@ function buildCalPop(prefix=""){
   +"<div class='cal-dh'>"+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>"<span>"+d+"</span>").join("")+"</div>"
   +"<div class='cal-days'>"+cells+"</div>"
   +"<button class='cal-tod' onclick='"+todFn+"()'>📌 Today</button></div>";
+}
+
+function buildPipCal(){
+  const dateVal=pipForm.lastMeeting;
+  const sd=dateVal?new Date(dateVal+"T00:00:00"):null;
+  const disp=sd?String(sd.getDate()).padStart(2,"0")+"/"+String(sd.getMonth()+1).padStart(2,"0")+"/"+sd.getFullYear():"";
+  return "<div class='cal-wrap' id='pipCalWrap'>"
+  +"<div class='cal-row'>"
+  +"<input class='inp' id='pipDateInp' type='text' placeholder='dd/mm/yyyy' value='"+esc(disp)+"' onblur='pipMeetingBlur(this.value)' style='flex:1;' autocomplete='off' autocorrect='off' autocapitalize='none'/>"
+  +"<button class='cal-ico"+(pipCalOpen?" open":"")+"' onclick='pipToggleCal()'>📅</button>"
+  +"</div>"
+  +(pipCalOpen?buildPipCalPop():"")
+  +"</div>";
+}
+function buildPipCalPop(){
+  const today=new Date();
+  const first=new Date(pipCalY,pipCalM,1).getDay(),dim=new Date(pipCalY,pipCalM+1,0).getDate();
+  const sd=pipForm.lastMeeting?new Date(pipForm.lastMeeting+"T00:00:00"):null;
+  let cells="";
+  for(let i=0;i<first;i++)cells+="<button class='cal-day empty' disabled></button>";
+  for(let d=1;d<=dim;d++){
+    const isSel=sd&&sd.getFullYear()===pipCalY&&sd.getMonth()===pipCalM&&sd.getDate()===d;
+    const isTod=today.getFullYear()===pipCalY&&today.getMonth()===pipCalM&&today.getDate()===d;
+    cells+="<button class='cal-day"+(isSel?" selected":isTod?" today":"")+"' onclick='pipPickDay("+d+")'>"+d+"</button>";
+  }
+  const yOpts=yearList().map(y=>"<option value='"+y+"'"+(y===pipCalY?" selected":"")+">"+y+"</option>").join("");
+  return "<div class='cal-pop'>"
+  +"<div class='cal-nav'><button class='cal-nb' onclick='pipNavM(-1)'>&#8249;</button>"
+  +"<div style='display:flex;align-items:center;gap:6px;'><span style='font-weight:700;font-size:13px;color:#60a5fa;'>"+MTHS[pipCalM]+"</span>"
+  +"<select class='cal-ysel' onchange='pipJumpY(parseInt(this.value))'>"+yOpts+"</select></div>"
+  +"<button class='cal-nb' onclick='pipNavM(1)'>&#8250;</button></div>"
+  +"<div class='cal-dh'>"+["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>"<span>"+d+"</span>").join("")+"</div>"
+  +"<div class='cal-days'>"+cells+"</div>"
+  +"<button class='cal-tod' onclick='pipPickToday()'>📌 Today</button></div>";
 }
 
 function buildSrch(pid,sel){
@@ -1871,6 +1906,8 @@ function attachAll(){
     if(calOpen&&cw&&!cw.contains(e.target)){calOpen=false;renderLog();attachAll();}
     const fwdCW=document.getElementById("fwdCalWrap");
     if(fwdForm.calOpen&&fwdCW&&!fwdCW.contains(e.target)){fwdForm.calOpen=false;renderPage();}
+    const pipCW=document.getElementById("pipCalWrap");
+    if(pipCalOpen&&pipCW&&!pipCW.contains(e.target)){pipCalOpen=false;renderPage();}
     let changed=false;
     Object.keys(srch).forEach(pid=>{if(srch[pid]&&srch[pid].open){const el=document.getElementById("srch-"+pid);if(el&&!el.contains(e.target)){srch[pid]={open:false,query:""};changed=true;}}});
     if(changed){renderLog();attachAll();}
@@ -2149,7 +2186,7 @@ function pipEstimate(product,term,premium){
 
 // Pipeline window functions — all state mutations go through window.*
 window.openPipForm=()=>{pipFormOpen=true;renderPage();};
-window.closePipForm=()=>{pipFormOpen=false;pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};srch["pip"]={open:false,query:""};renderPage();};
+window.closePipForm=()=>{pipFormOpen=false;pipCalOpen=false;pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};srch["pip"]={open:false,query:""};renderPage();};
 window.setPipFilter=f=>{pipFilter=f;renderPage();};
 window.setPipTerm=t=>{pipForm.term=t;renderPage();};
 window.setPipPrem=v=>{
@@ -2165,7 +2202,17 @@ window.setPipPrem=v=>{
 };
 window.setPipStage=s=>{pipForm.stage=s;renderPage();};
 window.setPipFormStr=(k,v)=>{pipForm[k]=v;};
-window.setPipTargetQ=v=>{pipForm.targetQ=v;renderPage()};
+window.setPipTargetQ=v=>{pipForm.targetQ=v;renderPage();};
+window.pipToggleCal=()=>{pipCalOpen=!pipCalOpen;if(pipCalOpen){const d=pipForm.lastMeeting?new Date(pipForm.lastMeeting+"T00:00:00"):new Date();pipCalY=d.getFullYear();pipCalM=d.getMonth();}renderPage();};
+window.pipNavM=d=>{pipCalM+=d;if(pipCalM<0){pipCalM=11;pipCalY--;}else if(pipCalM>11){pipCalM=0;pipCalY++;}renderPage();};
+window.pipJumpY=y=>{pipCalY=y;renderPage();};
+window.pipPickDay=d=>{pipForm.lastMeeting=pipCalY+"-"+String(pipCalM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");pipCalOpen=false;renderPage();};
+window.pipPickToday=()=>{const t=new Date();pipForm.lastMeeting=t.toISOString().slice(0,10);pipCalY=t.getFullYear();pipCalM=t.getMonth();pipCalOpen=false;renderPage();};
+window.pipMeetingBlur=v=>{
+  if(!v.trim()){pipForm.lastMeeting="";renderPage();return;}
+  const m=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m){pipForm.lastMeeting=m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");renderPage();}
+};
 window.setPipelineStage=(fid,stage)=>updatePipelineDB(fid,{stage});
 window.startFollowUp=fid=>{followPid=fid;pipFollowNote="";closingPid=null;renderPage();};
 window.cancelFollowUp=()=>{followPid=null;pipFollowNote="";renderPage();};
@@ -2447,7 +2494,7 @@ function buildPipForm(){
   +"</div>"
   // Last meeting
   +"<label style='font-size:11px;color:#94a3b8;'>Last Meeting Date <span style='color:#475569;'>(optional)</span></label>"
-  +"<input class='inp' type='date' value='"+pipForm.lastMeeting+"' onchange='pipForm.lastMeeting=this.value;' style='width:100%;margin:4px 0 10px;'/>"
+  +"<div style='margin:4px 0 10px;'>"+buildPipCal()+"</div>"
   // Notes
   +"<label style='font-size:11px;color:#94a3b8;'>Notes <span style='color:#475569;'>(optional)</span></label>"
   +"<input class='inp' type='text' placeholder='e.g. Interested in term plan, budget ~$200/m' value='"+esc(pipForm.notes)+"' oninput='pipForm.notes=this.value;' style='width:100%;margin:4px 0 12px;color:#ffffff;'/>"
