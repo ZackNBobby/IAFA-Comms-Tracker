@@ -2223,6 +2223,7 @@ window.pipMeetingBlur=v=>{
   if(m){pipForm.lastMeeting=m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");renderPage();}
 };
 window.setPipelineStage=(fid,stage)=>updatePipelineDB(fid,{stage});
+window.setPipelineTargetQ=(fid,q)=>updatePipelineDB(fid,{targetQ:q});
 window.startFollowUp=fid=>{followPid=fid;pipFollowNote="";closingPid=null;renderPage();};
 window.cancelFollowUp=()=>{followPid=null;pipFollowNote="";renderPage();};
 window.setPipFollowNote=v=>{pipFollowNote=v;};
@@ -2424,9 +2425,12 @@ function renderPipeline(){
       +"<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>"
       +"<div style='font-size:15px;font-weight:800;color:#f1f5f9;'>"+esc(c.clientName)+"</div>"
       +"<span style='font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:"+s.bg+";color:"+s.color+";border:1px solid "+s.color+"55;'>"+s.label+"</span>"
-      +(c.targetQ?"<span style='font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid #1e40af;'>"+c.targetQ+"</span>":"")
       +"<select onchange='setPipelineStage(\""+c.fid+"\",this.value)' style='font-size:10px;background:#1e293b;color:#64748b;border:1px solid #334155;border-radius:6px;padding:1px 4px;cursor:pointer;'>"
       +Object.entries(PIPE_STAGES).map(([k,st])=>"<option value='"+k+"'"+(c.stage===k?" selected":"")+">"+st.label+"</option>").join("")
+      +"</select>"
+      +"<select onchange='setPipelineTargetQ(\""+c.fid+"\",this.value)' style='font-size:10px;background:#1e293b;color:"+(c.targetQ?"#60a5fa":"#64748b")+";border:1px solid "+(c.targetQ?"#1e40af":"#334155")+";border-radius:6px;padding:1px 4px;cursor:pointer;font-weight:"+(c.targetQ?"700":"400")+";'>"
+      +"<option value=''>— Q? —</option>"
+      +["Q1","Q2","Q3","Q4"].map(q=>"<option value='"+q+"'"+(c.targetQ===q?" selected":"")+">"+q+" "+selYear+"</option>").join("")
       +"</select>"
       +"</div>"
       +(c.product?"<div style='font-size:12px;color:#94a3b8;margin-top:3px;'>"+esc(c.product)+(c.term?" · "+esc(c.term):"")+"</div>":"")
