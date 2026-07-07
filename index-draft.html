@@ -2469,7 +2469,7 @@ function buildPipForm(){
   +"<div style='font-size:14px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>＋ New Pipeline Case</div>"
   // Client name
   +"<label style='font-size:11px;color:#94a3b8;'>Client Name</label>"
-  +"<input class='inp' type='text' placeholder='Client name...' value='"+esc(pipForm.client)+"' oninput='pipForm.client=this.value;' style='width:100%;margin:4px 0 10px;color:#ffffff;'/>"
+  +"<input class='inp' type='text' placeholder='Client name...' value='"+esc(pipForm.client)+"' oninput='setPipFormStr(\"client\",this.value)' style='width:100%;margin:4px 0 10px;color:#ffffff;'/>"
   // Product search — uses same buildSrch component as Log Sale
   +"<label style='font-size:11px;color:#94a3b8;'>Product <span style='color:#475569;'>(optional — for commission estimate)</span></label>"
   +"<div style='margin:4px 0 10px;'>"+buildSrch("pip",pipForm.product)+"</div>"
@@ -2506,7 +2506,7 @@ function buildPipForm(){
   +"<div style='margin:4px 0 10px;'>"+buildPipCal()+"</div>"
   // Notes
   +"<label style='font-size:11px;color:#94a3b8;'>Notes <span style='color:#475569;'>(optional)</span></label>"
-  +"<input class='inp' type='text' placeholder='e.g. Interested in term plan, budget ~$200/m' value='"+esc(pipForm.notes)+"' oninput='pipForm.notes=this.value;' style='width:100%;margin:4px 0 12px;color:#ffffff;'/>"
+  +"<input class='inp' type='text' placeholder='e.g. Interested in term plan, budget ~$200/m' value='"+esc(pipForm.notes)+"' oninput='setPipFormStr(\"notes\",this.value)' style='width:100%;margin:4px 0 12px;color:#ffffff;'/>"
   // Buttons
   +"<div style='display:flex;gap:8px;'>"
   +"<button class='btn-sm' style='flex:1;padding:11px;font-size:13px;font-weight:700;' onclick='doAddPipeline()'>＋ Add to Pipeline</button>"
