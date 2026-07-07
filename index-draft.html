@@ -2354,6 +2354,9 @@ function renderPipeline(){
       const s=PIPE_STAGES[c.stage]||PIPE_STAGES.warm;
       const est=pipEstimate(c.product,c.term,c.estPremium);
       const ap=parseFloat(c.estPremium)||0;
+      const projCred=qCredNow+est.credit;
+      const nextTierPip=est.credit>0?TIERS.find(t=>t.min>projCred):null;
+      const curTierPip=est.credit>0?getTier(projCred):null;
       const lastFU=c.followUps&&c.followUps.length?(c.followUps[c.followUps.length-1]):null;
       const fuDaysAgo=lastFU?Math.floor((now-new Date(lastFU.date).getTime())/(86400000)):null;
       const meetDaysAgo=c.lastMeeting?Math.floor((now-new Date(c.lastMeeting+"T00:00:00").getTime())/(86400000)):null;
@@ -2441,6 +2444,7 @@ function renderPipeline(){
       +"<div style='font-size:11px;color:#64748b;'>Est AP</div>"
       +"<div style='font-size:14px;font-weight:700;color:#60a5fa;'>"+$f(ap)+"</div>"
       +(est.comm>0?"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Est Comm</div><div style='font-size:18px;font-weight:900;color:#34d399;'>"+$f(est.comm)+"</div>":"")
+      +(nextTierPip?"<div style='font-size:10px;color:#f59e0b;margin-top:6px;line-height:1.4;'>⚡ "+$c(nextTierPip.min-projCred)+"<br>to "+nextTierPip.bonus+"% tier</div>":curTierPip?"<div style='font-size:10px;color:#34d399;margin-top:6px;'>✓ "+curTierPip.bonus+"% tier</div>":"")
       +"</div></div>"
       // Info row
       +"<div style='display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;'>"
