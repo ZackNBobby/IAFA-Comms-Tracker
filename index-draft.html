@@ -401,10 +401,10 @@ function getTopProducts(){
 
 let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
 let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={},showNextYear=false;
-let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipFormOpen=false;
+let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipSaving=false;
 let pipCalOpen=false,pipCalY=new Date().getFullYear(),pipCalM=new Date().getMonth();
-let pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};
-let pipCloseForm={premium:"",product:"",term:""};
+let pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:""}]};
+let pipClosePols={};
 let pipFollowNote="";
 let campTab="ignite";
 let giForm={date:todayStr(),client:"",product:"",category:"gi",isRenewal:false,policyStartDate:"",premium:""};
@@ -1861,36 +1861,26 @@ function playGICelebrationSound(){
 }
 function launchConfetti(customSound){
   (customSound||playCelebrationSound)();
-  const cv=document.getElementById("confetti");cv.style.display="block";cv.width=window.innerWidth;cv.height=window.innerHeight;
-  const ctx=cv.getContext("2d"),cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
-  const pieces=Array.from({length:180},()=>({x:Math.random()*cv.width,y:-10-Math.random()*200,w:8+Math.random()*8,h:5+Math.random()*5,color:cols[Math.floor(Math.random()*cols.length)],angle:Math.random()*360,spin:(-1+Math.random()*2)*4,vx:(-1+Math.random()*2)*3,vy:3+Math.random()*5,op:1}));
+  const cv=document.getElementById("confetti");
+  const dpr=window.devicePixelRatio||1;
+  const W=window.innerWidth,H=window.innerHeight;
+  cv.style.display="block";cv.style.width=W+"px";cv.style.height=H+"px";
+  cv.width=W*dpr;cv.height=H*dpr;
+  const ctx=cv.getContext("2d");ctx.scale(dpr,dpr);
+  const cols=["#34d399","#60a5fa","#fbbf24","#a78bfa","#f87171","#38bdf8","#fb923c"];
+  const pieces=Array.from({length:180},()=>({x:Math.random()*W,y:-10-Math.random()*200,w:8+Math.random()*8,h:5+Math.random()*5,color:cols[Math.floor(Math.random()*cols.length)],angle:Math.random()*360,spin:(-1+Math.random()*2)*4,vx:(-1+Math.random()*2)*3,vy:3+Math.random()*5,op:1}));
   let fr=0;
-  function draw(){ctx.clearRect(0,0,cv.width,cv.height);pieces.forEach(p=>{ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;if(fr>80)p.op-=0.018;});fr++;if(fr<140)requestAnimationFrame(draw);else{ctx.clearRect(0,0,cv.width,cv.height);cv.style.display="none";}}
+  function draw(){ctx.clearRect(0,0,W,H);pieces.forEach(p=>{ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;if(fr>80)p.op-=0.018;});fr++;if(fr<140)requestAnimationFrame(draw);else{ctx.clearRect(0,0,W,H);cv.style.display="none";}}
   draw();
 }
 function launchCommFloat(comm){
-  const el=document.createElement("div");
-  el.textContent="+"+$f(comm)+" commission!";
-  el.style.cssText="position:fixed;top:50%;left:50%;font-size:30px;font-weight:900;color:rgba(52,211,153,0.97);text-shadow:0 0 28px rgba(52,211,153,0.9),0 0 60px rgba(52,211,153,0.5);pointer-events:none;z-index:100001;animation:commGhost 1.65s ease-out forwards;white-space:nowrap;letter-spacing:-0.5px;";
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),1700);
-}
-function animateJackpot(el,to,from=0){
-  if(!el||to===from){if(el)el.textContent=$f(to);return;}
-  // Explicit delay schedule: fast at first, decelerates like a slot machine
-  const delays=[28,28,32,32,38,50,70,95,125,160,195,230];
-  let i=0;
-  const fmt=v=>"$"+Math.round(v).toLocaleString("en-SG"); // fast integer fmt for spin
-  function step(){
-    const t=i/delays.length;
-    el.textContent=t<0.55
-      ?fmt(from+Math.random()*(to-from)*1.12)
-      :fmt(from+(to-from)*(1-Math.pow(1-(t-0.55)/0.45,2)));
-    i++;
-    if(i<delays.length)setTimeout(step,delays[i]);
-    else el.textContent=$f(to); // final: use full formatter with decimals
-  }
-  step();
+  requestAnimationFrame(()=>{
+    const el=document.createElement("div");
+    el.textContent="+"+$f(comm)+" commission!";
+    el.style.cssText="position:fixed;top:50%;left:50%;font-size:clamp(18px,6vw,30px);font-weight:900;color:rgba(52,211,153,0.97);text-shadow:0 0 28px rgba(52,211,153,0.9),0 0 60px rgba(52,211,153,0.5);pointer-events:none;z-index:100001;animation:commGhost 1.65s ease-out forwards;white-space:normal;max-width:88vw;text-align:center;letter-spacing:-0.5px;line-height:1.2;";
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),1750);
+  });
 }
 function flashField(el){if(!el)return;el.classList.remove("field-error");void el.offsetWidth;el.classList.add("field-error");setTimeout(()=>el.classList.remove("field-error"),1400);}
 
@@ -1967,13 +1957,12 @@ window.fwdTermChange=v=>{fwdForm.term=v;updateFWDPreview();};
 window.fwdSelMo=mo=>{fwdSelMonth=fwdSelMonth===mo?null:mo;renderPage();};
 window.srchOpen=pid=>{
   srch[pid]={open:true,query:""};
-  if(pid==="pip"){renderPage();setTimeout(()=>document.getElementById("sinp-pip")?.focus(),30);}
+  if(/^pip/.test(pid)){renderPage();setTimeout(()=>document.getElementById("sinp-"+pid)?.focus(),30);}
   else{renderLog();attachAll();setTimeout(()=>document.getElementById("sinp-"+pid)?.focus(),30);}
 };
 window.srchType=(pid,val)=>{
   srch[pid]={open:true,query:val};
-  if(pid==="pip"){renderPage();return;}
-  // Only update the dropdown list — never re-render the whole form on mobile (kills keyboard)
+  // Targeted dropdown update — never full re-render on typing (kills mobile keyboard)
   const wrap=document.getElementById("srch-"+pid);
   if(!wrap)return;
   const q=val.toLowerCase();
@@ -1989,12 +1978,14 @@ window.srchType=(pid,val)=>{
 };
 window.srchPick=(pid,val)=>{
   srch[pid]={open:false,query:""};
-  if(pid==="pip"){pipForm.product=val;pipForm.term="";renderPage();return;}
+  const pipM=pid.match(/^pip_(\d+)$/);
+  if(pipM){const i=parseInt(pipM[1]);if(pipForm.pols[i]){pipForm.pols[i].product=val;pipForm.pols[i].term="";pipForm.pols[i].estPremium="";}renderPage();return;}
+  if(pid==="pip"){pipForm.pols[0].product=val;pipForm.pols[0].term="";pipForm.pols[0].estPremium="";renderPage();return;}
   pols=pols.map(p=>p.id===pid?{...p,product:val,term:"",ap:"",riders:[]}:p);renderLog();attachAll();
 };
 window.srchKey=(e,pid)=>{
   if(e.key==="Escape"){srch[pid]={open:false,query:""};
-  if(pid==="pip")renderPage();else{renderLog();attachAll();}}
+  if(/^pip/.test(pid))renderPage();else{renderLog();attachAll();}}
 };
 window.addPol=()=>{pols.push(newPol());renderLog();attachAll();};
 window.remPol=id=>{srch[id]=null;pols=pols.filter(p=>p.id!==id);renderLog();attachAll();};
@@ -2023,12 +2014,12 @@ window.doAddSale=async()=>{
     return{product:b.product,term:b.term,annualPremium:ap,commPct:t.y,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
   });
   const obj={date:fDate,clientName:fClient,policies:saved,totalComm:saved.reduce((a,p)=>a+p.totalComm,0),baseComm:saved.reduce((a,p)=>a+p.baseComm,0),totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),quarter:getQ(mo),month:mo};
-  const prevIncome=getYearTotals(selYear).incomeComm;
   await addSaleDB(obj);
+  fClient="";pols=[newPol()];srch={};
   launchCommFloat(obj.totalComm);
   launchConfetti();
-  fClient="";pols=[newPol()];srch={};tab="dashboard";renderAll();
-  setTimeout(()=>animateJackpot(document.getElementById("dash-income-val"),prevIncome+obj.totalComm,prevIncome),60);
+  tab="dashboard";renderAll();window.scrollTo(0,0);
+  setTimeout(()=>{const cv=document.getElementById("confetti");if(cv)cv.style.display="none";},2100);
 };
 
 window.doAddFWDSale=async()=>{
@@ -2215,21 +2206,19 @@ function pipEstimate(product,term,premium){
 }
 
 // Pipeline window functions — all state mutations go through window.*
-window.openPipForm=()=>{pipFormOpen=true;renderPage();};
-window.closePipForm=()=>{pipFormOpen=false;pipCalOpen=false;pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};srch["pip"]={open:false,query:""};renderPage();};
+function resetPipForm(){pipCalOpen=false;pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:""}]};Object.keys(srch).filter(k=>/^pip/.test(k)).forEach(k=>delete srch[k]);}
+window.closePipForm=()=>{resetPipForm();renderPage();};
 window.setPipFilter=f=>{pipFilter=f;renderPage();};
-window.setPipTerm=t=>{pipForm.term=t;renderPage();};
-window.setPipPrem=v=>{
-  pipForm.estPremium=v;
-  const est=pipEstimate(pipForm.product,pipForm.term,v);
-  const el=document.getElementById("pip-comm-preview");
+window.setPipPolTerm=(i,v)=>{pipForm.pols[i].term=v;renderPage();};
+window.setPipPolPrem=(i,v)=>{
+  pipForm.pols[i].estPremium=v;
+  const el=document.getElementById("pip-pp-"+i);
   if(!el)return;
-  el.innerHTML=est.comm>0
-    ?"<div style='background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;gap:16px;'>"
-    +"<span style='font-size:12px;color:#64748b;'>Est Comm: <strong style='color:#34d399;'>"+$f(est.comm)+"</strong></span>"
-    +"<span style='font-size:12px;color:#64748b;'>Est Credits: <strong style='color:#60a5fa;'>"+$c(est.credit)+"</strong></span>"
-    +"</div>":"";
+  const est=pipEstimate(pipForm.pols[i].product,pipForm.pols[i].term,v);
+  el.innerHTML=est.comm>0?"<span style='font-size:11px;color:#64748b;margin-top:4px;display:block;'>"+$f(est.comm)+" comm · "+$c(est.credit)+" credits</span>":"";
 };
+window.addPipPol=()=>{pipForm.pols=[...pipForm.pols,{product:"",term:"",estPremium:""}];renderPage();};
+window.delPipPol=i=>{if(pipForm.pols.length<=1)return;pipForm.pols=pipForm.pols.filter((_,j)=>j!==i);delete srch["pip_"+i];renderPage();};
 window.setPipStage=s=>{pipForm.stage=s;renderPage();};
 window.setPipFormStr=(k,v)=>{pipForm[k]=v;};
 window.setPipTargetQ=v=>{pipForm.targetQ=v;renderPage();};
@@ -2257,20 +2246,23 @@ window.setPipelineTargetQ=(fid,q)=>updatePipelineDB(fid,{targetQ:q});
 window.startFollowUp=fid=>{followPid=fid;pipFollowNote="";closingPid=null;renderPage();};
 window.cancelFollowUp=()=>{followPid=null;pipFollowNote="";renderPage();};
 window.setPipFollowNote=v=>{pipFollowNote=v;};
-window.startClosePipeline=fid=>{closingPid=fid;followPid=null;pipCloseForm={premium:"",product:"",term:""};renderPage();};
-window.cancelClosePipeline=()=>{closingPid=null;pipCloseForm={premium:"",product:"",term:""};renderPage();};
-window.setPipClosePrem=v=>{pipCloseForm.premium=v;renderPage();};
-window.setPipCloseTerm=v=>{pipCloseForm.term=v;renderPage();};
+window.startClosePipeline=fid=>{closingPid=fid;followPid=null;pipClosePols={};renderPage();};
+window.cancelClosePipeline=()=>{closingPid=null;pipClosePols={};renderPage();};
+window.setPipClosePolPrem=(i,v)=>{pipClosePols[i]={...pipClosePols[i]||{},premium:v};renderPage();};
+window.setPipClosePolTerm=(i,v)=>{pipClosePols[i]={...pipClosePols[i]||{},term:v};renderPage();};
 window.deletePipeline=fid=>{if(confirm("Remove this pipeline case?"))delPipelineDB(fid);};
+
+function getPipPolicies(c){return(c.policies&&c.policies.length)?c.policies:[{product:c.product||"",term:c.term||"",estPremium:c.estPremium||""}];}
+function pipCaseEst(c){const ps=getPipPolicies(c);return ps.reduce((a,p)=>{const e=pipEstimate(p.product,p.term,p.estPremium);return{comm:a.comm+e.comm,credit:a.credit+e.credit,ap:a.ap+(parseFloat(p.estPremium)||0)};},{comm:0,credit:0,ap:0});}
 
 function renderPipeline(){
   const now=Date.now();
   const cases=pipelineCases.filter(c=>pipFilter==="all"||c.stage===pipFilter);
   const allCases=pipelineCases;
 
-  // Totals
-  const totalPipeVal=allCases.reduce((a,c)=>a+(parseFloat(c.estPremium)||0),0);
-  const totalPipeComm=allCases.reduce((a,c)=>a+pipEstimate(c.product,c.term,c.estPremium).comm,0);
+  // Totals using all policies per case
+  const totalPipeVal=allCases.reduce((a,c)=>a+pipCaseEst(c).ap,0);
+  const totalPipeComm=allCases.reduce((a,c)=>a+pipCaseEst(c).comm,0);
 
   // MDRT projection
   const MDRT_T=75800,COT_T=MDRT_T*3;
@@ -2281,7 +2273,7 @@ function renderPipeline(){
 
   // Trailblazer projection
   const trailComm=sales.filter(s=>s.date.startsWith("2026")).reduce((a,s)=>a+s.totalComm,0);
-  const trailPipe=allCases.reduce((a,c)=>a+pipEstimate(c.product,c.term,c.estPremium).comm,0);
+  const trailPipe=allCases.reduce((a,c)=>a+pipCaseEst(c).comm,0);
   const TRAIL_T1=75000,TRAIL_T2=150000;
 
   // Quarter credits
@@ -2329,12 +2321,8 @@ function renderPipeline(){
   +"<div style='font-size:10px;color:#475569;margin-top:2px;'>if all close</div>"
   +"</div></div>";
 
-  // ── Add new case button ──
-  if(!pipFormOpen){
-    html+="<button onclick='openPipForm()' style='width:100%;padding:12px;border-radius:12px;border:2px dashed #334155;background:rgba(30,41,59,0.5);color:#60a5fa;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;transition:all 0.2s;'>＋ Add New Pipeline Case</button>";
-  } else {
-    html+=buildPipForm();
-  }
+  // ── Add new case form (always visible) ──
+  html+=buildPipForm();
 
   // ── Stage filter pills ──
   html+="<div style='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;'>";
@@ -2351,7 +2339,7 @@ function renderPipeline(){
   const qColors=["#f59e0b","#10b981","#60a5fa","#a78bfa"];
   const qData=qLabels.map(q=>{
     const qCases=allCases.filter(c=>c.targetQ===q);
-    return{q,count:qCases.length,ap:qCases.reduce((a,c)=>a+(parseFloat(c.estPremium)||0),0),comm:qCases.reduce((a,c)=>a+pipEstimate(c.product,c.term,c.estPremium).comm,0)};
+    return{q,count:qCases.length,ap:qCases.reduce((a,c)=>a+pipCaseEst(c).ap,0),comm:qCases.reduce((a,c)=>a+pipCaseEst(c).comm,0)};
   });
   const unassigned=allCases.filter(c=>!c.targetQ);
   if(allCases.length>0){
@@ -2382,69 +2370,77 @@ function renderPipeline(){
   } else {
     cases.forEach((c,idx)=>{
       const s=PIPE_STAGES[c.stage]||PIPE_STAGES.warm;
-      const est=pipEstimate(c.product,c.term,c.estPremium);
-      const ap=parseFloat(c.estPremium)||0;
-      const projCred=qCredNow+est.credit;
-      const nextTierPip=est.credit>0?TIERS.find(t=>t.min>projCred):null;
-      const curTierPip=est.credit>0?getTier(projCred):null;
+      const cPols=getPipPolicies(c);
+      const cEst=pipCaseEst(c);
+      const projCred=qCredNow+cEst.credit;
+      const nextTierPip=cEst.credit>0?TIERS.find(t=>t.min>projCred):null;
+      const curTierPip=cEst.credit>0?getTier(projCred):null;
       const lastFU=c.followUps&&c.followUps.length?(c.followUps[c.followUps.length-1]):null;
       const fuDaysAgo=lastFU?Math.floor((now-new Date(lastFU.date).getTime())/(86400000)):null;
       const meetDaysAgo=c.lastMeeting?Math.floor((now-new Date(c.lastMeeting+"T00:00:00").getTime())/(86400000)):null;
       const isClosing=closingPid===c.fid;
       const isFollowing=followPid===c.fid;
 
-      // Closing close panel preview
+      // ── Close panel — one row per policy ──
       let closePanelHtml="";
       if(isClosing){
-        const clPrem=pipCloseForm.premium!=""?pipCloseForm.premium:c.estPremium;
-        const clProd=pipCloseForm.product||c.product;
-        const clTerm=pipCloseForm.term||c.term;
-        const clEst=pipEstimate(clProd,clTerm,clPrem);
-        const clAP=parseFloat(clPrem)||0;
-        const def=PROD[clProd];
-        const clTier=getTier(qCredNow+clEst.credit);
-        const nextT=TIERS.find(t=>t.min>qCredNow+clEst.credit);
         closePanelHtml="<div style='margin-top:12px;background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;border:1px solid rgba(52,211,153,0.3);'>"
-        +"<div style='font-size:12px;font-weight:700;color:#34d399;margin-bottom:10px;'>✅ Confirm Close — Adjust if needed</div>"
-        +"<label style='font-size:11px;color:#94a3b8;'>Annual Premium (SGD)</label>"
-        +"<input class='inp' type='number' value='"+clPrem+"' oninput='setPipClosePrem(this.value)' style='width:100%;margin:4px 0 8px;'/>"
-        +(def?"<label style='font-size:11px;color:#94a3b8;'>Term</label>"
-        +"<select class='inp' onchange='setPipCloseTerm(this.value)' style='width:100%;margin:4px 0 8px;'>"
-        +def.terms.map(t=>"<option value='"+t.l+"'"+(t.l===clTerm?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
-        +"</select>":"")
-        +"<div style='display:flex;gap:10px;margin-bottom:10px;'>"
-        +"<div style='flex:1;background:rgba(15,23,42,0.8);border-radius:8px;padding:10px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Est Commission</div><div style='font-size:18px;font-weight:800;color:#34d399;'>"+$f(clEst.comm)+"</div></div>"
-        +"<div style='flex:1;background:rgba(15,23,42,0.8);border-radius:8px;padding:10px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Credits Added</div><div style='font-size:18px;font-weight:800;color:#60a5fa;'>"+$c(clEst.credit)+"</div></div>"
-        +"<div style='flex:1;background:rgba(15,23,42,0.8);border-radius:8px;padding:10px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Qtr Bonus Tier</div><div style='font-size:18px;font-weight:800;color:#a78bfa;'>"+clTier.bonus+"%</div></div>"
-        +"</div>"
-        +(nextT&&clEst.credit>0?"<div style='font-size:11px;color:#f59e0b;margin-bottom:8px;'>⚡ "+$c(nextT.min-(qCredNow+clEst.credit))+" more credits to reach "+nextT.bonus+"% tier</div>":"")
-        +"<div style='display:flex;gap:8px;'>"
-        +"<button class='btn-sm' style='flex:1;padding:11px;font-size:13px;font-weight:700;background:rgba(15,80,72,0.9);border-color:rgba(52,211,153,0.7);' onclick='confirmClosePipeline(\""+c.fid+"\")'>🏆 Close Case & Log Sale!</button>"
-        +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='cancelClosePipeline()'>✕</button>"
-        +"</div></div>";
+        +"<div style='font-size:12px;font-weight:700;color:#34d399;margin-bottom:10px;'>✅ Confirm Close — select which policy(ies) to close</div>";
+        cPols.forEach((pol,pi)=>{
+          const ov=pipClosePols[pi]||{};
+          const clPrem=ov.premium!==undefined&&ov.premium!==""?ov.premium:(pol.estPremium||"");
+          const clTerm=ov.term||pol.term;
+          const clEst=pipEstimate(pol.product,clTerm,clPrem);
+          const def=PROD[pol.product];
+          const clTier=getTier(qCredNow+clEst.credit);
+          const nextT=TIERS.find(t=>t.min>qCredNow+clEst.credit);
+          closePanelHtml+="<div style='background:rgba(15,23,42,0.6);border-radius:8px;padding:10px;margin-bottom:10px;border:1px solid #1e293b;'>"
+          +(cPols.length>1?"<div style='font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:6px;'>Policy "+(pi+1)+": "+esc(pol.product||"(No product)")+"</div>":"")
+          +"<label style='font-size:11px;color:#94a3b8;'>Annual Premium (SGD)</label>"
+          +"<input class='inp' type='number' value='"+esc(clPrem)+"' oninput='setPipClosePolPrem("+pi+",this.value)' style='width:100%;margin:4px 0 6px;'/>"
+          +(def&&def.terms&&def.terms.length>1?"<label style='font-size:11px;color:#94a3b8;'>Term</label>"
+          +"<select class='inp' onchange='setPipClosePolTerm("+pi+",this.value)' style='width:100%;margin:4px 0 6px;'>"
+          +def.terms.map(t=>"<option value='"+t.l+"'"+(t.l===clTerm?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
+          +"</select>":"")
+          +"<div style='display:flex;gap:8px;margin-bottom:6px;'>"
+          +"<div style='flex:1;background:rgba(0,0,0,0.3);border-radius:6px;padding:7px;text-align:center;'><div style='font-size:9px;color:#64748b;'>Est Comm</div><div style='font-size:15px;font-weight:800;color:#34d399;'>"+$f(clEst.comm)+"</div></div>"
+          +"<div style='flex:1;background:rgba(0,0,0,0.3);border-radius:6px;padding:7px;text-align:center;'><div style='font-size:9px;color:#64748b;'>Credits</div><div style='font-size:15px;font-weight:800;color:#60a5fa;'>"+$c(clEst.credit)+"</div></div>"
+          +"<div style='flex:1;background:rgba(0,0,0,0.3);border-radius:6px;padding:7px;text-align:center;'><div style='font-size:9px;color:#64748b;'>Tier</div><div style='font-size:15px;font-weight:800;color:#a78bfa;'>"+clTier.bonus+"%</div></div>"
+          +"</div>"
+          +(nextT&&clEst.credit>0?"<div style='font-size:10px;color:#f59e0b;margin-bottom:6px;'>⚡ "+$c(nextT.min-(qCredNow+clEst.credit))+" to "+nextT.bonus+"% tier</div>":"")
+          +(pipSaving
+            ?"<button class='btn-sm' disabled style='width:100%;padding:8px;font-size:12px;opacity:0.6;cursor:not-allowed;'>⏳ Saving…</button>"
+            :"<button class='btn-sm' style='width:100%;padding:8px;font-size:12px;font-weight:700;background:rgba(15,80,72,0.9);border-color:rgba(52,211,153,0.7);' onclick='confirmCloseOnePolicy(\""+c.fid+"\","+pi+")'>🏆 Close "+(cPols.length>1?"this policy":"& Log Sale!")+"</button>")
+          +"</div>";
+        });
+        closePanelHtml+="<button class='btn-sm' style='width:100%;padding:8px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;font-size:12px;' onclick='cancelClosePipeline()'>✕ Cancel</button>"
+        +"</div>";
       }
 
-      // Follow-up panel
+      // ── Follow-up panel ──
       let fuPanelHtml="";
       if(isFollowing){
         fuPanelHtml="<div style='margin-top:10px;background:rgba(0,0,0,0.25);border-radius:10px;padding:12px;border:1px solid rgba(96,165,250,0.3);'>"
-        +"<div style='font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:700;'>📞 Log Follow-up Note</div>"
-        +"<input class='inp' type='text' placeholder='e.g. Called, will think about it...' value='"+esc(pipFollowNote)+"' oninput='setPipFollowNote(this.value)' style='width:100%;margin-bottom:8px;color:#ffffff;'/>"
+        +"<div style='font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:700;'>Log Follow-up Note</div>"
+        +"<input class='inp' type='text' placeholder='e.g. Interested, will confirm next week...' value='"+esc(pipFollowNote)+"' oninput='setPipFollowNote(this.value)' style='width:100%;margin-bottom:8px;color:#ffffff;'/>"
         +"<div style='display:flex;gap:8px;'>"
-        +"<button class='btn-sm' style='flex:1;padding:8px;font-size:12px;background:rgba(30,58,138,0.7);border-color:#3b82f6;' onclick='confirmFollowUp(\""+c.fid+"\")'>✅ Save</button>"
+        +"<button class='btn-sm' style='flex:1;padding:8px;font-size:12px;background:rgba(7,153,88,0.3);border-color:#25d366;color:#25d366;' onclick='confirmFollowUp(\""+c.fid+"\",\"whatsapp\")'>💬 WhatsApp</button>"
+        +"<button class='btn-sm' style='flex:1;padding:8px;font-size:12px;background:rgba(30,58,138,0.5);border-color:#3b82f6;color:#60a5fa;' onclick='confirmFollowUp(\""+c.fid+"\",\"call\")'>📞 Call</button>"
         +"<button class='btn-sm' style='padding:8px 12px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='cancelFollowUp()'>✕</button>"
         +"</div></div>";
       }
 
-      // Follow-up history
+      // ── Follow-up history ──
       let fuHistHtml="";
       if(c.followUps&&c.followUps.length){
         fuHistHtml="<div style='margin-top:8px;'>";
         const recent=[...c.followUps].reverse().slice(0,5);
-        recent.forEach((fu,fi)=>{
+        recent.forEach(fu=>{
           const d=new Date(fu.date);
+          const ico=fu.type==="whatsapp"?"💬":fu.type==="call"?"📞":"📋";
           fuHistHtml+="<div style='font-size:11px;color:#94a3b8;padding:4px 0;border-bottom:1px solid #1e293b;display:flex;gap:8px;align-items:flex-start;'>"
-          +"<span style='color:#475569;white-space:nowrap;min-width:80px;'>"+d.toLocaleDateString("en-SG",{day:"2-digit",month:"short"})+"</span>"
+          +"<span style='white-space:nowrap;'>"+ico+"</span>"
+          +"<span style='color:#475569;white-space:nowrap;min-width:72px;'>"+d.toLocaleDateString("en-SG",{day:"2-digit",month:"short"})+"</span>"
           +"<span style='color:#ffffff;flex:1;'>"+esc(fu.note||"Follow-up logged")+"</span>"
           +"</div>";
         });
@@ -2466,14 +2462,16 @@ function renderPipeline(){
       +["Q1","Q2","Q3","Q4"].map(q=>"<option value='"+q+"'"+(c.targetQ===q?" selected":"")+">"+q+" "+selYear+"</option>").join("")
       +"</select>"
       +"</div>"
-      +(c.product?"<div style='font-size:12px;color:#94a3b8;margin-top:3px;'>"+esc(c.product)+(c.term?" · "+esc(c.term):"")+"</div>":"")
+      // Policies list
+      +cPols.filter(p=>p.product).map(p=>"<div style='font-size:12px;color:#94a3b8;margin-top:3px;'>"+esc(p.product)+(p.term?" · "+esc(p.term):"")+"</div>").join("")
       +(c.notes?"<div style='font-size:11px;color:#64748b;margin-top:3px;font-style:italic;'>📝 "+esc(c.notes)+"</div>":"")
       +"</div>"
-      // Commission estimate
+      // Summary estimates
       +"<div style='text-align:right;padding-left:12px;flex-shrink:0;'>"
       +"<div style='font-size:11px;color:#64748b;'>Est AP</div>"
-      +"<div style='font-size:14px;font-weight:700;color:#60a5fa;'>"+$f(ap)+"</div>"
-      +(est.comm>0?"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Est Comm</div><div style='font-size:18px;font-weight:900;color:#34d399;'>"+$f(est.comm)+"</div>":"")
+      +"<div style='font-size:14px;font-weight:700;color:#60a5fa;'>"+$f(cEst.ap)+"</div>"
+      +(cEst.comm>0?"<div style='font-size:11px;color:#64748b;margin-top:2px;'>Est Comm</div><div style='font-size:18px;font-weight:900;color:#34d399;'>"+$f(cEst.comm)+"</div>":"")
+      +(cEst.credit>0?"<div style='font-size:10px;color:#64748b;margin-top:2px;'>Credits</div><div style='font-size:12px;font-weight:700;color:#60a5fa;'>"+$c(cEst.credit)+"</div>":"")
       +(nextTierPip?"<div style='font-size:10px;color:#f59e0b;margin-top:6px;line-height:1.4;'>⚡ "+$c(nextTierPip.min-projCred)+"<br>to "+nextTierPip.bonus+"% tier</div>":curTierPip?"<div style='font-size:10px;color:#34d399;margin-top:6px;'>✓ "+curTierPip.bonus+"% tier</div>":"")
       +"</div></div>"
       // Info row
@@ -2498,105 +2496,107 @@ function renderPipeline(){
 }
 
 function buildPipForm(){
-  const def=PROD[pipForm.product];
-  const estAP=parseFloat(pipForm.estPremium)||0;
-  const est=pipEstimate(pipForm.product,pipForm.term,pipForm.estPremium);
-  if(!srch["pip"])srch["pip"]={open:false,query:""};
-
   let html="<div style='background:linear-gradient(135deg,#0f172a,#1a2035);border-radius:14px;padding:16px;border:1px solid #1e40af;margin-bottom:14px;'>"
   +"<div style='font-size:14px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>＋ New Pipeline Case</div>"
-  // Client name
   +"<label style='font-size:11px;color:#94a3b8;'>Client Name</label>"
-  +"<input class='inp' type='text' placeholder='Client name...' value='"+esc(pipForm.client)+"' oninput='setPipFormStr(\"client\",this.value)' style='width:100%;margin:4px 0 10px;color:#ffffff;'/>"
-  // Product search — uses same buildSrch component as Log Sale
-  +"<label style='font-size:11px;color:#94a3b8;'>Product <span style='color:#475569;'>(optional — for commission estimate)</span></label>"
-  +"<div style='margin:4px 0 10px;'>"+buildSrch("pip",pipForm.product)+"</div>"
-  // Term (if product selected)
-  +(def&&def.terms&&def.terms.length>1?"<label style='font-size:11px;color:#94a3b8;'>Term <span style='color:#475569;'>(optional)</span></label>"
-  +"<select class='inp' onchange='setPipTerm(this.value)' style='width:100%;margin:4px 0 10px;'>"
-  +"<option value=''>— Select term —</option>"
-  +def.terms.map(t=>"<option value='"+t.l+"'"+(pipForm.term===t.l?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
-  +"</select>":"")
-  // Est premium
-  +"<label style='font-size:11px;color:#94a3b8;'>Estimated Annual Premium (SGD)</label>"
-  +"<input class='inp' type='number' placeholder='e.g. 5000' value='"+pipForm.estPremium+"' oninput='setPipPrem(this.value)' style='width:100%;margin:4px 0 10px;'/>"
-  // Est commission preview — stable id so setPipPrem swaps only this, no full re-render
-  +"<div id='pip-comm-preview'>"
-  +(est.comm>0?"<div style='background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;gap:16px;'>"
-  +"<span style='font-size:12px;color:#64748b;'>Est Comm: <strong style='color:#34d399;'>"+$f(est.comm)+"</strong></span>"
-  +"<span style='font-size:12px;color:#64748b;'>Est Credits: <strong style='color:#60a5fa;'>"+$c(est.credit)+"</strong></span>"
-  +"</div>":"")
-  +"</div>"
-  // Stage + Target Quarter row
-  +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;'>"
+  +"<input class='inp' type='text' placeholder='Client name...' value='"+esc(pipForm.client)+"' oninput='setPipFormStr(\"client\",this.value)' style='width:100%;margin:4px 0 12px;color:#ffffff;'/>"
+  // Policies
+  +"<label style='font-size:11px;color:#94a3b8;font-weight:700;'>Policies <span style='color:#475569;font-weight:400;'>(optional — for commission estimate)</span></label>";
+
+  pipForm.pols.forEach((pol,i)=>{
+    const pid="pip_"+i;
+    if(!srch[pid])srch[pid]={open:false,query:""};
+    const def=PROD[pol.product];
+    const est=pipEstimate(pol.product,pol.term,pol.estPremium);
+    html+="<div style='background:rgba(15,23,42,0.7);border-radius:10px;padding:12px;margin-top:8px;border:1px solid #1e293b;'>"
+    +(pipForm.pols.length>1?"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'><span style='font-size:11px;font-weight:700;color:#64748b;'>Policy "+(i+1)+"</span><button onclick='delPipPol("+i+")' style='background:transparent;border:none;color:#f87171;font-size:12px;cursor:pointer;'>✕ Remove</button></div>":"")
+    +"<div style='margin-bottom:8px;'>"+buildSrch(pid,pol.product)+"</div>"
+    +(def&&def.terms&&def.terms.length>1?"<select class='inp' onchange='setPipPolTerm("+i+",this.value)' style='width:100%;margin-bottom:8px;'>"
+    +"<option value=''>— Select term —</option>"
+    +def.terms.map(t=>"<option value='"+t.l+"'"+(pol.term===t.l?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
+    +"</select>":"")
+    +"<input class='inp' type='number' placeholder='Est Annual Premium (SGD)' value='"+esc(pol.estPremium)+"' oninput='setPipPolPrem("+i+",this.value)' style='width:100%;'/>"
+    +"<div id='pip-pp-"+i+"'>"+(est.comm>0?"<span style='font-size:11px;color:#64748b;margin-top:4px;display:block;'>"+$f(est.comm)+" comm · "+$c(est.credit)+" credits</span>":"")+"</div>"
+    +"</div>";
+  });
+
+  html+="<button onclick='addPipPol()' style='width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px dashed #334155;background:transparent;color:#60a5fa;font-size:12px;cursor:pointer;'>＋ Add Another Policy</button>"
+  // Stage + Quarter
+  +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 10px;'>"
   +"<div><label style='font-size:11px;color:#94a3b8;'>Stage</label>"
   +"<div style='display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;'>"
   +Object.entries(PIPE_STAGES).map(([k,s])=>"<button onclick='setPipStage(\""+k+"\")' style='padding:4px 10px;border-radius:14px;border:1px solid "+(pipForm.stage===k?s.color:"#334155")+";background:"+(pipForm.stage===k?s.bg:"transparent")+";color:"+(pipForm.stage===k?s.color:"#64748b")+";font-size:11px;font-weight:600;cursor:pointer;'>"+s.label+"</button>").join("")
   +"</div></div>"
-  +"<div><label style='font-size:11px;color:#94a3b8;'>Target Quarter <span style='color:#475569;'>(optional)</span></label>"
+  +"<div><label style='font-size:11px;color:#94a3b8;'>Target Quarter</label>"
   +"<select class='inp' onchange='setPipTargetQ(this.value)' style='width:100%;margin-top:4px;'>"
   +"<option value=''"+(!pipForm.targetQ?" selected":"")+">— Any —</option>"
   +["Q1","Q2","Q3","Q4"].map(q=>"<option value='"+q+"'"+(pipForm.targetQ===q?" selected":"")+">"+q+" "+selYear+"</option>").join("")
   +"</select></div>"
   +"</div>"
-  // Last meeting
   +"<label style='font-size:11px;color:#94a3b8;'>Last Meeting Date <span style='color:#475569;'>(optional)</span></label>"
   +"<div style='margin:4px 0 10px;'>"+buildPipCal()+"</div>"
-  // Notes
   +"<label style='font-size:11px;color:#94a3b8;'>Notes <span style='color:#475569;'>(optional)</span></label>"
   +"<input class='inp' type='text' placeholder='e.g. Interested in term plan, budget ~$200/m' value='"+esc(pipForm.notes)+"' oninput='setPipFormStr(\"notes\",this.value)' style='width:100%;margin:4px 0 12px;color:#ffffff;'/>"
-  // Buttons
   +"<div style='display:flex;gap:8px;'>"
   +"<button class='btn-sm' style='flex:1;padding:11px;font-size:13px;font-weight:700;' onclick='doAddPipeline()'>＋ Add to Pipeline</button>"
-  +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='closePipForm()'>Cancel</button>"
+  +"<button class='btn-sm' style='padding:11px 14px;background:rgba(51,65,85,0.4);border-color:#334155;color:#94a3b8;' onclick='closePipForm()'>Clear</button>"
   +"</div></div>";
   return html;
 }
 
 window.doAddPipeline=async()=>{
   if(!pipForm.client.trim()){alert("Please enter a client name.");return;}
-  const obj={clientName:pipForm.client.trim(),product:pipForm.product,term:pipForm.term,estPremium:pipForm.estPremium,stage:pipForm.stage,lastMeeting:pipForm.lastMeeting,notes:pipForm.notes,targetQ:pipForm.targetQ,followUps:[],createdAt:new Date().toISOString()};
+  const policies=pipForm.pols.filter(p=>p.product||(parseFloat(p.estPremium)>0));
+  const obj={clientName:pipForm.client.trim(),stage:pipForm.stage,lastMeeting:pipForm.lastMeeting,notes:pipForm.notes,targetQ:pipForm.targetQ,policies,followUps:[],createdAt:new Date().toISOString()};
   await addPipelineDB(obj);
-  pipFormOpen=false;pipForm={client:"",product:"",term:"",estPremium:"",stage:"hot",lastMeeting:"",notes:"",targetQ:""};srch["pip"]={open:false,query:""};
+  resetPipForm();
 };
 
-window.confirmFollowUp=async(fid)=>{
+window.confirmFollowUp=async(fid,type)=>{
   const c=pipelineCases.find(x=>x.fid===fid);if(!c)return;
   const note=pipFollowNote.trim();
-  const fu=[...(c.followUps||[]),{date:new Date().toISOString(),note}];
+  if(!note){alert("Please enter a follow-up note.");return;}
+  followPid=null;pipFollowNote=""; // reset BEFORE await so onSnapshot re-render closes the panel
+  const fu=[...(c.followUps||[]),{date:new Date().toISOString(),note,type:type||"note"}];
   await updatePipelineDB(fid,{followUps:fu});
-  followPid=null;pipFollowNote="";
 };
 
-window.confirmClosePipeline=async(fid)=>{
+window.confirmCloseOnePolicy=async(fid,polIdx)=>{
   const c=pipelineCases.find(x=>x.fid===fid);if(!c)return;
-  const clPrem=pipCloseForm.premium!=""?pipCloseForm.premium:c.estPremium;
-  const clProd=pipCloseForm.product||c.product;
-  const clTerm=pipCloseForm.term||c.term;
+  const allPols=getPipPolicies(c);
+  const pol=allPols[polIdx];
+  const ov=pipClosePols[polIdx]||{};
+  const clPrem=ov.premium!==undefined&&ov.premium!==""?ov.premium:(pol.estPremium||"");
+  const clTerm=ov.term||pol.term;
   const ap=parseFloat(clPrem)||0;
   if(ap<=0){alert("Please enter a valid premium.");return;}
-  const def=PROD[clProd];
+  pipSaving=true;renderPage();
+  const def=PROD[pol.product];
   const t=def&&def.terms&&(def.terms.find(x=>x.l===clTerm)||def.terms[0]);
   const baseComm=t?ap*t.y/100:0;
   const baseCred=t?ap*t.c:0;
-  const pol={product:clProd,term:clTerm||"",annualPremium:ap,commPct:t?t.y:0,baseComm,baseCred,riders:[],totalComm:baseComm,totalCredit:baseCred};
+  const polObj={product:pol.product,term:clTerm||"",annualPremium:ap,commPct:t?t.y:0,baseComm,baseCred,riders:[],totalComm:baseComm,totalCredit:baseCred};
   const mo=new Date().getMonth();
-  const obj={date:todayStr(),clientName:c.clientName,policies:[pol],totalComm:baseComm,baseComm,totalCredit:baseCred,quarter:getQ(mo),month:mo};
-  const prevIncome=getYearTotals(selYear).incomeComm;
-  await addSaleDB(obj);
-  await delPipelineDB(fid);
-  closingPid=null;pipCloseForm={premium:"",product:"",term:""};
+  const saleObj={date:todayStr(),clientName:c.clientName,policies:[polObj],totalComm:baseComm,baseComm,totalCredit:baseCred,quarter:getQ(mo),month:mo};
+  await addSaleDB(saleObj);
+  const remaining=allPols.filter((_,i)=>i!==polIdx);
+  if(remaining.length===0){
+    await delPipelineDB(fid);
+    closingPid=null;
+  } else {
+    await updatePipelineDB(fid,{policies:remaining});
+  }
+  pipSaving=false;pipClosePols={};
   launchCommFloat(baseComm);
-  launchConfetti();
-  setTimeout(()=>{
-    const cv=document.getElementById("confetti");
-    if(cv){cv.style.display="none";}
-    tab="dashboard";
-    renderAll();
-    window.scrollTo(0,0);
-    setTimeout(()=>animateJackpot(document.getElementById("dash-income-val"),prevIncome+baseComm,prevIncome),60);
-  },1600);
+  if(remaining.length===0){
+    launchConfetti();
+    tab="dashboard";renderAll();window.scrollTo(0,0);
+    setTimeout(()=>{const cv=document.getElementById("confetti");if(cv)cv.style.display="none";},2100);
+  } else {
+    renderPage(); // stay on pipeline — remaining policies still in case
+  }
 };
+
 
 onAuthStateChanged(auth,user=>{
   if(user){
