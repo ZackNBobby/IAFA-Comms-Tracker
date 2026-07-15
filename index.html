@@ -403,7 +403,7 @@ let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{cons
 let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={},showNextYear=false;
 let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipSaving=false;
 let pipCalOpen=false,pipCalY=new Date().getFullYear(),pipCalM=new Date().getMonth();
-let pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:""}]};
+let pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:"",riders:[]}]};
 let pipClosePols={};
 let pipFollowNote="";
 let campTab="ignite";
@@ -1916,23 +1916,41 @@ function attachAll(){
     inp.addEventListener("input",e=>{const pid=e.target.dataset.pid,rid=e.target.dataset.rid;pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);});
     inp.addEventListener("blur",e=>{const pid=e.target.dataset.pid,rid=e.target.dataset.rid;pols=pols.map(p=>p.id===pid?{...p,riders:p.riders.map(r=>r.id===rid?{...r,premium:e.target.value}:r)}:p);renderLog();attachAll();});
   });
-  document.addEventListener("mousedown",function h(e){
-    const cw=document.getElementById("calWrap");
-    if(calOpen&&cw&&!cw.contains(e.target)){calOpen=false;renderLog();attachAll();}
-    const fwdCW=document.getElementById("fwdCalWrap");
-    if(fwdForm.calOpen&&fwdCW&&!fwdCW.contains(e.target)){fwdForm.calOpen=false;renderPage();}
-    const pipCW=document.getElementById("pipCalWrap");
-    if(pipCalOpen&&pipCW&&!pipCW.contains(e.target)){pipCalOpen=false;renderPage();}
-    let changed=false;
-    Object.keys(srch).forEach(pid=>{if(srch[pid]&&srch[pid].open){const el=document.getElementById("srch-"+pid);if(el&&!el.contains(e.target)){srch[pid]={open:false,query:""};changed=true;}}});
-    if(changed){renderLog();attachAll();}
-    const yw=document.getElementById("yrWrap"),yd=document.getElementById("yrDD");
-    if(yd&&yw&&!yw.contains(e.target))yd.style.display="none";
-  },{once:true});
 }
+// Single permanent click-outside handler — covers log, pipeline, fwd calendars + all search dropdowns
+document.addEventListener("mousedown",e=>{
+  const cw=document.getElementById("calWrap");
+  if(calOpen&&cw&&!cw.contains(e.target)){calOpen=false;renderLog();attachAll();}
+  const fwdCW=document.getElementById("fwdCalWrap");
+  if(fwdForm.calOpen&&fwdCW&&!fwdCW.contains(e.target)){fwdForm.calOpen=false;renderPage();}
+  const pipCW=document.getElementById("pipCalWrap");
+  if(pipCalOpen&&pipCW&&!pipCW.contains(e.target)){pipCalOpen=false;renderPage();}
+  let logChanged=false,pipChangedAny=false;
+  Object.keys(srch).forEach(pid=>{
+    if(srch[pid]&&srch[pid].open){
+      const el=document.getElementById("srch-"+pid);
+      if(el&&!el.contains(e.target)){
+        srch[pid]={open:false,query:""};
+        if(/^pip/.test(pid))pipChangedAny=true;else logChanged=true;
+      }
+    }
+  });
+  if(pipChangedAny)renderPage();
+  if(logChanged){renderLog();attachAll();}
+  const yw=document.getElementById("yrWrap"),yd=document.getElementById("yrDD");
+  if(yd&&yw&&!yw.contains(e.target))yd.style.display="none";
+});
 
 const TAB_KEYS=["log","dashboard","history","fwd","gi","renewal","campaigns","mdrt"];
 document.addEventListener("keydown",e=>{
+  // Escape always closes any open search dropdown, regardless of focus
+  if(e.key==="Escape"){
+    let logChanged=false,pipChangedAny=false;
+    Object.keys(srch).forEach(pid=>{if(srch[pid]&&srch[pid].open){srch[pid]={open:false,query:""};if(/^pip/.test(pid))pipChangedAny=true;else logChanged=true;}});
+    if(pipChangedAny)renderPage();
+    if(logChanged){renderLog();attachAll();}
+    return;
+  }
   const tag=document.activeElement.tagName;
   if(tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA")return;
   const idx=parseInt(e.key)-1;
@@ -2206,7 +2224,16 @@ function pipEstimate(product,term,premium){
 }
 
 // Pipeline window functions — all state mutations go through window.*
-function resetPipForm(){pipCalOpen=false;pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:""}]};Object.keys(srch).filter(k=>/^pip/.test(k)).forEach(k=>delete srch[k]);}
+function resetPipForm(){pipCalOpen=false;pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:"",riders:[]}]};Object.keys(srch).filter(k=>/^pip/.test(k)).forEach(k=>delete srch[k]);}
+function newPipPol(){return{product:"",term:"",estPremium:"",riders:[]};}
+function newPipRider(){return{name:"",riderTerm:"",premium:""};}
+window.addPipPol=()=>{pipForm.pols=[...pipForm.pols,newPipPol()];renderPage();};
+window.delPipPol=i=>{if(pipForm.pols.length<=1)return;pipForm.pols=pipForm.pols.filter((_,j)=>j!==i);delete srch["pip_"+i];renderPage();};
+window.addPipPolRider=i=>{const p=pipForm.pols[i];const def=PROD[p.product];if(!def||!def.riders)return;pipForm.pols[i].riders=[...p.riders,newPipRider()];renderPage();};
+window.remPipPolRider=(i,ri)=>{pipForm.pols[i].riders=pipForm.pols[i].riders.filter((_,j)=>j!==ri);renderPage();};
+window.setPipPolRiderName=(i,ri,v)=>{pipForm.pols[i].riders[ri].name=v;pipForm.pols[i].riders[ri].riderTerm="";renderPage();};
+window.setPipPolRiderTerm=(i,ri,v)=>{pipForm.pols[i].riders[ri].riderTerm=v;renderPage();};
+window.setPipPolRiderPrem=(i,ri,v)=>{pipForm.pols[i].riders[ri].premium=v;renderPage();};
 window.closePipForm=()=>{resetPipForm();renderPage();};
 window.setPipFilter=f=>{pipFilter=f;renderPage();};
 window.setPipPolTerm=(i,v)=>{pipForm.pols[i].term=v;renderPage();};
@@ -2217,9 +2244,7 @@ window.setPipPolPrem=(i,v)=>{
   const est=pipEstimate(pipForm.pols[i].product,pipForm.pols[i].term,v);
   el.innerHTML=est.comm>0?"<span style='font-size:11px;color:#64748b;margin-top:4px;display:block;'>"+$f(est.comm)+" comm · "+$c(est.credit)+" credits</span>":"";
 };
-window.addPipPol=()=>{pipForm.pols=[...pipForm.pols,{product:"",term:"",estPremium:""}];renderPage();};
-window.delPipPol=i=>{if(pipForm.pols.length<=1)return;pipForm.pols=pipForm.pols.filter((_,j)=>j!==i);delete srch["pip_"+i];renderPage();};
-window.setPipStage=s=>{pipForm.stage=s;renderPage();};
+window.setPipStage=s=>{pipForm.stage=s;renderPage()};
 window.setPipFormStr=(k,v)=>{pipForm[k]=v;};
 window.setPipTargetQ=v=>{pipForm.targetQ=v;renderPage();};
 window.pipToggleCal=()=>{pipCalOpen=!pipCalOpen;if(pipCalOpen){const d=pipForm.lastMeeting?new Date(pipForm.lastMeeting+"T00:00:00"):new Date();pipCalY=d.getFullYear();pipCalM=d.getMonth();}renderPage();};
@@ -2253,7 +2278,7 @@ window.setPipClosePolTerm=(i,v)=>{pipClosePols[i]={...pipClosePols[i]||{},term:v
 window.deletePipeline=fid=>{if(confirm("Remove this pipeline case?"))delPipelineDB(fid);};
 
 function getPipPolicies(c){return(c.policies&&c.policies.length)?c.policies:[{product:c.product||"",term:c.term||"",estPremium:c.estPremium||""}];}
-function pipCaseEst(c){const ps=getPipPolicies(c);return ps.reduce((a,p)=>{const e=pipEstimate(p.product,p.term,p.estPremium);return{comm:a.comm+e.comm,credit:a.credit+e.credit,ap:a.ap+(parseFloat(p.estPremium)||0)};},{comm:0,credit:0,ap:0});}
+function pipCaseEst(c){const ps=getPipPolicies(c);return ps.reduce((a,p)=>{const e=pipEstimate(p.product,p.term,p.estPremium);const rC=(p.riders||[]).reduce((s,r)=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return{comm:s.comm+(rd&&rp?rp*rd.y/100:0),credit:s.credit+(rd&&rp?rp*rd.c:0)};},{comm:0,credit:0});return{comm:a.comm+e.comm+rC.comm,credit:a.credit+e.credit+rC.credit,ap:a.ap+(parseFloat(p.estPremium)||0)};},{comm:0,credit:0,ap:0});}
 
 function renderPipeline(){
   const now=Date.now();
@@ -2507,7 +2532,11 @@ function buildPipForm(){
     const pid="pip_"+i;
     if(!srch[pid])srch[pid]={open:false,query:""};
     const def=PROD[pol.product];
+    const avR=def&&def.riders?def.riders:[];
+    const chosenR=(pol.riders||[]).map(r=>r.name).filter(Boolean);
     const est=pipEstimate(pol.product,pol.term,pol.estPremium);
+    const rComm=(pol.riders||[]).reduce((s,r)=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return s+(rd&&rp?rp*rd.y/100:0);},0);
+    const rCred=(pol.riders||[]).reduce((s,r)=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return s+(rd&&rp?rp*rd.c:0);},0);
     html+="<div style='background:rgba(15,23,42,0.7);border-radius:10px;padding:12px;margin-top:8px;border:1px solid #1e293b;'>"
     +(pipForm.pols.length>1?"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'><span style='font-size:11px;font-weight:700;color:#64748b;'>Policy "+(i+1)+"</span><button onclick='delPipPol("+i+")' style='background:transparent;border:none;color:#f87171;font-size:12px;cursor:pointer;'>✕ Remove</button></div>":"")
     +"<div style='margin-bottom:8px;'>"+buildSrch(pid,pol.product)+"</div>"
@@ -2515,8 +2544,44 @@ function buildPipForm(){
     +"<option value=''>— Select term —</option>"
     +def.terms.map(t=>"<option value='"+t.l+"'"+(pol.term===t.l?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
     +"</select>":"")
-    +"<input class='inp' type='number' placeholder='Est Annual Premium (SGD)' value='"+esc(pol.estPremium)+"' oninput='setPipPolPrem("+i+",this.value)' style='width:100%;'/>"
-    +"<div id='pip-pp-"+i+"'>"+(est.comm>0?"<span style='font-size:11px;color:#64748b;margin-top:4px;display:block;'>"+$f(est.comm)+" comm · "+$c(est.credit)+" credits</span>":"")+"</div>"
+    +"<input class='inp' type='number' placeholder='Est Annual Premium (SGD)' value='"+esc(pol.estPremium)+"' oninput='setPipPolPrem("+i+",this.value)' style='width:100%;margin-bottom:8px;'/>"
+    // Riders
+    +(avR.length>0?"<div style='border-top:1px solid #1e293b;padding-top:8px;margin-top:4px;'>"
+    +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'>"
+    +"<span style='font-size:11px;font-weight:700;color:#a78bfa;'>🔗 Riders</span>"
+    +((pol.riders||[]).length<avR.length?"<button class='btn-rider' onclick='addPipPolRider("+i+")'>+ Add Rider</button>":"<span style='font-size:10px;color:#475569;'>All riders added</span>")
+    +"</div>"
+    +(pol.riders||[]).map((r,ri)=>{
+      const avail=avR.filter(x=>x===r.name||!chosenR.includes(x));
+      const rTerms=RIDER_TERMS[r.name]||null,needsTerm=rTerms&&rTerms.length>1;
+      const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;
+      return "<div class='rider-block'>"
+      +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>"
+      +"<span style='font-size:11px;color:#a78bfa;font-weight:700;'>Rider "+(ri+1)+"</span>"
+      +"<button class='btn-del' style='font-size:11px;padding:2px 8px;' onclick='remPipPolRider("+i+","+ri+")'>✕</button>"
+      +"</div>"
+      +"<div class='g2' style='margin-bottom:"+(needsTerm?"8px":"0")+"'>"
+      +"<div><label class='lbl' style='font-size:11px;'>Rider</label>"
+      +"<select class='sel' style='font-size:12px;color:"+(r.name?"#e2e8f0":"#64748b")+";' onchange='setPipPolRiderName("+i+","+ri+",this.value)'>"
+      +"<option value=''>-- Select --</option>"
+      +avail.map(x=>"<option value='"+esc(x)+"'"+(r.name===x?" selected":"")+">"+esc(x)+"</option>").join("")
+      +"</select></div>"
+      +"<div><label class='lbl' style='font-size:11px;'>Est Premium (SGD)</label>"
+      +"<input class='inp' type='number' style='font-size:12px;' value='"+esc(r.premium)+"' placeholder='e.g. 1200' oninput='setPipPolRiderPrem("+i+","+ri+",this.value)'/></div>"
+      +"</div>"
+      +(needsTerm?"<div><label class='lbl' style='font-size:11px;color:#a78bfa;'>Rider Term</label>"
+      +"<select class='sel' style='font-size:12px;color:"+(r.riderTerm?"#e2e8f0":"#64748b")+";' onchange='setPipPolRiderTerm("+i+","+ri+",this.value)'>"
+      +"<option value=''>-- Select term --</option>"
+      +rTerms.map(t=>"<option value='"+esc(t.l)+"'"+(r.riderTerm===t.l?" selected":"")+">"+esc(t.l)+" ("+t.y+"%)</option>").join("")
+      +"</select></div>":"")
+      +(rd&&rp?"<div style='font-size:11px;color:#a78bfa;margin-top:4px;'>"+$f(rp*rd.y/100)+" comm · "+$c(rp*rd.c)+" credits</div>":"")
+      +"</div>";
+    }).join("")
+    +"</div>":"")
+    // Total preview for this policy
+    +"<div id='pip-pp-"+i+"'>"
+    +((est.comm+rComm)>0?"<div style='font-size:11px;color:#64748b;margin-top:6px;'>Base: "+$f(est.comm)+(rComm>0?" + Riders: "+$f(rComm)+" = <strong style=\"color:#34d399;\">"+$f(est.comm+rComm)+"</strong> · "+$c(est.credit+rCred)+" credits":"")+"</div>":"")
+    +"</div>"
     +"</div>";
   });
 
@@ -2575,9 +2640,12 @@ window.confirmCloseOnePolicy=async(fid,polIdx)=>{
   const t=def&&def.terms&&(def.terms.find(x=>x.l===clTerm)||def.terms[0]);
   const baseComm=t?ap*t.y/100:0;
   const baseCred=t?ap*t.c:0;
-  const polObj={product:pol.product,term:clTerm||"",annualPremium:ap,commPct:t?t.y:0,baseComm,baseCred,riders:[],totalComm:baseComm,totalCredit:baseCred};
+  const riders=(pol.riders||[]).filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return{name:r.name,riderTerm:r.riderTerm||"",premium:rp,commPct:rd?rd.y:0,comm:rd?rp*rd.y/100:0,credit:rd?rp*rd.c:0};});
+  const rComm=riders.reduce((a,r)=>a+r.comm,0),rCred=riders.reduce((a,r)=>a+r.credit,0);
+  const polObj={product:pol.product,term:clTerm||"",annualPremium:ap,commPct:t?t.y:0,baseComm,baseCred,riders,totalComm:baseComm+rComm,totalCredit:baseCred+rCred};
   const mo=new Date().getMonth();
-  const saleObj={date:todayStr(),clientName:c.clientName,policies:[polObj],totalComm:baseComm,baseComm,totalCredit:baseCred,quarter:getQ(mo),month:mo};
+  const totalComm=baseComm+rComm;
+  const saleObj={date:todayStr(),clientName:c.clientName,policies:[polObj],totalComm,baseComm,totalCredit:baseCred+rCred,quarter:getQ(mo),month:mo};
   await addSaleDB(saleObj);
   const remaining=allPols.filter((_,i)=>i!==polIdx);
   if(remaining.length===0){
@@ -2587,7 +2655,7 @@ window.confirmCloseOnePolicy=async(fid,polIdx)=>{
     await updatePipelineDB(fid,{policies:remaining});
   }
   pipSaving=false;pipClosePols={};
-  launchCommFloat(baseComm);
+  launchCommFloat(totalComm);
   if(remaining.length===0){
     launchConfetti();
     tab="dashboard";renderAll();window.scrollTo(0,0);
