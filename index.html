@@ -2233,7 +2233,19 @@ window.addPipPolRider=i=>{const p=pipForm.pols[i];const def=PROD[p.product];if(!
 window.remPipPolRider=(i,ri)=>{pipForm.pols[i].riders=pipForm.pols[i].riders.filter((_,j)=>j!==ri);renderPage();};
 window.setPipPolRiderName=(i,ri,v)=>{pipForm.pols[i].riders[ri].name=v;pipForm.pols[i].riders[ri].riderTerm="";renderPage();};
 window.setPipPolRiderTerm=(i,ri,v)=>{pipForm.pols[i].riders[ri].riderTerm=v;renderPage();};
-window.setPipPolRiderPrem=(i,ri,v)=>{pipForm.pols[i].riders[ri].premium=v;renderPage();};
+window.setPipPolRiderPrem=(i,ri,v)=>{
+  pipForm.pols[i].riders[ri].premium=v;
+  const r=pipForm.pols[i].riders[ri];
+  const rd=getRiderRate(r.name,r.riderTerm);
+  const rp=parseFloat(v)||0;
+  const rEl=document.getElementById("pip-r-comm-"+i+"-"+ri);
+  if(rEl)rEl.innerHTML=rd&&rp?"<span style='font-size:11px;color:#a78bfa;margin-top:4px;display:block;'>"+$f(rp*rd.y/100)+" comm · "+$c(rp*rd.c)+" credits</span>":"";
+  const est=pipEstimate(pipForm.pols[i].product,pipForm.pols[i].term,pipForm.pols[i].estPremium);
+  const rComm=pipForm.pols[i].riders.reduce((s,r2)=>{const rrd=getRiderRate(r2.name,r2.riderTerm);const rrp=parseFloat(r2.premium)||0;return s+(rrd&&rrp?rrp*rrd.y/100:0);},0);
+  const rCred=pipForm.pols[i].riders.reduce((s,r2)=>{const rrd=getRiderRate(r2.name,r2.riderTerm);const rrp=parseFloat(r2.premium)||0;return s+(rrd&&rrp?rrp*rrd.c:0);},0);
+  const ppEl=document.getElementById("pip-pp-"+i);
+  if(ppEl)ppEl.innerHTML=(est.comm+rComm)>0?"<div style='font-size:11px;color:#64748b;margin-top:6px;'>Base: "+$f(est.comm)+(rComm>0?" + Riders: "+$f(rComm)+" = <strong style=\"color:#34d399;\">"+$f(est.comm+rComm)+"</strong> · "+$c(est.credit+rCred)+" credits":"")+"</div>":"";
+};
 window.closePipForm=()=>{resetPipForm();renderPage();};
 window.setPipFilter=f=>{pipFilter=f;renderPage();};
 window.setPipPolTerm=(i,v)=>{pipForm.pols[i].term=v;renderPage();};
@@ -2574,7 +2586,7 @@ function buildPipForm(){
       +"<option value=''>-- Select term --</option>"
       +rTerms.map(t=>"<option value='"+esc(t.l)+"'"+(r.riderTerm===t.l?" selected":"")+">"+esc(t.l)+" ("+t.y+"%)</option>").join("")
       +"</select></div>":"")
-      +(rd&&rp?"<div style='font-size:11px;color:#a78bfa;margin-top:4px;'>"+$f(rp*rd.y/100)+" comm · "+$c(rp*rd.c)+" credits</div>":"")
+      +"<div id='pip-r-comm-"+i+"-"+ri+"'>"+(rd&&rp?"<span style='font-size:11px;color:#a78bfa;margin-top:4px;display:block;'>"+$f(rp*rd.y/100)+" comm · "+$c(rp*rd.c)+" credits</span>":"")+"</div>"
       +"</div>";
     }).join("")
     +"</div>":"")
