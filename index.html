@@ -1581,6 +1581,7 @@ function renderHist(){
           +"<span style='font-size:11px;white-space:nowrap;"+strike+"'>Credits: <strong style='color:"+(voided?"#6b7280":"#60a5fa")+";'>"+$c(p.totalCredit)+"</strong></span>"
           +(voided?"<span style='font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.5);border:1px solid rgba(239,68,68,0.35);border-radius:4px;padding:2px 7px;white-space:nowrap;'>🚫 Not Approved</span>":"")
           +"<button onclick='togglePolicyVoid(\""+s.fid+"\","+pi+")' title='"+(voided?"Restore policy":"Cross out (e.g. underwriting declined)")+"' style='background:none;border:1px solid "+(voided?"rgba(52,211,153,0.4)":"rgba(239,68,68,0.35)")+";border-radius:5px;cursor:pointer;font-size:11px;padding:2px 8px;color:"+(voided?"#5eead4":"#fca5a5")+";white-space:nowrap;'>"+(voided?"↩️ Restore":"🚫 Cross Out")+"</button>"
+          +(voided?"<button onclick='deletePolicyFromSale(\""+s.fid+"\","+pi+")' title='Permanently delete this policy' style='background:rgba(127,29,29,0.7);border:1px solid rgba(239,68,68,0.4);border-radius:5px;cursor:pointer;font-size:11px;padding:2px 8px;color:#fca5a5;white-space:nowrap;'>🗑️ Delete</button>":"")
           +(p.riders&&p.riders.length>0
             ?"<div style='width:100%;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;'>"
               +p.riders.map(r=>"<span style='background:#0f172a;border-radius:5px;padding:2px 8px;border:1px solid #4f46e5;font-size:10px;color:#a78bfa;"+strike+"'>🔗 "+esc(r.name)+" "+$f(r.premium)+" → "+$f(r.comm)+"</span>").join("")
@@ -2104,6 +2105,24 @@ window.togglePolicyVoid=async(fid,pi)=>{
   const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
   try{await updateDoc(doc(db,COLL,fid),updObj);}
   catch(e){alert("Update error: "+e.message);}
+};
+window.deletePolicyFromSale=async(fid,pi)=>{
+  const sale=sales.find(s=>s.fid===fid);
+  if(!sale)return;
+  const pol=sale.policies[pi];
+  if(!pol)return;
+  if(!confirm("Permanently delete this policy ("+pol.product+")? This cannot be undone."))return;
+  const newPolicies=sale.policies.filter((p,idx)=>idx!==pi);
+  try{
+    if(newPolicies.length===0){
+      playDeleteSound();
+      await delSaleDB(fid);
+    }else{
+      const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
+      playDeleteSound();
+      await updateDoc(doc(db,COLL,fid),updObj);
+    }
+  }catch(e){alert("Delete error: "+e.message);}
 };
 window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.setLogTab=t=>{logSubTab=t;renderLog();attachAll();};
