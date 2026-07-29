@@ -1562,24 +1562,28 @@ function renderHist(){
         const polRows=s.policies.map((p,pi)=>{
           const ek=s.fid+"_"+pi;
           const editing=!!apEditing[ek];
+          const voided=!!p.voided;
+          const strike=voided?"text-decoration:line-through;":"";
           const apPart=editing
             ?"<span style='display:inline-flex;align-items:center;gap:4px;'>"
               +"<input id='apedit-"+s.fid+"-"+pi+"' type='number' step='0.01' value='"+p.annualPremium+"' style='width:90px;padding:3px 6px;border-radius:6px;border:1px solid rgba(96,165,250,0.5);background:rgba(12,24,55,0.95);color:#93c5fd;font-size:12px;font-family:inherit;outline:none;'/>"
               +"<button onclick='saveAPEdit(\""+s.fid+"\","+pi+")' style='background:#1e3a8a;border:1px solid #3b82f6;border-radius:5px;color:#93c5fd;font-size:11px;padding:2px 7px;cursor:pointer;font-weight:700;'>✓</button>"
               +"<button onclick='cancelAPEdit(\""+s.fid+"\","+pi+")' style='background:rgba(127,29,29,0.8);border:1px solid rgba(239,68,68,0.4);border-radius:5px;color:#fca5a5;font-size:11px;padding:2px 7px;cursor:pointer;'>✕</button>"
               +"</span>"
-            :"<span style='color:#e2e8f0;font-weight:600;'>"+$f(p.annualPremium)+"</span>"
-              +" <button onclick='openAPEdit(\""+s.fid+"\","+pi+","+p.annualPremium+")' title='Edit premium' style='background:none;border:none;cursor:pointer;font-size:11px;padding:0 2px;opacity:0.55;line-height:1;vertical-align:middle;'>✏️</button>";
+            :"<span style='color:#e2e8f0;font-weight:600;"+strike+"'>"+$f(p.annualPremium)+"</span>"
+              +(voided?"":" <button onclick='openAPEdit(\""+s.fid+"\","+pi+","+p.annualPremium+")' title='Edit premium' style='background:none;border:none;cursor:pointer;font-size:11px;padding:0 2px;opacity:0.55;line-height:1;vertical-align:middle;'>✏️</button>");
 
-          return "<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;background:#0a1929;border-radius:8px;padding:8px 12px;margin-bottom:"+(pi<s.policies.length-1?"5":"0")+"px;border-left:3px solid #1e40af;'>"
-          +"<span style='font-size:12px;font-weight:700;color:#93c5fd;flex:1;min-width:120px;'>📋 "+esc(p.product)+"</span>"
-          +"<span style='font-size:10px;color:#475569;background:#0f172a;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;'>"+esc(p.term)+"</span>"
+          return "<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;background:"+(voided?"#1a0f0f":"#0a1929")+";border-radius:8px;padding:8px 12px;margin-bottom:"+(pi<s.policies.length-1?"5":"0")+"px;border-left:3px solid "+(voided?"#7f1d1d":"#1e40af")+";opacity:"+(voided?"0.65":"1")+";'>"
+          +"<span style='font-size:12px;font-weight:700;color:"+(voided?"#94a3b8":"#93c5fd")+";flex:1;min-width:120px;"+strike+"'>📋 "+esc(p.product)+"</span>"
+          +"<span style='font-size:10px;color:#475569;background:#0f172a;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;"+strike+"'>"+esc(p.term)+"</span>"
           +"<span style='font-size:11px;color:#94a3b8;white-space:nowrap;'>AP: "+apPart+"</span>"
-          +"<span style='font-size:11px;white-space:nowrap;'>Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
-          +"<span style='font-size:11px;white-space:nowrap;'>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span>"
+          +"<span style='font-size:11px;white-space:nowrap;"+strike+"'>Comm: <strong style='color:"+(voided?"#6b7280":"#34d399")+";'>"+$f(p.totalComm)+"</strong></span>"
+          +"<span style='font-size:11px;white-space:nowrap;"+strike+"'>Credits: <strong style='color:"+(voided?"#6b7280":"#60a5fa")+";'>"+$c(p.totalCredit)+"</strong></span>"
+          +(voided?"<span style='font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.5);border:1px solid rgba(239,68,68,0.35);border-radius:4px;padding:2px 7px;white-space:nowrap;'>🚫 Not Approved</span>":"")
+          +"<button onclick='togglePolicyVoid(\""+s.fid+"\","+pi+")' title='"+(voided?"Restore policy":"Cross out (e.g. underwriting declined)")+"' style='background:none;border:1px solid "+(voided?"rgba(52,211,153,0.4)":"rgba(239,68,68,0.35)")+";border-radius:5px;cursor:pointer;font-size:11px;padding:2px 8px;color:"+(voided?"#5eead4":"#fca5a5")+";white-space:nowrap;'>"+(voided?"↩️ Restore":"🚫 Cross Out")+"</button>"
           +(p.riders&&p.riders.length>0
             ?"<div style='width:100%;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;'>"
-              +p.riders.map(r=>"<span style='background:#0f172a;border-radius:5px;padding:2px 8px;border:1px solid #4f46e5;font-size:10px;color:#a78bfa;'>🔗 "+esc(r.name)+" "+$f(r.premium)+" → "+$f(r.comm)+"</span>").join("")
+              +p.riders.map(r=>"<span style='background:#0f172a;border-radius:5px;padding:2px 8px;border:1px solid #4f46e5;font-size:10px;color:#a78bfa;"+strike+"'>🔗 "+esc(r.name)+" "+$f(r.premium)+" → "+$f(r.comm)+"</span>").join("")
               +"</div>"
             :"")
           +"</div>";
@@ -2086,10 +2090,21 @@ window.saveAPEdit=async(fid,pi)=>{
   const rC=(pol.riders||[]).reduce((a,r)=>a+(r.comm||0),0);
   const rCr=(pol.riders||[]).reduce((a,r)=>a+(r.credit||0),0);
   const newPolicies=sale.policies.map((p,idx)=>idx!==pi?p:{...p,annualPremium:newAP,baseComm:newBaseComm,baseCred:newBaseCred,totalComm:newBaseComm+rC,totalCredit:newBaseCred+rCr});
-  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+p.totalComm,0),baseComm:newPolicies.reduce((a,p)=>a+p.baseComm,0),totalCredit:newPolicies.reduce((a,p)=>a+p.totalCredit,0)};
+  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
   try{await updateDoc(doc(db,COLL,fid),updObj);delete apEditing[fid+"_"+pi];}
   catch(e){alert("Update error: "+e.message);}
 };;
+window.togglePolicyVoid=async(fid,pi)=>{
+  const sale=sales.find(s=>s.fid===fid);
+  if(!sale)return;
+  const pol=sale.policies[pi];
+  if(!pol)return;
+  if(!pol.voided&&!confirm("Cross out this policy? It will be excluded from all commission, credit, and bonus totals (e.g. underwriting declined).")){return;}
+  const newPolicies=sale.policies.map((p,idx)=>idx!==pi?p:{...p,voided:!p.voided});
+  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
+  try{await updateDoc(doc(db,COLL,fid),updObj);}
+  catch(e){alert("Update error: "+e.message);}
+};
 window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.setLogTab=t=>{logSubTab=t;renderLog();attachAll();};
 window.openRenewalEdit=(key,origAP)=>{renewalEditing[key]={open:true,premium:String(origAP)};document.getElementById("app").innerHTML=renderDash();attachAll();};
