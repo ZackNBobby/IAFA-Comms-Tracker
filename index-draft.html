@@ -100,6 +100,9 @@ button,input,select{font-family:inherit;}
 .pol-row{background:rgba(5,12,24,0.8);border-radius:8px;padding:10px;border:1px solid rgba(30,58,95,0.4);margin-bottom:6px;}
 .badge{background:rgba(15,41,66,0.9);border-radius:4px;padding:2px 8px;font-size:11px;color:#60a5fa;border:1px solid rgba(59,130,246,0.15);}
 .badge-fwd{background:rgba(15,42,30,0.9);border-radius:4px;padding:2px 8px;font-size:11px;color:#34d399;border:1px solid rgba(52,211,153,0.15);}
+.badge-singlife{background:rgba(31,12,2,0.9);border-radius:4px;padding:2px 8px;font-size:11px;color:#fb923c;border:1px solid rgba(249,115,22,0.25);}
+.singlife-card{background:linear-gradient(135deg,rgba(28,10,2,0.85),rgba(40,15,4,0.9),rgba(50,20,5,0.85));border-radius:14px;padding:16px;border:1px solid rgba(194,65,12,0.4);margin-bottom:12px;box-shadow:0 4px 20px rgba(234,88,12,0.05);}
+.singlife-sale-item{background:linear-gradient(135deg,rgba(20,8,2,0.9),rgba(28,10,4,0.9));border-radius:10px;padding:14px;border:1px solid rgba(194,65,12,0.35);margin-bottom:10px;}
 .t-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .cal-wrap{position:relative;}
 .cal-row{display:flex;gap:6px;}
@@ -267,7 +270,7 @@ const db=getFirestore(fbApp);
 const auth=getAuth(fbApp);
 const gProvider=new GoogleAuthProvider();
 setPersistence(auth,browserLocalPersistence);
-const COLL="sales", COLL_FWD="fwd_sales";
+const COLL="sales", COLL_FWD="fwd_sales", COLL_SINGLIFE="singlife_sales";
 const COLL_GI="gi_sales", COLL_RENEWAL="renewal_sales";
 const COLL_PIPELINE="pipeline";
 
@@ -279,6 +282,37 @@ const FWD_RATES={
   21:{y1:71.5},22:{y1:72},23:{y1:72.5},24:{y1:73.5},25:{y1:74}
 };
 function getFWDRate(t){return FWD_RATES[Math.min(Math.max(parseInt(t)||5,5),25)]||FWD_RATES[5];}
+
+// ── Singlife products ──
+const SINGLIFE_PROD={
+  "Singlife Elite Term II":{
+    riders:["CI Premium Waiver II (Singlife)","Payer CI Premium Waiver II (Singlife)","Payer Premium Waiver (Singlife)"],
+    terms:[
+      {l:"1 Year",y:14.99},{l:"2 Years",y:16.50},{l:"3 Years",y:24.70},{l:"4 Years",y:32.99},
+      {l:"5 Years",y:41.20},{l:"6 Years",y:47.79},{l:"7 Years",y:53.90},{l:"8 Years",y:59.40},
+      {l:"9 Years",y:64.30},{l:"10-14 Years",y:68.69},{l:"15-19 Years",y:71.50},
+      {l:"20-24 Years",y:74.79},{l:"25+ Years",y:82.50}
+    ]
+  },
+  "Singlife Maternity Care":{terms:[{l:"Single Premium",y:6.00}]},
+  "Singlife Shield":{terms:[{l:"Plan 1 & 2",y:30.00},{l:"Plan 3",y:25.00},{l:"Standard Plan",y:25.00},{l:"Starter",y:15.00},{l:"Plan 1 & 2 (Foreigner)",y:30.00}]},
+  "Singlife Health Plus":{terms:[{l:"Plan 1 (Private)",y:22.50},{l:"Plan 1 (Private Prime)",y:11.25},{l:"Plan 2 (Public)",y:22.50},{l:"Plan 2 (Public Prime)",y:22.50},{l:"Plan 3 (Public)",y:15.00},{l:"Plan 3 (Public Prime)",y:15.00},{l:"Starter",y:15.00}]},
+  "Singlife Cancer Cover Plus II":{terms:[{l:"Yearly",y:63.46}]}
+};
+const _SL_RI=[
+  {l:"5 Years",y:29.12},{l:"6 Years",y:29.12},{l:"7 Years",y:29.12},{l:"8 Years",y:29.51},
+  {l:"9 Years",y:33.15},{l:"10 Years",y:36.92},{l:"11 Years",y:40.56},{l:"12 Years",y:44.33},
+  {l:"13 Years",y:47.97},{l:"14 Years",y:51.61},{l:"15 Years",y:55.38},{l:"16 Years",y:59.15},
+  {l:"17 Years",y:62.66},{l:"18 Years",y:66.56},{l:"19 Years",y:70.20},{l:"20 Years",y:73.84},
+  {l:"21 Years",y:77.61},{l:"22 Years",y:81.25},{l:"23 Years",y:84.89},{l:"24 Years",y:88.66},
+  {l:"25+ Years",y:92.30}
+];
+const SL_RIDER_TERMS={
+  "CI Premium Waiver II (Singlife)":_SL_RI,
+  "Payer CI Premium Waiver II (Singlife)":_SL_RI,
+  "Payer Premium Waiver (Singlife)":_SL_RI
+};
+function getSLRiderRate(n,t){const terms=SL_RIDER_TERMS[n];if(!terms)return null;const f=terms.find(x=>x.l===t);return f?f:null;}
 
 function getBending(saleDate,allSales){
   const dt=new Date(saleDate+"T00:00:00"),yr=dt.getFullYear(),mo=dt.getMonth();
@@ -311,6 +345,26 @@ function liveFWDComm(s){
     bendLabel: bend.label,
     bendTier: bend.tier,
     bendCredits: bend.credits
+  };
+}
+
+// Compute live commission for a stored Singlife sale (with bending)
+function liveSLCommCalc(s){
+  const bend=getLiveBending(s.date);
+  const def=SINGLIFE_PROD[s.product];
+  const t=def&&def.terms&&(def.terms.find(x=>x.l===s.term)||def.terms[0]);
+  const rate=t?t.y:s.commRate||0;
+  const baseComm=(s.annualPremium||0)*(rate/100)*bend.factor;
+  const rComm=(s.riders||[]).reduce((a,r)=>{
+    const rd=getSLRiderRate(r.name,r.riderTerm);
+    const rp=parseFloat(r.premium)||0;
+    return a+(rd&&rp?rp*(rd.y/100)*bend.factor:0);
+  },0);
+  return{
+    commission:baseComm+rComm,
+    baseComm,riderComm:rComm,
+    commRate:rate,
+    bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits
   };
 }
 
@@ -399,7 +453,7 @@ function getTopProducts(){
   return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
 }
 
-let sales=[],fwdSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
+let sales=[],fwdSales=[],singlifeSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
 let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={},showNextYear=false;
 let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipSaving=false;
 let pipCalOpen=false,pipCalY=new Date().getFullYear(),pipCalM=new Date().getMonth();
@@ -413,19 +467,23 @@ let renewalEditing={};
 let pols=[newPol()],fDate=todayStr(),fClient="";
 let calOpen=false,calY=new Date().getFullYear(),calM=new Date().getMonth();
 let srch={};
-let fwdSelMonth=null; // for payout timeline
+let fwdSelMonth=null,singlifeSelMonth=null;
 
 // FWD form — stored separately, NOT re-rendered on every keystroke
 let fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date().getFullYear(),calM:new Date().getMonth()};
 
+// Singlife form — stored separately, NOT re-rendered on every keystroke
+let singlifeForm={date:todayStr(),client:"",product:"",term:"",ap:"",riders:[]};
+
 function newPol(){return{id:uid(),product:"",term:"",ap:"",riders:[]};}
 function newRider(){return{id:uid(),name:"",riderTerm:"",premium:""};}
 
-let unsubSales=null,unsubFWD=null,unsubGI=null,unsubRenewal=null;
+let unsubSales=null,unsubFWD=null,unsubSinglife=null,unsubGI=null,unsubRenewal=null;
 function startListeners(){
   if(unsubSales)return;
   unsubSales=onSnapshot(collection(db,COLL),snap=>{sales=[];snap.forEach(d=>sales.push({...d.data(),fid:d.id}));sales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
   unsubFWD=onSnapshot(collection(db,COLL_FWD),snap=>{fwdSales=[];snap.forEach(d=>fwdSales.push({...d.data(),fid:d.id}));fwdSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
+  unsubSinglife=onSnapshot(collection(db,COLL_SINGLIFE),snap=>{singlifeSales=[];snap.forEach(d=>singlifeSales.push({...d.data(),fid:d.id}));singlifeSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
   unsubGI=onSnapshot(collection(db,COLL_GI),snap=>{giSales=[];snap.forEach(d=>giSales.push({...d.data(),fid:d.id}));giSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
   unsubRenewal=onSnapshot(collection(db,COLL_RENEWAL),snap=>{renewalSales=[];snap.forEach(d=>renewalSales.push({...d.data(),fid:d.id}));renewalSales.sort((a,b)=>a.date<b.date?1:-1);renderAll();});
   onSnapshot(collection(db,COLL_PIPELINE),snap=>{pipelineCases=[];snap.forEach(d=>pipelineCases.push({...d.data(),fid:d.id}));pipelineCases.sort((a,b)=>a.createdAt<b.createdAt?1:-1);renderAll();});
@@ -435,6 +493,8 @@ async function addSaleDB(obj){try{await addDoc(collection(db,COLL),obj);}catch(e
 async function delSaleDB(fid){try{await deleteDoc(doc(db,COLL,fid));}catch(e){alert("Delete error: "+e.message);}}
 async function addFWDSaleDB(obj){try{await addDoc(collection(db,COLL_FWD),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delFWDSaleDB(fid){try{await deleteDoc(doc(db,COLL_FWD,fid));}catch(e){alert("Delete error: "+e.message);}}
+async function addSinglifeSaleDB(obj){try{await addDoc(collection(db,COLL_SINGLIFE),obj);}catch(e){alert("Save error: "+e.message);}}
+async function delSinglifeSaleDB(fid){try{await deleteDoc(doc(db,COLL_SINGLIFE,fid));}catch(e){alert("Delete error: "+e.message);}}
 async function addGISaleDB(obj){try{await addDoc(collection(db,COLL_GI),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delGISaleDB(fid){try{await deleteDoc(doc(db,COLL_GI,fid));}catch(e){alert("Delete error: "+e.message);}}
 async function addRenewalDB(obj){try{await addDoc(collection(db,COLL_RENEWAL),obj);}catch(e){alert("Save error: "+e.message);}}
@@ -866,7 +926,149 @@ function renderFWD(){
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#34d399;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
         </div>
       </div>`;
-    }).join("")}`;
+    }).join("")}
+
+  <!-- ═══════════════════════ SINGLIFE SECTION ═══════════════════════ -->
+  <div style='margin-top:28px;border-top:1px solid rgba(249,115,22,0.2);padding-top:20px;'>
+  <div style='font-size:16px;font-weight:700;color:#fb923c;margin-bottom:14px;'>🟠 Singlife — 3rd Party</div>
+
+  ${(()=>{
+    const liveSLAll=singlifeSales.map(s=>({...s,...liveSLCommCalc(s)}));
+    const liveSL=liveSLAll.filter(s=>s.date.startsWith(String(selYear)));
+    const slQTotals=Object.keys(QS).map(q=>{const qs=liveSL.filter(s=>s.quarter===q);return{q,total:qs.reduce((a,s)=>a+s.commission,0),count:qs.length};});
+    const grandSL=liveSL.reduce((a,s)=>a+s.commission,0);
+
+    const def=SINGLIFE_PROD[singlifeForm.product];
+    const termOpts=def?def.terms.map(t=>`<option value="${esc(t.l)}"${singlifeForm.term===t.l?" selected":""}>${esc(t.l)} (${t.y}%)</option>`).join(""):"";
+    const selT=def&&singlifeForm.term?def.terms.find(t=>t.l===singlifeForm.term):null;
+    const ap=parseFloat(singlifeForm.ap)||0;
+    let slPreviewHtml="";
+    if(ap>0&&selT){
+      const bend=getBending(singlifeForm.date,sales);
+      const baseComm=ap*(selT.y/100)*bend.factor;
+      const rComm=(singlifeForm.riders||[]).reduce((a,r)=>{const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return a+(rd&&rp?rp*(rd.y/100)*bend.factor:0);},0);
+      const totalComm=baseComm+rComm;
+      const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
+      slPreviewHtml=`<div id='slPreview' style='background:#100802;border-radius:10px;padding:12px;border:1px solid #c2410c;margin-bottom:14px;'>
+        <div style='font-size:11px;color:#fb923c;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
+        <div class='g3' style='margin-bottom:8px;'>
+          <div class='mc'><div class='ml'>Comm Rate</div><div class='mv' style='color:#fb923c;'>${selT.y}%</div></div>
+          <div class='mc'><div class='ml'>Bending</div><div class='mv'><span class='bending-badge ${bendCls}'>${bend.label}</span></div></div>
+          <div class='mc'><div class='ml'>Est. Comm</div><div class='mv' style='color:#fb923c;font-size:15px;'>${$f(totalComm)}</div></div>
+        </div>
+        <div style='font-size:11px;color:#475569;'>Prev quarter credits: <span style='color:#94a3b8;font-weight:600;'>${$c(bend.credits)} pts</span>
+        · Payout in: <span style='color:#fb923c;font-weight:600;'>${getPayoutMonth(singlifeForm.date)}</span></div>
+      </div>`;
+    }else{slPreviewHtml=`<div id='slPreview'></div>`;}
+
+    const hasRiders=def&&def.riders&&def.riders.length>0;
+    const ridersHtml=hasRiders?(()=>{
+      const chosen=(singlifeForm.riders||[]).map(r=>r.name).filter(Boolean);
+      const avail=def.riders.filter(x=>x===undefined||true); // all riders visible
+      const riderTrmOpts=(singlifeForm.riders||[]).map((r,ri)=>{
+        const trms=SL_RIDER_TERMS[r.name]||null;
+        const needsTerm=trms&&trms.length>1;
+        return `<div class='rider-block' style='border-color:rgba(194,65,12,0.3);background:rgba(15,5,1,0.9);'>
+          <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>
+            <span style='font-size:11px;color:#fb923c;font-weight:700;'>Rider ${ri+1}</span>
+            <button class='btn-del' style='font-size:11px;padding:2px 8px;' onclick='slRemRider(${ri})'>✕</button>
+          </div>
+          <div class='g2' style='margin-bottom:${needsTerm?"8px":"0"}'>
+            <div><label class='lbl' style='font-size:11px;'>Rider</label>
+              <select class='sel' style='font-size:12px;color:${r.name?"#e2e8f0":"#64748b"};' onchange='slRiderName(${ri},this.value)'>
+                <option value=''>-- Select --</option>
+                ${def.riders.filter(x=>x===r.name||!chosen.filter((_,j)=>j!==ri).includes(x)).map(x=>`<option value="${esc(x)}"${r.name===x?" selected":""}>${esc(x)}</option>`).join("")}
+              </select></div>
+            <div><label class='lbl' style='font-size:11px;'>Est Premium (SGD)</label>
+              <input class='inp' type='number' style='font-size:12px;' value='${esc(r.premium)}' placeholder='e.g. 500' oninput='slRiderPrem(${ri},this.value)'/></div>
+          </div>
+          ${needsTerm?`<div><label class='lbl' style='font-size:11px;color:#fb923c;'>Rider Term</label>
+            <select class='sel' style='font-size:12px;color:${r.riderTerm?"#e2e8f0":"#64748b"};' onchange='slRiderTerm(${ri},this.value)'>
+              <option value=''>-- Select term --</option>
+              ${trms.map(t=>`<option value="${esc(t.l)}"${r.riderTerm===t.l?" selected":""}>${esc(t.l)} (${t.y}%)</option>`).join("")}
+            </select></div>`:""}
+          <div id='sl-r-comm-${ri}'>${(()=>{const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;const bend2=getBending(singlifeForm.date,sales);return rd&&rp?`<span style='font-size:11px;color:#fb923c;margin-top:4px;display:block;'>${$f(rp*(rd.y/100)*bend2.factor)} comm</span>`:"";})()}</div>
+        </div>`;
+      }).join("");
+      return (singlifeForm.riders&&singlifeForm.riders.length>0?`<div style='margin:10px 0 6px;'>${riderTrmOpts}</div>`:"")
+        +`<button class='btn-rider' style='border-color:rgba(194,65,12,0.5);color:#fb923c;margin-bottom:12px;' onclick='slAddRider()'>＋ Add Rider</button>`;
+    })():"";
+
+    return `
+    <!-- Singlife totals -->
+    <div style='background:linear-gradient(135deg,#100802,#170c04,#1e1005);border-radius:12px;padding:16px 20px;border:1px solid #c2410c;margin-bottom:12px;text-align:center;box-shadow:0 0 20px rgba(249,115,22,0.1);'>
+      <div style='font-size:11px;color:#fdba74;font-weight:600;'>Singlife Total Commission (${selYear})</div>
+      <div style='font-size:30px;font-weight:900;color:#fb923c;margin-top:4px;'>${$f(grandSL)}</div>
+      <div style='font-size:11px;color:#475569;margin-top:2px;'>${liveSL.length} sale${liveSL.length!==1?"s":""} · ${Object.keys(SINGLIFE_PROD).join(", ")}</div>
+    </div>
+    <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;'>
+      ${slQTotals.map(qt=>`<div style='background:#100802;border-radius:10px;padding:12px;border:1px solid ${qt.total>0?"#c2410c":"#1e293b"};text-align:center;'>
+        <div style='font-size:11px;color:#475569;font-weight:700;'>${qt.q}</div>
+        <div style='font-size:15px;font-weight:800;color:${qt.total>0?"#fb923c":"#334155"};margin-top:4px;'>${qt.total>0?$f(qt.total):"—"}</div>
+        <div style='font-size:10px;color:#475569;margin-top:2px;'>${qt.count} sale${qt.count!==1?"s":""}</div>
+      </div>`).join("")}
+    </div>
+
+    <!-- Log Singlife Sale -->
+    <div class='singlife-card'>
+      <div style='font-size:14px;font-weight:700;color:#fb923c;margin-bottom:14px;'>➕ Log Singlife Sale</div>
+      <div class='g2' style='margin-bottom:12px;'>
+        <div><label class='lbl'>📅 Date of Sale</label><input class='inp' id='slDateInp' type='text' placeholder='YYYY-MM-DD' value='${esc(singlifeForm.date)}' style='border-color:#c2410c;'/></div>
+        <div><label class='lbl'>👤 Client Name</label><input class='inp' id='slClientInp' type='text' placeholder='e.g. John Tan' value='${esc(singlifeForm.client)}' style='border-color:#c2410c;'/></div>
+      </div>
+      <div class='g2' style='margin-bottom:12px;'>
+        <div><label class='lbl'>🏢 Product</label>
+          <select class='sel' id='slProdSel' style='border-color:#c2410c;color:${singlifeForm.product?"#e2e8f0":"#64748b"};' onchange='slProdChange(this.value)'>
+            <option value=''>-- Select Product --</option>
+            ${Object.keys(SINGLIFE_PROD).map(p=>`<option value="${esc(p)}"${singlifeForm.product===p?" selected":""}>${esc(p)}</option>`).join("")}
+          </select></div>
+        ${def?`<div><label class='lbl'>📋 Plan / Term</label>
+          <select class='sel' id='slTermSel' style='border-color:#c2410c;color:${singlifeForm.term?"#e2e8f0":"#64748b"};' onchange='slTermChange(this.value)'>
+            <option value=''>-- Select --</option>${termOpts}
+          </select></div>`
+          :`<div><label class='lbl'>📋 Plan / Term</label><select class='sel' disabled style='border-color:#c2410c;color:#64748b;'><option>-- Select product first --</option></select></div>`}
+      </div>
+      <div style='margin-bottom:12px;'>
+        <label class='lbl'>💰 Annual Premium (SGD)</label>
+        <input class='inp' id='slApInp' type='number' placeholder='e.g. 3000' value='${esc(singlifeForm.ap)}' style='border-color:#c2410c;'/>
+      </div>
+      ${ridersHtml}
+      ${slPreviewHtml}
+      <div class='val-err' id='slValErr'>⚠️ Please fill in all required fields.</div>
+      <button class='btn-pri' style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);' onclick='doAddSinglifeSale()'>✅ Add Singlife Sale</button>
+    </div>
+
+    <!-- Singlife Sales History -->
+    <div style='font-size:14px;font-weight:700;color:#fb923c;margin:16px 0 10px;'>📋 Singlife Sales History (${liveSL.length})</div>
+    ${liveSL.length===0
+      ?`<div style='text-align:center;color:#475569;padding:30px;background:#100802;border-radius:10px;border:1px solid #c2410c;'>No Singlife sales logged yet.</div>`
+      :liveSL.map(s=>{
+        const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+        const bendCls=s.bendTier==="high"?"bend-high":s.bendTier==="mid"?"bend-mid":"bend-base";
+        const rComm=s.riderComm||0;
+        return `<div class='singlife-sale-item'>
+          <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;'>
+            <div>
+              <div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;'>
+                <span style='font-weight:700;font-size:15px;'>${esc(s.clientName)}</span>
+                <span class='badge-singlife'>Singlife</span><span class='badge'>${s.quarter}</span>
+                <span style='font-size:11px;color:#64748b;'>${dt}</span>
+              </div>
+              <div style='font-size:12px;color:#64748b;'>${esc(s.product||"")} · ${esc(s.term||"")} · AP: <strong style='color:#e2e8f0;'>${$f(s.annualPremium)}</strong></div>
+            </div>
+            <button class='btn-del' onclick='doDelSinglifeSale("${s.fid}")'>✕</button>
+          </div>
+          <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;'>
+            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Year 1 Comm</div><div style='font-size:14px;font-weight:800;color:#fb923c;margin-top:2px;'>${$f(s.commission)}</div></div>
+            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Comm %</div><div style='font-size:14px;font-weight:800;color:#fdba74;margin-top:2px;'>${(s.commRate||0).toFixed(2)}%</div></div>
+            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Bending</div><div style='margin-top:4px;'><span class='bending-badge ${bendCls}'>${s.bendLabel}</span></div></div>
+            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#fb923c;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
+          </div>
+          ${rComm>0?`<div style='font-size:11px;color:#fdba74;margin-top:6px;'>Includes rider commission: ${$f(rComm)}</div>`:""}
+        </div>`;
+      }).join("")}
+  </div>`;
+  })()}`;
 }
 
 // ── Update FWD preview WITHOUT re-rendering whole page ──
@@ -919,6 +1121,8 @@ function renderDash(){
   const fwdQ=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))&&s.quarter===activeQ);
   const fwdQTotal=fwdQ.reduce((a,s)=>a+s.commission,0);
   const fwdYrTotal=liveFwdAll.filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
+  const liveSLAll=singlifeSales.map(s=>({...s,...liveSLCommCalc(s)}));
+  const slYrTotal=liveSLAll.filter(s=>s.date.startsWith(String(selYear))).reduce((a,s)=>a+s.commission,0);
 
   // ── Income monthly payout map (sale month +1) ──
   const incomePayMap={};
@@ -940,6 +1144,17 @@ function renderDash(){
       if(!fwdPayMap[mo])fwdPayMap[mo]={comm:0,count:0};
       fwdPayMap[mo].comm+=s.commission;
       fwdPayMap[mo].count++;
+    }
+  });
+
+  // ── Build Singlife monthly payout map for selYear ──
+  const slPayMap={};
+  liveSLAll.forEach(s=>{
+    const{mo,yr}=getPayoutMoYear(s.date);
+    if(yr===selYear){
+      if(!slPayMap[mo])slPayMap[mo]={comm:0,count:0};
+      slPayMap[mo].comm+=s.commission;
+      slPayMap[mo].count++;
     }
   });
 
@@ -1037,10 +1252,11 @@ function renderDash(){
   const combinedMonths=MTHS_S.map((m,i)=>{
     const incData=incomePayMap[i]||{comm:0,count:0};
     const fwdData=fwdPayMap[i]||{comm:0,count:0};
+    const slData=slPayMap[i]||{comm:0,count:0};
     const bonusQ=BONUS_MO_MAP[i]||null;
     const bonusAmt=bonusQ?getQBonus(ys,bonusQ):0;
-    const total=incData.comm+fwdData.comm+bonusAmt;
-    return{m,i,income:incData.comm,fwd:fwdData.comm,bonus:bonusAmt,total};
+    const total=incData.comm+fwdData.comm+slData.comm+bonusAmt;
+    return{m,i,income:incData.comm,fwd:fwdData.comm,singlife:slData.comm,bonus:bonusAmt,total};
   });
   const chartMax=Math.max(...combinedMonths.map(d=>d.total),1);
   const curMo=new Date().getMonth(),curYr=new Date().getFullYear();
@@ -1051,6 +1267,7 @@ function renderDash(){
   +"<div style='display:flex;gap:12px;flex-wrap:wrap;'>"
   +"<div style='display:flex;align-items:center;gap:5px;font-size:12px;color:#b0c4d4;'><div style='width:10px;height:10px;border-radius:2px;background:#f97316;'></div>Income</div>"
   +"<div style='display:flex;align-items:center;gap:5px;font-size:12px;color:#b0c4d4;'><div style='width:10px;height:10px;border-radius:2px;background:#34d399;'></div>FWD</div>"
+  +"<div style='display:flex;align-items:center;gap:5px;font-size:12px;color:#b0c4d4;'><div style='width:10px;height:10px;border-radius:2px;background:#fb923c;'></div>Singlife</div>"
   +"<div style='display:flex;align-items:center;gap:5px;font-size:12px;color:#b0c4d4;'><div style='width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#a78bfa,#3b82f6);'></div>Bonus</div>"
   +"</div></div>"
   // Bar chart — with hover tooltip
@@ -1060,20 +1277,23 @@ function renderDash(){
     const hasAmt=d.total>0;
     const incH=d.total>0?Math.max(4,Math.round((d.income/chartMax)*110)):0;
     const fwdH=d.total>0?Math.max(d.fwd>0?4:0,Math.round((d.fwd/chartMax)*110)):0;
+    const slH=d.total>0?Math.max(d.singlife>0?4:0,Math.round((d.singlife/chartMax)*110)):0;
     const bonH=d.total>0?Math.max(d.bonus>0?4:0,Math.round((d.bonus/chartMax)*110)):0;
     // Tooltip content shown on hover
     const tipLines=[]
     if(d.income>0)tipLines.push("<span style='color:#fb923c;'>Income:</span> "+$f(d.income));
     if(d.fwd>0)tipLines.push("<span style='color:#34d399;'>FWD:</span> "+$f(d.fwd));
+    if(d.singlife>0)tipLines.push("<span style='color:#fb923c;'>Singlife:</span> "+$f(d.singlife));
     if(d.bonus>0)tipLines.push("<span style='color:#a78bfa;'>Bonus:</span> "+$f(d.bonus));
     if(hasAmt)tipLines.push("<span style='color:#e2e8f0;font-weight:800;'>Total: "+$f(d.total)+"</span>");
     const tip=hasAmt?"<div class='bar-tip'>"+tipLines.join("<br>")+"</div>":"";
     return "<div class='bar-col"+(isCur?" bar-cur":"")+"'>"
     +tip
-    // stacked bar segments: bonus on top, FWD middle, Income at bottom
+    // stacked bar segments: bonus on top, Singlife, FWD, Income at bottom
     +(bonH>0?"<div style='width:100%;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#a78bfa,#3b82f6);height:"+bonH+"px;transition:height 0.6s ease;box-shadow:0 0 8px rgba(167,139,250,0.5);'></div>":"")
-    +(fwdH>0?"<div style='width:100%;background:linear-gradient(180deg,#34d399,#059669);height:"+fwdH+"px;"+(bonH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
-    +(incH>0?"<div style='width:100%;background:linear-gradient(180deg,#fb923c,#ea580c);height:"+incH+"px;"+(fwdH===0&&bonH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
+    +(slH>0?"<div style='width:100%;background:linear-gradient(180deg,#fdba74,#f97316);height:"+slH+"px;"+(bonH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
+    +(fwdH>0?"<div style='width:100%;background:linear-gradient(180deg,#34d399,#059669);height:"+fwdH+"px;"+(bonH===0&&slH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
+    +(incH>0?"<div style='width:100%;background:linear-gradient(180deg,#fb923c,#ea580c);height:"+incH+"px;"+(fwdH===0&&bonH===0&&slH===0?"border-radius:3px 3px 0 0;":"")+"transition:height 0.6s ease;'></div>":"")
     +(!hasAmt?"<div style='width:100%;height:3px;background:#334155;border-radius:2px;'></div>":"")
     +"<div style='font-size:10px;color:"+(isCur?"#60a5fa":"#7a8fa6")+";font-weight:"+(isCur?"700":"400")+";margin-top:4px;text-align:center;'>"+d.m+"</div>"
     +"</div>";
@@ -1087,6 +1307,7 @@ function renderDash(){
   +"<th style='padding:6px 8px;text-align:left;color:#7a8fa6;border-bottom:1px solid #1e293b;'>Month</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#f97316;border-bottom:1px solid #1e293b;'>Income</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#34d399;border-bottom:1px solid #1e293b;'>FWD</th>"
+  +"<th style='padding:6px 8px;text-align:right;color:#fb923c;border-bottom:1px solid #1e293b;'>Singlife</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#a78bfa;border-bottom:1px solid #1e293b;'>Bonus</th>"
   +"<th style='padding:6px 8px;text-align:right;color:#e2e8f0;border-bottom:1px solid #1e293b;font-weight:800;'>Total</th>"
   +"</tr></thead><tbody>"
@@ -1100,6 +1321,7 @@ function renderDash(){
     +"</td>"
     +"<td style='padding:7px 8px;text-align:right;color:"+(d.income>0?"#f97316":"#334155")+";font-weight:"+(d.income>0?"600":"400")+"'>"+(d.income>0?$f(d.income):"—")+"</td>"
     +"<td style='padding:7px 8px;text-align:right;color:"+(d.fwd>0?"#34d399":"#334155")+";font-weight:"+(d.fwd>0?"600":"400")+"'>"+(d.fwd>0?$f(d.fwd):"—")+"</td>"
+    +"<td style='padding:7px 8px;text-align:right;color:"+(d.singlife>0?"#fb923c":"#334155")+";font-weight:"+(d.singlife>0?"600":"400")+"'>"+(d.singlife>0?$f(d.singlife):"—")+"</td>"
     +"<td style='padding:7px 8px;text-align:right;color:"+(d.bonus>0?"#a78bfa":"#334155")+";font-weight:"+(d.bonus>0?"600":"400")+"'>"+(d.bonus>0?$f(d.bonus):"—")+"</td>"
     +"<td style='padding:7px 8px;text-align:right;font-weight:800;font-size:12px;color:"+(hasAmt?"#ffffff":"#334155")+"'>"+(hasAmt?$f(d.total):"—")+"</td>"
     +"</tr>";
@@ -1109,6 +1331,7 @@ function renderDash(){
   +"<td style='padding:8px 8px;font-weight:800;color:#e2e8f0;font-size:12px;'>Full Year</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#f97316;'>"+$f(combinedMonths.reduce((a,d)=>a+d.income,0))+"</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#34d399;'>"+$f(combinedMonths.reduce((a,d)=>a+d.fwd,0))+"</td>"
+  +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#fb923c;'>"+$f(combinedMonths.reduce((a,d)=>a+d.singlife,0))+"</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:700;color:#a78bfa;'>"+$f(combinedMonths.reduce((a,d)=>a+d.bonus,0))+"</td>"
   +"<td style='padding:8px 8px;text-align:right;font-weight:900;font-size:13px;color:#60a5fa;'>"+$f(combinedMonths.reduce((a,d)=>a+d.total,0))+"</td>"
   +"</tr>"
@@ -1116,7 +1339,7 @@ function renderDash(){
 
   // ── YTD summary ──
   const ytd=getYearTotals(selYear);
-  const ytdGrandAll=ytd.grand+fwdYrTotal;
+  const ytdGrandAll=ytd.grand+fwdYrTotal+slYrTotal;
   const ytdHtml="<div style='background:linear-gradient(135deg,#0d1f3a,#0f2a4a,#112e52,#0a2040);border-radius:14px;padding:16px;border:1px solid rgba(96,165,250,0.3);box-shadow:0 0 32px rgba(96,165,250,0.1);margin-bottom:16px;position:relative;overflow:hidden;'>"
   +"<div style='position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(96,165,250,0.04));pointer-events:none;'></div>"
   +"<div style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#60a5fa;margin-bottom:10px;'>📈 "+selYear+" Year-To-Date Earnings</div>"
@@ -1133,6 +1356,9 @@ function renderDash(){
   +"<div style='text-align:center;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.15);border-radius:8px;padding:8px 4px;'>"
   +"<div style='font-size:10px;color:#6ee7b7;margin-bottom:3px;'>FWD (3rd Party)</div><div style='font-size:16px;font-weight:900;color:#34d399;'>"+$f(fwdYrTotal)+"</div>"
   +"<div style='font-size:9px;color:#7a8fa6;'>FWD comm</div></div>"
+  +"<div style='text-align:center;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.18);border-radius:8px;padding:8px 4px;'>"
+  +"<div style='font-size:10px;color:#fdba74;margin-bottom:3px;'>Singlife (3rd Party)</div><div style='font-size:16px;font-weight:900;color:#fb923c;'>"+$f(slYrTotal)+"</div>"
+  +"<div style='font-size:9px;color:#7a8fa6;'>Singlife comm</div></div>"
   +"<div style='text-align:center;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:8px 4px;'>"
   +"<div style='font-size:10px;color:#93c5fd;font-weight:700;margin-bottom:3px;'>Grand Total YTD</div><div style='font-size:18px;font-weight:900;color:#60a5fa;'>"+$f(ytdGrandAll)+"</div>"
   +"<div style='font-size:9px;color:#7a8fa6;'>All sources</div></div>"
@@ -1873,11 +2099,13 @@ function launchConfetti(customSound){
   function draw(){ctx.clearRect(0,0,W,H);pieces.forEach(p=>{ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.angle*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();p.x+=p.vx;p.y+=p.vy;p.angle+=p.spin;p.vy+=0.07;if(fr>80)p.op-=0.018;});fr++;if(fr<140)requestAnimationFrame(draw);else{ctx.clearRect(0,0,W,H);cv.style.display="none";}}
   draw();
 }
-function launchCommFloat(comm){
+function launchCommFloat(comm,color){
   requestAnimationFrame(()=>{
+    const cl=color||"rgba(52,211,153,0.97)";
+    const sh=color?"0 0 28px "+color+",0 0 60px "+color.replace("0.97","0.4"):"0 0 28px rgba(52,211,153,0.9),0 0 60px rgba(52,211,153,0.5)";
     const el=document.createElement("div");
     el.textContent="+"+$f(comm)+" commission!";
-    el.style.cssText="position:fixed;top:50%;left:50%;font-size:clamp(18px,6vw,30px);font-weight:900;color:rgba(52,211,153,0.97);text-shadow:0 0 28px rgba(52,211,153,0.9),0 0 60px rgba(52,211,153,0.5);pointer-events:none;z-index:100001;animation:commGhost 1.65s ease-out forwards;white-space:normal;max-width:88vw;text-align:center;letter-spacing:-0.5px;line-height:1.2;";
+    el.style.cssText="position:fixed;top:50%;left:50%;font-size:clamp(18px,6vw,30px);font-weight:900;color:"+cl+";text-shadow:"+sh+";pointer-events:none;z-index:100001;animation:commGhost 1.65s ease-out forwards;white-space:normal;max-width:88vw;text-align:center;letter-spacing:-0.5px;line-height:1.2;";
     document.body.appendChild(el);
     setTimeout(()=>el.remove(),1750);
   });
@@ -1897,6 +2125,14 @@ function attachAll(){
   if(fwdCli)fwdCli.addEventListener("input",e=>{fwdForm.client=e.target.value;});
   const fwdAp=document.getElementById("fwdApInp");
   if(fwdAp)fwdAp.addEventListener("input",e=>{fwdForm.ap=e.target.value;updateFWDPreview();});
+
+  // Singlife — same pattern
+  const slCli=document.getElementById("slClientInp");
+  if(slCli)slCli.addEventListener("input",e=>{singlifeForm.client=e.target.value;});
+  const slAp=document.getElementById("slApInp");
+  if(slAp)slAp.addEventListener("input",e=>{singlifeForm.ap=e.target.value;updateSinglifePreview();});
+  const slDate=document.getElementById("slDateInp");
+  if(slDate)slDate.addEventListener("input",e=>{singlifeForm.date=e.target.value;updateSinglifePreview();});
   const fwdCalIco=document.getElementById("fwdCalIco");
   if(fwdCalIco)fwdCalIco.addEventListener("click",e=>{e.stopPropagation();fwdForm.calOpen=!fwdForm.calOpen;if(fwdForm.calOpen&&fwdForm.date){fwdForm.calY=parseInt(fwdForm.date.split("-")[0]);fwdForm.calM=parseInt(fwdForm.date.split("-")[1])-1;}renderPage();});
   const fwdDateInp=document.getElementById("fwdDateInp");
@@ -2056,6 +2292,79 @@ window.doAddFWDSale=async()=>{
   await addFWDSaleDB(obj);launchConfetti();
   fwdForm={date:todayStr(),client:"",term:"",ap:"",calOpen:false,calY:new Date().getFullYear(),calM:new Date().getMonth()};
   renderAll();
+};
+
+window.slProdChange=v=>{singlifeForm.product=v;singlifeForm.term="";singlifeForm.riders=[];renderPage();};
+window.slTermChange=v=>{singlifeForm.term=v;updateSinglifePreview();};
+window.slAddRider=()=>{
+  const def=SINGLIFE_PROD[singlifeForm.product];
+  if(!def||!def.riders)return;
+  singlifeForm.riders=[...singlifeForm.riders,{name:"",riderTerm:"",premium:""}];renderPage();
+};
+window.slRemRider=ri=>{singlifeForm.riders=singlifeForm.riders.filter((_,j)=>j!==ri);renderPage();};
+window.slRiderName=(ri,v)=>{singlifeForm.riders[ri].name=v;singlifeForm.riders[ri].riderTerm="";renderPage();};
+window.slRiderTerm=(ri,v)=>{singlifeForm.riders[ri].riderTerm=v;updateSinglifePreview();};
+window.slRiderPrem=(ri,v)=>{
+  singlifeForm.riders[ri].premium=v;
+  const r=singlifeForm.riders[ri];
+  const rd=getSLRiderRate(r.name,r.riderTerm);
+  const rp=parseFloat(v)||0;
+  const bend=getBending(singlifeForm.date,sales);
+  const rEl=document.getElementById("sl-r-comm-"+ri);
+  if(rEl)rEl.innerHTML=rd&&rp?`<span style='font-size:11px;color:#fb923c;margin-top:4px;display:block;'>${$f(rp*(rd.y/100)*bend.factor)} comm</span>`:"";
+  updateSinglifePreview();
+};
+window.doDelSinglifeSale=async id=>{if(confirm("Delete this Singlife sale?")){playDeleteSound();await delSinglifeSaleDB(id);}};
+function updateSinglifePreview(){
+  const el=document.getElementById("slPreview");if(!el)return;
+  const def=SINGLIFE_PROD[singlifeForm.product];
+  const selT=def&&singlifeForm.term?def.terms.find(t=>t.l===singlifeForm.term):null;
+  const ap=parseFloat(singlifeForm.ap)||0;
+  if(ap>0&&selT){
+    const bend=getBending(singlifeForm.date,sales);
+    const baseComm=ap*(selT.y/100)*bend.factor;
+    const rComm=(singlifeForm.riders||[]).reduce((a,r)=>{const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return a+(rd&&rp?rp*(rd.y/100)*bend.factor:0);},0);
+    const totalComm=baseComm+rComm;
+    const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
+    el.style.cssText="background:#100802;border-radius:10px;padding:12px;border:1px solid #c2410c;margin-bottom:14px;";
+    el.innerHTML=`<div style='font-size:11px;color:#fb923c;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
+      <div class='g3' style='margin-bottom:8px;'>
+        <div class='mc'><div class='ml'>Comm Rate</div><div class='mv' style='color:#fb923c;'>${selT.y}%</div></div>
+        <div class='mc'><div class='ml'>Bending</div><div class='mv'><span class='bending-badge ${bendCls}'>${bend.label}</span></div></div>
+        <div class='mc'><div class='ml'>Est. Comm</div><div class='mv' style='color:#fb923c;font-size:15px;'>${$f(totalComm)}</div></div>
+      </div>
+      <div style='font-size:11px;color:#475569;'>Prev quarter credits: <span style='color:#94a3b8;font-weight:600;'>${$c(bend.credits)} pts</span>
+      · Payout in: <span style='color:#fb923c;font-weight:600;'>${getPayoutMonth(singlifeForm.date)}</span></div>`;
+  }else{el.innerHTML="";el.style.cssText="";}
+}
+window.doAddSinglifeSale=async()=>{
+  const cli=document.getElementById("slClientInp");if(cli)singlifeForm.client=cli.value.trim();
+  const apEl=document.getElementById("slApInp");if(apEl)singlifeForm.ap=apEl.value;
+  let hasErr=false;
+  if(!singlifeForm.client){flashField(document.getElementById("slClientInp"));hasErr=true;}
+  if(!singlifeForm.product){flashField(document.getElementById("slProdSel"));hasErr=true;}
+  if(!singlifeForm.term){flashField(document.getElementById("slTermSel"));hasErr=true;}
+  if(!singlifeForm.ap||parseFloat(singlifeForm.ap)<=0){flashField(document.getElementById("slApInp"));hasErr=true;}
+  if(hasErr){const err=document.getElementById("slValErr");if(err){err.classList.add("show");setTimeout(()=>err.classList.remove("show"),3500);}return;}
+  const def=SINGLIFE_PROD[singlifeForm.product];
+  const selT=def&&def.terms.find(t=>t.l===singlifeForm.term);
+  const ap=parseFloat(singlifeForm.ap);
+  const bend=getBending(singlifeForm.date,sales);
+  const baseComm=ap*(selT.y/100)*bend.factor;
+  const riders=(singlifeForm.riders||[]).filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{
+    const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;
+    return{name:r.name,riderTerm:r.riderTerm||"",premium:rp,commRate:rd?rd.y:0,comm:rd?rp*(rd.y/100)*bend.factor:0};
+  });
+  const rComm=riders.reduce((a,r)=>a+r.comm,0);
+  const totalComm=baseComm+rComm;
+  const mo=new Date(singlifeForm.date+"T00:00:00").getMonth();
+  const obj={date:singlifeForm.date,clientName:singlifeForm.client,product:singlifeForm.product,term:singlifeForm.term,annualPremium:ap,commRate:selT.y,baseComm,riders,riderComm:rComm,commission:totalComm,bendFactor:bend.factor,bendLabel:bend.label,bendTier:bend.tier,bendCredits:bend.credits,payoutMonth:getPayoutMonth(singlifeForm.date),quarter:getQ(mo),month:mo,company:"Singlife"};
+  await addSinglifeSaleDB(obj);
+  launchCommFloat(totalComm,"rgba(251,146,60,0.97)");
+  launchConfetti();
+  singlifeForm={date:todayStr(),client:"",product:"",term:"",ap:"",riders:[]};
+  renderAll();window.scrollTo(0,0);
+  setTimeout(()=>{const cv=document.getElementById("confetti");if(cv)cv.style.display="none";},2100);
 };
 
 let _delCtx=null,_delBuf=null;
