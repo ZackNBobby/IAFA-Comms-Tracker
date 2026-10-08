@@ -454,7 +454,7 @@ function getTopProducts(){
 }
 
 let sales=[],fwdSales=[],singlifeSales=[],giSales=[],renewalSales=[],tab="log",activeQ=(()=>{const m=new Date().getMonth();return m<3?"Q1":m<6?"Q2":m<9?"Q3":"Q4";})(),selYear=new Date().getFullYear();
-let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",apEditing={},giRenewalPrems={},showNextYear=false;
+let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",thirdPartyTab="fwd",apEditing={},giRenewalPrems={},showNextYear=false;
 let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipSaving=false;
 let pipCalOpen=false,pipCalY=new Date().getFullYear(),pipCalM=new Date().getMonth();
 let pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:"",riders:[]}]};
@@ -852,11 +852,151 @@ function renderFWD(){
     previewHtml=`<div id='fwdPreview'></div>`;
   }
 
+  const _yrSel=`<div style='position:relative;margin-left:auto;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 ${selYear} <span style='font-size:10px;opacity:0.7;'>▼</span></button><div class='yr-dd' id='yrDD' style='display:none;'>${yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")}</div></div>`;
+  const _tpTabs=`<div style='display:flex;gap:8px;margin-bottom:18px;'>
+    <button onclick='setTPTab("fwd")' style='flex:1;padding:10px;border-radius:12px;border:1px solid ${thirdPartyTab==="fwd"?"rgba(52,211,153,0.6)":"rgba(51,65,85,0.4)"};background:${thirdPartyTab==="fwd"?"rgba(15,80,72,0.8)":"transparent"};color:${thirdPartyTab==="fwd"?"#34d399":"#64748b"};font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;box-shadow:${thirdPartyTab==="fwd"?"0 0 14px rgba(52,211,153,0.2)":"none"};'>🟢 FWD Future First</button>
+    <button onclick='setTPTab("singlife")' style='flex:1;padding:10px;border-radius:12px;border:1px solid ${thirdPartyTab==="singlife"?"rgba(249,115,22,0.6)":"rgba(51,65,85,0.4)"};background:${thirdPartyTab==="singlife"?"rgba(50,20,5,0.8)":"transparent"};color:${thirdPartyTab==="singlife"?"#fb923c":"#64748b"};font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;box-shadow:${thirdPartyTab==="singlife"?"0 0 14px rgba(249,115,22,0.2)":"none"};'>🟠 Singlife</button>
+  </div>`;
+
+  if(thirdPartyTab==="singlife"){
+    return `<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>
+      <div style='font-size:16px;font-weight:700;color:#fb923c;'>🏢 3rd Party</div>
+      ${_yrSel}
+    </div>
+    ${_tpTabs}
+    ${(()=>{
+      const liveSLAll=singlifeSales.map(s=>({...s,...liveSLCommCalc(s)}));
+      const liveSL=liveSLAll.filter(s=>s.date.startsWith(String(selYear)));
+      const slQTotals=Object.keys(QS).map(q=>{const qs=liveSL.filter(s=>s.quarter===q);return{q,total:qs.reduce((a,s)=>a+s.commission,0),count:qs.length};});
+      const grandSL=liveSL.reduce((a,s)=>a+s.commission,0);
+      const def=SINGLIFE_PROD[singlifeForm.product];
+      const termOpts=def?def.terms.map(t=>`<option value="${esc(t.l)}"${singlifeForm.term===t.l?" selected":""}>${esc(t.l)} (${t.y}%)</option>`).join(""):"";
+      const selT=def&&singlifeForm.term?def.terms.find(t=>t.l===singlifeForm.term):null;
+      const ap=parseFloat(singlifeForm.ap)||0;
+      let slPreviewHtml="";
+      if(ap>0&&selT){
+        const bend=getBending(singlifeForm.date,sales);
+        const baseComm=ap*(selT.y/100)*bend.factor;
+        const rComm=(singlifeForm.riders||[]).reduce((a,r)=>{const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return a+(rd&&rp?rp*(rd.y/100)*bend.factor:0);},0);
+        const totalComm=baseComm+rComm;
+        const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
+        slPreviewHtml=`<div id='slPreview' style='background:#100802;border-radius:10px;padding:12px;border:1px solid #c2410c;margin-bottom:14px;'>
+          <div style='font-size:11px;color:#fb923c;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
+          <div class='g3' style='margin-bottom:8px;'>
+            <div class='mc'><div class='ml'>Comm Rate</div><div class='mv' style='color:#fb923c;'>${selT.y}%</div></div>
+            <div class='mc'><div class='ml'>Bending</div><div class='mv'><span class='bending-badge ${bendCls}'>${bend.label}</span></div></div>
+            <div class='mc'><div class='ml'>Est. Comm</div><div class='mv' style='color:#fb923c;font-size:15px;'>${$f(totalComm)}</div></div>
+          </div>
+          <div style='font-size:11px;color:#475569;'>Prev quarter credits: <span style='color:#94a3b8;font-weight:600;'>${$c(bend.credits)} pts</span> · Payout in: <span style='color:#fb923c;font-weight:600;'>${getPayoutMonth(singlifeForm.date)}</span></div>
+        </div>`;
+      }else{slPreviewHtml=`<div id='slPreview'></div>`;}
+      const hasRiders=def&&def.riders&&def.riders.length>0;
+      const ridersHtml=hasRiders?(()=>{
+        const chosen=(singlifeForm.riders||[]).map(r=>r.name).filter(Boolean);
+        const riderBlocks=(singlifeForm.riders||[]).map((r,ri)=>{
+          const trms=SL_RIDER_TERMS[r.name]||null,needsTerm=trms&&trms.length>1;
+          const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;
+          const bend2=getBending(singlifeForm.date,sales);
+          return `<div class='rider-block' style='border-color:rgba(194,65,12,0.3);background:rgba(15,5,1,0.9);'>
+            <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>
+              <span style='font-size:11px;color:#fb923c;font-weight:700;'>Rider ${ri+1}</span>
+              <button class='btn-del' style='font-size:11px;padding:2px 8px;' onclick='slRemRider(${ri})'>✕</button>
+            </div>
+            <div class='g2' style='margin-bottom:${needsTerm?"8px":"0"}'>
+              <div><label class='lbl' style='font-size:11px;'>Rider</label>
+                <select class='sel' style='font-size:12px;color:${r.name?"#e2e8f0":"#64748b"};' onchange='slRiderName(${ri},this.value)'>
+                  <option value=''>-- Select --</option>
+                  ${def.riders.filter(x=>x===r.name||!chosen.filter((_,j)=>j!==ri).includes(x)).map(x=>`<option value="${esc(x)}"${r.name===x?" selected":""}>${esc(x)}</option>`).join("")}
+                </select></div>
+              <div><label class='lbl' style='font-size:11px;'>Est Premium (SGD)</label>
+                <input class='inp' type='number' style='font-size:12px;' value='${esc(r.premium)}' placeholder='e.g. 500' oninput='slRiderPrem(${ri},this.value)'/></div>
+            </div>
+            ${needsTerm?`<div><label class='lbl' style='font-size:11px;color:#fb923c;'>Rider Term</label>
+              <select class='sel' style='font-size:12px;color:${r.riderTerm?"#e2e8f0":"#64748b"};' onchange='slRiderTerm(${ri},this.value)'>
+                <option value=''>-- Select term --</option>
+                ${trms.map(t=>`<option value="${esc(t.l)}"${r.riderTerm===t.l?" selected":""}>${esc(t.l)} (${t.y}%)</option>`).join("")}
+              </select></div>`:""}
+            <div id='sl-r-comm-${ri}'>${rd&&rp?`<span style='font-size:11px;color:#fb923c;margin-top:4px;display:block;'>${$f(rp*(rd.y/100)*bend2.factor)} comm</span>`:""}</div>
+          </div>`;
+        }).join("");
+        return (singlifeForm.riders&&singlifeForm.riders.length>0?`<div style='margin:10px 0 6px;'>${riderBlocks}</div>`:"")
+          +`<button class='btn-rider' style='border-color:rgba(194,65,12,0.5);color:#fb923c;margin-bottom:12px;' onclick='slAddRider()'>＋ Add Rider</button>`;
+      })():"";
+      return `
+        <div style='background:linear-gradient(135deg,#100802,#170c04,#1e1005);border-radius:12px;padding:16px 20px;border:1px solid #c2410c;margin-bottom:12px;text-align:center;box-shadow:0 0 20px rgba(249,115,22,0.1);'>
+          <div style='font-size:11px;color:#fdba74;font-weight:600;'>Singlife Total Commission (${selYear})</div>
+          <div style='font-size:30px;font-weight:900;color:#fb923c;margin-top:4px;'>${$f(grandSL)}</div>
+          <div style='font-size:11px;color:#475569;margin-top:2px;'>${liveSL.length} sale${liveSL.length!==1?"s":""}</div>
+        </div>
+        <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;'>
+          ${slQTotals.map(qt=>`<div style='background:#100802;border-radius:10px;padding:12px;border:1px solid ${qt.total>0?"#c2410c":"#1e293b"};text-align:center;'>
+            <div style='font-size:11px;color:#475569;font-weight:700;'>${qt.q}</div>
+            <div style='font-size:15px;font-weight:800;color:${qt.total>0?"#fb923c":"#334155"};margin-top:4px;'>${qt.total>0?$f(qt.total):"—"}</div>
+            <div style='font-size:10px;color:#475569;margin-top:2px;'>${qt.count} sale${qt.count!==1?"s":""}</div>
+          </div>`).join("")}
+        </div>
+        <div class='singlife-card'>
+          <div style='font-size:14px;font-weight:700;color:#fb923c;margin-bottom:14px;'>➕ Log Singlife Sale</div>
+          <div class='g2' style='margin-bottom:12px;'>
+            <div><label class='lbl'>📅 Date of Sale</label><input class='inp' id='slDateInp' type='text' placeholder='YYYY-MM-DD' value='${esc(singlifeForm.date)}' style='border-color:#c2410c;'/></div>
+            <div><label class='lbl'>👤 Client Name</label><input class='inp' id='slClientInp' type='text' placeholder='e.g. John Tan' value='${esc(singlifeForm.client)}' style='border-color:#c2410c;'/></div>
+          </div>
+          <div class='g2' style='margin-bottom:12px;'>
+            <div><label class='lbl'>🏢 Product</label>
+              <select class='sel' id='slProdSel' style='border-color:#c2410c;color:${singlifeForm.product?"#e2e8f0":"#64748b"};' onchange='slProdChange(this.value)'>
+                <option value=''>-- Select Product --</option>
+                ${Object.keys(SINGLIFE_PROD).map(p=>`<option value="${esc(p)}"${singlifeForm.product===p?" selected":""}>${esc(p)}</option>`).join("")}
+              </select></div>
+            ${def?`<div><label class='lbl'>📋 Plan / Term</label>
+              <select class='sel' id='slTermSel' style='border-color:#c2410c;color:${singlifeForm.term?"#e2e8f0":"#64748b"};' onchange='slTermChange(this.value)'>
+                <option value=''>-- Select --</option>${termOpts}
+              </select></div>`
+              :`<div><label class='lbl'>📋 Plan / Term</label><select class='sel' disabled style='border-color:#c2410c;color:#64748b;'><option>-- Select product first --</option></select></div>`}
+          </div>
+          <div style='margin-bottom:12px;'><label class='lbl'>💰 Annual Premium (SGD)</label>
+            <input class='inp' id='slApInp' type='number' placeholder='e.g. 3000' value='${esc(singlifeForm.ap)}' style='border-color:#c2410c;'/>
+          </div>
+          ${ridersHtml}
+          ${slPreviewHtml}
+          <div class='val-err' id='slValErr'>⚠️ Please fill in all required fields.</div>
+          <button class='btn-pri' style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);' onclick='doAddSinglifeSale()'>✅ Add Singlife Sale</button>
+        </div>
+        <div style='font-size:14px;font-weight:700;color:#fb923c;margin:16px 0 10px;'>📋 Singlife Sales History (${liveSL.length})</div>
+        ${liveSL.length===0
+          ?`<div style='text-align:center;color:#475569;padding:30px;background:#100802;border-radius:10px;border:1px solid #c2410c;'>No Singlife sales logged yet.</div>`
+          :liveSL.map(s=>{
+            const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
+            const bendCls=s.bendTier==="high"?"bend-high":s.bendTier==="mid"?"bend-mid":"bend-base";
+            const rComm=s.riderComm||0;
+            return `<div class='singlife-sale-item'>
+              <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;'>
+                <div>
+                  <div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;'>
+                    <span style='font-weight:700;font-size:15px;'>${esc(s.clientName)}</span>
+                    <span class='badge-singlife'>Singlife</span><span class='badge'>${s.quarter}</span>
+                    <span style='font-size:11px;color:#64748b;'>${dt}</span>
+                  </div>
+                  <div style='font-size:12px;color:#64748b;'>${esc(s.product||"")} · ${esc(s.term||"")} · AP: <strong style='color:#e2e8f0;'>${$f(s.annualPremium)}</strong></div>
+                </div>
+                <button class='btn-del' onclick='doDelSinglifeSale("${s.fid}")'>✕</button>
+              </div>
+              <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;'>
+                <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Year 1 Comm</div><div style='font-size:14px;font-weight:800;color:#fb923c;margin-top:2px;'>${$f(s.commission)}</div></div>
+                <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Comm %</div><div style='font-size:14px;font-weight:800;color:#fdba74;margin-top:2px;'>${(s.commRate||0).toFixed(2)}%</div></div>
+                <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Bending</div><div style='margin-top:4px;'><span class='bending-badge ${bendCls}'>${s.bendLabel}</span></div></div>
+                <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#fb923c;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
+              </div>
+              ${rComm>0?`<div style='font-size:11px;color:#fdba74;margin-top:6px;'>Includes rider commission: ${$f(rComm)}</div>`:""}
+            </div>`;
+          }).join("")}`;
+    })()}`;
+  }
+
   return `<div style='display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;'>
-    <div style='font-size:16px;font-weight:700;color:#34d399;'>🏢 3rd Party — FWD</div>
-    <div style='position:relative;margin-left:auto;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 ${selYear} <span style='font-size:10px;opacity:0.7;'>▼</span></button>
-    <div class='yr-dd' id='yrDD' style='display:none;'>${yearList().map(y=>`<button class='yr-opt' style='color:${y===selYear?"#fff":"#94a3b8"};background:${y===selYear?"#0f766e":"transparent"};' onclick='selYr(${y})'>${y}</button>`).join("")}</div></div>
+    <div style='font-size:16px;font-weight:700;color:#e2e8f0;'>🏢 3rd Party</div>
+    ${_yrSel}
   </div>
+  ${_tpTabs}
 
   <!-- Grand total -->
   <div style='background:linear-gradient(135deg,#071510,#0a1f14,#0d2b1a);border-radius:12px;padding:16px 20px;border:1px solid #166534;margin-bottom:12px;text-align:center;box-shadow:0 0 20px rgba(52,211,153,0.1);'>
@@ -926,150 +1066,7 @@ function renderFWD(){
           <div style='background:#0a2218;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#34d399;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
         </div>
       </div>`;
-    }).join("")}
-
-  <!-- ═══════════════════════ SINGLIFE SECTION ═══════════════════════ -->
-  <div style='margin-top:28px;border-top:1px solid rgba(249,115,22,0.2);padding-top:20px;'>
-  <div style='font-size:16px;font-weight:700;color:#fb923c;margin-bottom:14px;'>🟠 Singlife — 3rd Party</div>
-
-  ${(()=>{
-    const liveSLAll=singlifeSales.map(s=>({...s,...liveSLCommCalc(s)}));
-    const liveSL=liveSLAll.filter(s=>s.date.startsWith(String(selYear)));
-    const slQTotals=Object.keys(QS).map(q=>{const qs=liveSL.filter(s=>s.quarter===q);return{q,total:qs.reduce((a,s)=>a+s.commission,0),count:qs.length};});
-    const grandSL=liveSL.reduce((a,s)=>a+s.commission,0);
-
-    const def=SINGLIFE_PROD[singlifeForm.product];
-    const termOpts=def?def.terms.map(t=>`<option value="${esc(t.l)}"${singlifeForm.term===t.l?" selected":""}>${esc(t.l)} (${t.y}%)</option>`).join(""):"";
-    const selT=def&&singlifeForm.term?def.terms.find(t=>t.l===singlifeForm.term):null;
-    const ap=parseFloat(singlifeForm.ap)||0;
-    let slPreviewHtml="";
-    if(ap>0&&selT){
-      const bend=getBending(singlifeForm.date,sales);
-      const baseComm=ap*(selT.y/100)*bend.factor;
-      const rComm=(singlifeForm.riders||[]).reduce((a,r)=>{const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return a+(rd&&rp?rp*(rd.y/100)*bend.factor:0);},0);
-      const totalComm=baseComm+rComm;
-      const bendCls=bend.tier==="high"?"bend-high":bend.tier==="mid"?"bend-mid":"bend-base";
-      slPreviewHtml=`<div id='slPreview' style='background:#100802;border-radius:10px;padding:12px;border:1px solid #c2410c;margin-bottom:14px;'>
-        <div style='font-size:11px;color:#fb923c;font-weight:700;margin-bottom:8px;'>⚡ Preview</div>
-        <div class='g3' style='margin-bottom:8px;'>
-          <div class='mc'><div class='ml'>Comm Rate</div><div class='mv' style='color:#fb923c;'>${selT.y}%</div></div>
-          <div class='mc'><div class='ml'>Bending</div><div class='mv'><span class='bending-badge ${bendCls}'>${bend.label}</span></div></div>
-          <div class='mc'><div class='ml'>Est. Comm</div><div class='mv' style='color:#fb923c;font-size:15px;'>${$f(totalComm)}</div></div>
-        </div>
-        <div style='font-size:11px;color:#475569;'>Prev quarter credits: <span style='color:#94a3b8;font-weight:600;'>${$c(bend.credits)} pts</span>
-        · Payout in: <span style='color:#fb923c;font-weight:600;'>${getPayoutMonth(singlifeForm.date)}</span></div>
-      </div>`;
-    }else{slPreviewHtml=`<div id='slPreview'></div>`;}
-
-    const hasRiders=def&&def.riders&&def.riders.length>0;
-    const ridersHtml=hasRiders?(()=>{
-      const chosen=(singlifeForm.riders||[]).map(r=>r.name).filter(Boolean);
-      const avail=def.riders.filter(x=>x===undefined||true); // all riders visible
-      const riderTrmOpts=(singlifeForm.riders||[]).map((r,ri)=>{
-        const trms=SL_RIDER_TERMS[r.name]||null;
-        const needsTerm=trms&&trms.length>1;
-        return `<div class='rider-block' style='border-color:rgba(194,65,12,0.3);background:rgba(15,5,1,0.9);'>
-          <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'>
-            <span style='font-size:11px;color:#fb923c;font-weight:700;'>Rider ${ri+1}</span>
-            <button class='btn-del' style='font-size:11px;padding:2px 8px;' onclick='slRemRider(${ri})'>✕</button>
-          </div>
-          <div class='g2' style='margin-bottom:${needsTerm?"8px":"0"}'>
-            <div><label class='lbl' style='font-size:11px;'>Rider</label>
-              <select class='sel' style='font-size:12px;color:${r.name?"#e2e8f0":"#64748b"};' onchange='slRiderName(${ri},this.value)'>
-                <option value=''>-- Select --</option>
-                ${def.riders.filter(x=>x===r.name||!chosen.filter((_,j)=>j!==ri).includes(x)).map(x=>`<option value="${esc(x)}"${r.name===x?" selected":""}>${esc(x)}</option>`).join("")}
-              </select></div>
-            <div><label class='lbl' style='font-size:11px;'>Est Premium (SGD)</label>
-              <input class='inp' type='number' style='font-size:12px;' value='${esc(r.premium)}' placeholder='e.g. 500' oninput='slRiderPrem(${ri},this.value)'/></div>
-          </div>
-          ${needsTerm?`<div><label class='lbl' style='font-size:11px;color:#fb923c;'>Rider Term</label>
-            <select class='sel' style='font-size:12px;color:${r.riderTerm?"#e2e8f0":"#64748b"};' onchange='slRiderTerm(${ri},this.value)'>
-              <option value=''>-- Select term --</option>
-              ${trms.map(t=>`<option value="${esc(t.l)}"${r.riderTerm===t.l?" selected":""}>${esc(t.l)} (${t.y}%)</option>`).join("")}
-            </select></div>`:""}
-          <div id='sl-r-comm-${ri}'>${(()=>{const rd=getSLRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;const bend2=getBending(singlifeForm.date,sales);return rd&&rp?`<span style='font-size:11px;color:#fb923c;margin-top:4px;display:block;'>${$f(rp*(rd.y/100)*bend2.factor)} comm</span>`:"";})()}</div>
-        </div>`;
-      }).join("");
-      return (singlifeForm.riders&&singlifeForm.riders.length>0?`<div style='margin:10px 0 6px;'>${riderTrmOpts}</div>`:"")
-        +`<button class='btn-rider' style='border-color:rgba(194,65,12,0.5);color:#fb923c;margin-bottom:12px;' onclick='slAddRider()'>＋ Add Rider</button>`;
-    })():"";
-
-    return `
-    <!-- Singlife totals -->
-    <div style='background:linear-gradient(135deg,#100802,#170c04,#1e1005);border-radius:12px;padding:16px 20px;border:1px solid #c2410c;margin-bottom:12px;text-align:center;box-shadow:0 0 20px rgba(249,115,22,0.1);'>
-      <div style='font-size:11px;color:#fdba74;font-weight:600;'>Singlife Total Commission (${selYear})</div>
-      <div style='font-size:30px;font-weight:900;color:#fb923c;margin-top:4px;'>${$f(grandSL)}</div>
-      <div style='font-size:11px;color:#475569;margin-top:2px;'>${liveSL.length} sale${liveSL.length!==1?"s":""} · ${Object.keys(SINGLIFE_PROD).join(", ")}</div>
-    </div>
-    <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;'>
-      ${slQTotals.map(qt=>`<div style='background:#100802;border-radius:10px;padding:12px;border:1px solid ${qt.total>0?"#c2410c":"#1e293b"};text-align:center;'>
-        <div style='font-size:11px;color:#475569;font-weight:700;'>${qt.q}</div>
-        <div style='font-size:15px;font-weight:800;color:${qt.total>0?"#fb923c":"#334155"};margin-top:4px;'>${qt.total>0?$f(qt.total):"—"}</div>
-        <div style='font-size:10px;color:#475569;margin-top:2px;'>${qt.count} sale${qt.count!==1?"s":""}</div>
-      </div>`).join("")}
-    </div>
-
-    <!-- Log Singlife Sale -->
-    <div class='singlife-card'>
-      <div style='font-size:14px;font-weight:700;color:#fb923c;margin-bottom:14px;'>➕ Log Singlife Sale</div>
-      <div class='g2' style='margin-bottom:12px;'>
-        <div><label class='lbl'>📅 Date of Sale</label><input class='inp' id='slDateInp' type='text' placeholder='YYYY-MM-DD' value='${esc(singlifeForm.date)}' style='border-color:#c2410c;'/></div>
-        <div><label class='lbl'>👤 Client Name</label><input class='inp' id='slClientInp' type='text' placeholder='e.g. John Tan' value='${esc(singlifeForm.client)}' style='border-color:#c2410c;'/></div>
-      </div>
-      <div class='g2' style='margin-bottom:12px;'>
-        <div><label class='lbl'>🏢 Product</label>
-          <select class='sel' id='slProdSel' style='border-color:#c2410c;color:${singlifeForm.product?"#e2e8f0":"#64748b"};' onchange='slProdChange(this.value)'>
-            <option value=''>-- Select Product --</option>
-            ${Object.keys(SINGLIFE_PROD).map(p=>`<option value="${esc(p)}"${singlifeForm.product===p?" selected":""}>${esc(p)}</option>`).join("")}
-          </select></div>
-        ${def?`<div><label class='lbl'>📋 Plan / Term</label>
-          <select class='sel' id='slTermSel' style='border-color:#c2410c;color:${singlifeForm.term?"#e2e8f0":"#64748b"};' onchange='slTermChange(this.value)'>
-            <option value=''>-- Select --</option>${termOpts}
-          </select></div>`
-          :`<div><label class='lbl'>📋 Plan / Term</label><select class='sel' disabled style='border-color:#c2410c;color:#64748b;'><option>-- Select product first --</option></select></div>`}
-      </div>
-      <div style='margin-bottom:12px;'>
-        <label class='lbl'>💰 Annual Premium (SGD)</label>
-        <input class='inp' id='slApInp' type='number' placeholder='e.g. 3000' value='${esc(singlifeForm.ap)}' style='border-color:#c2410c;'/>
-      </div>
-      ${ridersHtml}
-      ${slPreviewHtml}
-      <div class='val-err' id='slValErr'>⚠️ Please fill in all required fields.</div>
-      <button class='btn-pri' style='background:linear-gradient(135deg,#7c2d12,#c2410c,#ea580c);' onclick='doAddSinglifeSale()'>✅ Add Singlife Sale</button>
-    </div>
-
-    <!-- Singlife Sales History -->
-    <div style='font-size:14px;font-weight:700;color:#fb923c;margin:16px 0 10px;'>📋 Singlife Sales History (${liveSL.length})</div>
-    ${liveSL.length===0
-      ?`<div style='text-align:center;color:#475569;padding:30px;background:#100802;border-radius:10px;border:1px solid #c2410c;'>No Singlife sales logged yet.</div>`
-      :liveSL.map(s=>{
-        const dt=new Date(s.date+"T00:00:00").toLocaleDateString("en-SG",{day:"2-digit",month:"short",year:"numeric"});
-        const bendCls=s.bendTier==="high"?"bend-high":s.bendTier==="mid"?"bend-mid":"bend-base";
-        const rComm=s.riderComm||0;
-        return `<div class='singlife-sale-item'>
-          <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;'>
-            <div>
-              <div style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;'>
-                <span style='font-weight:700;font-size:15px;'>${esc(s.clientName)}</span>
-                <span class='badge-singlife'>Singlife</span><span class='badge'>${s.quarter}</span>
-                <span style='font-size:11px;color:#64748b;'>${dt}</span>
-              </div>
-              <div style='font-size:12px;color:#64748b;'>${esc(s.product||"")} · ${esc(s.term||"")} · AP: <strong style='color:#e2e8f0;'>${$f(s.annualPremium)}</strong></div>
-            </div>
-            <button class='btn-del' onclick='doDelSinglifeSale("${s.fid}")'>✕</button>
-          </div>
-          <div style='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;'>
-            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Year 1 Comm</div><div style='font-size:14px;font-weight:800;color:#fb923c;margin-top:2px;'>${$f(s.commission)}</div></div>
-            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Comm %</div><div style='font-size:14px;font-weight:800;color:#fdba74;margin-top:2px;'>${(s.commRate||0).toFixed(2)}%</div></div>
-            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Bending</div><div style='margin-top:4px;'><span class='bending-badge ${bendCls}'>${s.bendLabel}</span></div></div>
-            <div style='background:#160a03;border-radius:8px;padding:8px;text-align:center;'><div style='font-size:10px;color:#64748b;'>Payout Month</div><div style='font-size:12px;font-weight:700;color:#fb923c;margin-top:4px;'>${getPayoutMonth(s.date)}</div></div>
-          </div>
-          ${rComm>0?`<div style='font-size:11px;color:#fdba74;margin-top:6px;'>Includes rider commission: ${$f(rComm)}</div>`:""}
-        </div>`;
-      }).join("")}
-  </div>`;
-  })()}`;
-}
+    }).join("")}\`;}
 
 // ── Update FWD preview WITHOUT re-rendering whole page ──
 function updateFWDPreview(){
@@ -1788,29 +1785,24 @@ function renderHist(){
         const polRows=s.policies.map((p,pi)=>{
           const ek=s.fid+"_"+pi;
           const editing=!!apEditing[ek];
-          const voided=!!p.voided;
-          const strike=voided?"text-decoration:line-through;":"";
           const apPart=editing
             ?"<span style='display:inline-flex;align-items:center;gap:4px;'>"
               +"<input id='apedit-"+s.fid+"-"+pi+"' type='number' step='0.01' value='"+p.annualPremium+"' style='width:90px;padding:3px 6px;border-radius:6px;border:1px solid rgba(96,165,250,0.5);background:rgba(12,24,55,0.95);color:#93c5fd;font-size:12px;font-family:inherit;outline:none;'/>"
               +"<button onclick='saveAPEdit(\""+s.fid+"\","+pi+")' style='background:#1e3a8a;border:1px solid #3b82f6;border-radius:5px;color:#93c5fd;font-size:11px;padding:2px 7px;cursor:pointer;font-weight:700;'>✓</button>"
               +"<button onclick='cancelAPEdit(\""+s.fid+"\","+pi+")' style='background:rgba(127,29,29,0.8);border:1px solid rgba(239,68,68,0.4);border-radius:5px;color:#fca5a5;font-size:11px;padding:2px 7px;cursor:pointer;'>✕</button>"
               +"</span>"
-            :"<span style='color:#e2e8f0;font-weight:600;"+strike+"'>"+$f(p.annualPremium)+"</span>"
-              +(voided?"":" <button onclick='openAPEdit(\""+s.fid+"\","+pi+","+p.annualPremium+")' title='Edit premium' style='background:none;border:none;cursor:pointer;font-size:11px;padding:0 2px;opacity:0.55;line-height:1;vertical-align:middle;'>✏️</button>");
+            :"<span style='color:#e2e8f0;font-weight:600;'>"+$f(p.annualPremium)+"</span>"
+              +" <button onclick='openAPEdit(\""+s.fid+"\","+pi+","+p.annualPremium+")' title='Edit premium' style='background:none;border:none;cursor:pointer;font-size:11px;padding:0 2px;opacity:0.55;line-height:1;vertical-align:middle;'>✏️</button>";
 
-          return "<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;background:"+(voided?"#1a0f0f":"#0a1929")+";border-radius:8px;padding:8px 12px;margin-bottom:"+(pi<s.policies.length-1?"5":"0")+"px;border-left:3px solid "+(voided?"#7f1d1d":"#1e40af")+";opacity:"+(voided?"0.65":"1")+";'>"
-          +"<span style='font-size:12px;font-weight:700;color:"+(voided?"#94a3b8":"#93c5fd")+";flex:1;min-width:120px;"+strike+"'>📋 "+esc(p.product)+"</span>"
-          +"<span style='font-size:10px;color:#475569;background:#0f172a;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;"+strike+"'>"+esc(p.term)+"</span>"
+          return "<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;background:#0a1929;border-radius:8px;padding:8px 12px;margin-bottom:"+(pi<s.policies.length-1?"5":"0")+"px;border-left:3px solid #1e40af;'>"
+          +"<span style='font-size:12px;font-weight:700;color:#93c5fd;flex:1;min-width:120px;'>📋 "+esc(p.product)+"</span>"
+          +"<span style='font-size:10px;color:#475569;background:#0f172a;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0;'>"+esc(p.term)+"</span>"
           +"<span style='font-size:11px;color:#94a3b8;white-space:nowrap;'>AP: "+apPart+"</span>"
-          +"<span style='font-size:11px;white-space:nowrap;"+strike+"'>Comm: <strong style='color:"+(voided?"#6b7280":"#34d399")+";'>"+$f(p.totalComm)+"</strong></span>"
-          +"<span style='font-size:11px;white-space:nowrap;"+strike+"'>Credits: <strong style='color:"+(voided?"#6b7280":"#60a5fa")+";'>"+$c(p.totalCredit)+"</strong></span>"
-          +(voided?"<span style='font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.5);border:1px solid rgba(239,68,68,0.35);border-radius:4px;padding:2px 7px;white-space:nowrap;'>🚫 Not Approved</span>":"")
-          +"<button onclick='togglePolicyVoid(\""+s.fid+"\","+pi+")' title='"+(voided?"Restore policy":"Cross out (e.g. underwriting declined)")+"' style='background:none;border:1px solid "+(voided?"rgba(52,211,153,0.4)":"rgba(239,68,68,0.35)")+";border-radius:5px;cursor:pointer;font-size:11px;padding:2px 8px;color:"+(voided?"#5eead4":"#fca5a5")+";white-space:nowrap;'>"+(voided?"↩️ Restore":"🚫 Cross Out")+"</button>"
-          +(voided?"<button onclick='deletePolicyFromSale(\""+s.fid+"\","+pi+")' title='Permanently delete this policy' style='background:rgba(127,29,29,0.7);border:1px solid rgba(239,68,68,0.4);border-radius:5px;cursor:pointer;font-size:11px;padding:2px 8px;color:#fca5a5;white-space:nowrap;'>🗑️ Delete</button>":"")
+          +"<span style='font-size:11px;white-space:nowrap;'>Comm: <strong style='color:#34d399;'>"+$f(p.totalComm)+"</strong></span>"
+          +"<span style='font-size:11px;white-space:nowrap;'>Credits: <strong style='color:#60a5fa;'>"+$c(p.totalCredit)+"</strong></span>"
           +(p.riders&&p.riders.length>0
             ?"<div style='width:100%;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;'>"
-              +p.riders.map(r=>"<span style='background:#0f172a;border-radius:5px;padding:2px 8px;border:1px solid #4f46e5;font-size:10px;color:#a78bfa;"+strike+"'>🔗 "+esc(r.name)+" "+$f(r.premium)+" → "+$f(r.comm)+"</span>").join("")
+              +p.riders.map(r=>"<span style='background:#0f172a;border-radius:5px;padding:2px 8px;border:1px solid #4f46e5;font-size:10px;color:#a78bfa;'>🔗 "+esc(r.name)+" "+$f(r.premium)+" → "+$f(r.comm)+"</span>").join("")
               +"</div>"
             :"")
           +"</div>";
@@ -2400,41 +2392,13 @@ window.saveAPEdit=async(fid,pi)=>{
   const rC=(pol.riders||[]).reduce((a,r)=>a+(r.comm||0),0);
   const rCr=(pol.riders||[]).reduce((a,r)=>a+(r.credit||0),0);
   const newPolicies=sale.policies.map((p,idx)=>idx!==pi?p:{...p,annualPremium:newAP,baseComm:newBaseComm,baseCred:newBaseCred,totalComm:newBaseComm+rC,totalCredit:newBaseCred+rCr});
-  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
+  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+p.totalComm,0),baseComm:newPolicies.reduce((a,p)=>a+p.baseComm,0),totalCredit:newPolicies.reduce((a,p)=>a+p.totalCredit,0)};
   try{await updateDoc(doc(db,COLL,fid),updObj);delete apEditing[fid+"_"+pi];}
   catch(e){alert("Update error: "+e.message);}
 };;
-window.togglePolicyVoid=async(fid,pi)=>{
-  const sale=sales.find(s=>s.fid===fid);
-  if(!sale)return;
-  const pol=sale.policies[pi];
-  if(!pol)return;
-  if(!pol.voided&&!confirm("Cross out this policy? It will be excluded from all commission, credit, and bonus totals (e.g. underwriting declined).")){return;}
-  const newPolicies=sale.policies.map((p,idx)=>idx!==pi?p:{...p,voided:!p.voided});
-  const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
-  try{await updateDoc(doc(db,COLL,fid),updObj);}
-  catch(e){alert("Update error: "+e.message);}
-};
-window.deletePolicyFromSale=async(fid,pi)=>{
-  const sale=sales.find(s=>s.fid===fid);
-  if(!sale)return;
-  const pol=sale.policies[pi];
-  if(!pol)return;
-  if(!confirm("Permanently delete this policy ("+pol.product+")? This cannot be undone."))return;
-  const newPolicies=sale.policies.filter((p,idx)=>idx!==pi);
-  try{
-    if(newPolicies.length===0){
-      playDeleteSound();
-      await delSaleDB(fid);
-    }else{
-      const updObj={policies:newPolicies,totalComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalComm),0),baseComm:newPolicies.reduce((a,p)=>a+(p.voided?0:p.baseComm),0),totalCredit:newPolicies.reduce((a,p)=>a+(p.voided?0:p.totalCredit),0)};
-      playDeleteSound();
-      await updateDoc(doc(db,COLL,fid),updObj);
-    }
-  }catch(e){alert("Delete error: "+e.message);}
-};
 window.setDashTab=t=>{dashSubTab=t;document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.setLogTab=t=>{logSubTab=t;renderLog();attachAll();};
+window.setTPTab=t=>{thirdPartyTab=t;renderPage();};
 window.openRenewalEdit=(key,origAP)=>{renewalEditing[key]={open:true,premium:String(origAP)};document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.closeRenewalEdit=key=>{delete renewalEditing[key];document.getElementById("app").innerHTML=renderDash();attachAll();};
 window.updateRenewalPrem=(key,val)=>{if(renewalEditing[key])renewalEditing[key].premium=val;};
