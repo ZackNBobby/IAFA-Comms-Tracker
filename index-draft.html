@@ -523,6 +523,18 @@ function buildLog(){
     +"</div>";
   if(logSubTab==="gi")return subBar+buildGIForm();
   const gt=grandTot();
+  // Bonus projection after closing this sale
+  const _saleDate=new Date(fDate+"T00:00:00");
+  const _q=getQ(_saleDate.getMonth());
+  const _yr=_saleDate.getFullYear();
+  const _qExist=sales.filter(s=>s.date.startsWith(String(_yr))&&s.quarter===_q);
+  const _existCred=_qExist.reduce((a,s)=>a+s.totalCredit,0);
+  const _afterCred=_existCred+gt.cred;
+  const _curTier=getTier(_existCred);
+  const _afterTier=getTier(_afterCred);
+  const _isMaxed=_afterCred>=140000;
+  const _nextTier=_isMaxed?null:TIERS.find(t=>t.min>_afterCred);
+  const _tierUp=_afterTier.bonus>_curTier.bonus;
   return subBar+"<div class='card'>"
   +"<div style='margin-bottom:12px;'><label class='lbl'>📅 Date of Sale</label>"+buildCal()+"</div>"
   +"<div style='margin-bottom:20px;'><label class='lbl'>👤 Client Name</label><input class='inp' id='clientInp' type='text' placeholder='e.g. John Tan' value='"+esc(fClient)+"'/></div>"
@@ -535,7 +547,57 @@ function buildLog(){
   +"<div class='g2'>"
   +"<div class='mc' style='padding:10px 4px;'><div class='ml'>Total Commission</div><div style='font-size:18px;font-weight:800;color:#34d399;margin-top:2px;'>"+$f(gt.comm)+"</div></div>"
   +"<div class='mc' style='padding:10px 4px;'><div class='ml'>Total Credits</div><div style='font-size:18px;font-weight:800;color:#60a5fa;margin-top:2px;'>"+$c(gt.cred)+" pts</div></div>"
-  +"</div></div>":"")
+  +"</div>"
+  +"<div style='margin-top:12px;border-top:1px solid rgba(96,165,250,0.15);padding-top:12px;'>"
+  +"<div style='font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;'>🎯 After Closing — "+_q+" "+_yr+"</div>"
+  // Tier progress bar
+  +(()=>{
+    const MAX=140000;
+    const milestones=[{v:50000,b:10},{v:68000,b:20},{v:97000,b:30},{v:140000,b:40}];
+    const capExist=Math.min(_existCred,MAX);
+    const capAfter=Math.min(_afterCred,MAX);
+    const pExist=(capExist/MAX*100).toFixed(2);
+    const pAfter=(capAfter/MAX*100).toFixed(2);
+    const pNew=Math.max(0,(capAfter-capExist)/MAX*100).toFixed(2);
+    // Build tick marks + labels
+    let ticks="",labels="";
+    milestones.forEach(m=>{
+      const x=(m.v/MAX*100).toFixed(2);
+      const crossed=_afterCred>=m.v;
+      const crossedBefore=_existCred>=m.v;
+      const col=crossedBefore?"#34d399":crossed?"#f59e0b":"#334155";
+      ticks+="<div style='position:absolute;left:"+x+"%;top:0;bottom:0;width:2px;background:"+col+";transform:translateX(-50%);'></div>";
+      labels+="<div style='position:absolute;left:"+x+"%;transform:translateX(-50%);text-align:center;'>"
+        +"<div style='font-size:10px;font-weight:700;color:"+col+";white-space:nowrap;'>"+m.b+"%</div>"
+        +"<div style='font-size:9px;color:#475569;white-space:nowrap;'>"+$c(m.v)+"</div>"
+        +"</div>";
+    });
+    return "<div style='position:relative;margin-bottom:28px;'>"
+      // Bar
+      +"<div style='height:10px;border-radius:5px;background:#1e293b;overflow:hidden;position:relative;'>"
+      +"<div style='position:absolute;left:0;top:0;bottom:0;width:"+pExist+"%;background:#3b82f6;border-radius:5px 0 0 5px;'></div>"
+      +"<div style='position:absolute;left:"+pExist+"%;top:0;bottom:0;width:"+pNew+"%;background:#34d399;'></div>"
+      +(_isMaxed?"<div style='position:absolute;inset:0;background:linear-gradient(90deg,#f59e0b,#f97316);border-radius:5px;'></div>":"")
+      +"</div>"
+      // Tick marks (above sits the bar, these are over it)
+      +"<div style='position:absolute;left:0;right:0;top:0;height:10px;'>"+ticks+"</div>"
+      // Labels below
+      +"<div style='position:relative;height:30px;margin-top:4px;'>"+labels+"</div>"
+      +"</div>";
+  })()
+  // Summary row
+  +(_isMaxed
+    ?"<div style='text-align:center;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1));border:1px solid rgba(245,158,11,0.4);'>"
+    +"<div style='font-size:20px;font-weight:900;color:#f59e0b;'>🔥 MAXXED UP!</div>"
+    +"<div style='font-size:12px;color:#fdba74;margin-top:3px;'>"+$c(_afterCred)+" pts · 40% bonus tier</div>"
+    +"</div>"
+    :"<div class='g2' style='margin-bottom:0;'>"
+    +"<div class='mc' style='padding:8px 4px;'><div class='ml'>Quarter Credits</div><div style='font-size:17px;font-weight:800;color:#60a5fa;margin-top:2px;'>"+$c(_afterCred)+"</div></div>"
+    +"<div class='mc' style='padding:8px 4px;'><div class='ml'>Bonus Tier</div><div style='font-size:17px;font-weight:800;color:"+(_tierUp?"#34d399":"#a78bfa")+";margin-top:2px;'>"+_afterTier.bonus+"%"+(_tierUp?" ⬆️":"")+"</div></div>"
+    +"</div>"
+    +(_nextTier?"<div style='font-size:11px;color:#f59e0b;margin-top:7px;'>⚡ "+$c(_nextTier.min-_afterCred)+" more credits to "+_nextTier.bonus+"% tier</div>":"<div style='font-size:11px;color:#34d399;margin-top:7px;'>✅ Top tier — 40% bonus unlocked</div>"))
+  +"</div>"
+  +"</div>":"")
   +"<div class='val-err' id='valErr'>⚠️ Please fill in all required fields highlighted in red.</div>"
   +"<button class='btn-pri' onclick='doAddSale()'>💰 Close Deal!</button>"
   +"</div>";
