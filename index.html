@@ -491,7 +491,6 @@ async function addSinglifeSaleDB(obj){try{await addDoc(collection(db,COLL_SINGLI
 async function delSinglifeSaleDB(fid){try{await deleteDoc(doc(db,COLL_SINGLIFE,fid));}catch(e){alert("Delete error: "+e.message);}}
 async function addGISaleDB(obj){try{await addDoc(collection(db,COLL_GI),obj);}catch(e){alert("Save error: "+e.message);}}
 async function delGISaleDB(fid){try{await deleteDoc(doc(db,COLL_GI,fid));}catch(e){alert("Delete error: "+e.message);}}
-
 async function addPipelineDB(obj){try{const r=await addDoc(collection(db,COLL_PIPELINE),obj);return r.id;}catch(e){alert("Save error: "+e.message);}}
 async function updatePipelineDB(fid,upd){try{await updateDoc(doc(db,COLL_PIPELINE,fid),upd);}catch(e){alert("Update error: "+e.message);}}
 async function delPipelineDB(fid){try{await deleteDoc(doc(db,COLL_PIPELINE,fid));}catch(e){alert("Delete error: "+e.message);}}
@@ -1405,7 +1404,7 @@ function renderDash(){
     +"<div style='position:relative;' id='yrWrap'><button class='yr-btn' onclick='togYrDD()'>📅 "+selYear+" <span style='font-size:10px;opacity:0.7;'>▼</span></button>"
     +"<div class='yr-dd' id='yrDD' style='display:none;'>"+yearList().map(y=>"<button class='yr-opt' style='color:"+(y===selYear?"#fff":"#94a3b8")+";background:"+(y===selYear?"#0f766e":"transparent")+";' onclick='selYr("+y+")'>"+y+"</button>").join("")+"</div></div>"
     +"<div style='display:flex;gap:6px;flex:1;flex-wrap:wrap;'>"+Object.keys(QS).map(q=>"<button class='q-btn"+(activeQ===q?" active":"")+"' onclick='setQ(\""+q+"\")'>"+q+"</button>").join("")+"</div></div>";
-    // Top stat cards: YTD total, quarter total, NB vs Renewal
+    // Top stat cards: YTD total, quarter total
     giHtml+="<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;'>"
     +"<div style='background:linear-gradient(135deg,#052a1e,#063b28);border-radius:12px;padding:16px;border:1px solid rgba(13,148,136,0.5);text-align:center;box-shadow:0 0 18px rgba(13,148,136,0.1);'>"
     +"<div style='font-size:11px;color:#5eead4;text-transform:uppercase;letter-spacing:0.05em;'>YTD GI Commission</div>"
@@ -1547,7 +1546,6 @@ function getQD(ys,q,giYs=[]){
   const qb=tm*tier.bonus/100;
   return{tm,bc,tc,tier,eb,qb,tb:eb+qb};
 }
-
 
 function renderHist(){
   const yrSales=sales.filter(s=>s.date.startsWith(String(selYear)));
@@ -2180,7 +2178,6 @@ window.doAddGISale=async()=>{
   renderLog();attachAll();
 };
 window.doDelGISale=async id=>{if(confirm("Delete this GI sale?")){playDeleteSound();await delGISaleDB(id);}};
-};
 
 // ═══════════════════════════════════ PIPELINE ═══════════════════════════════════
 const PIPE_STAGES={
