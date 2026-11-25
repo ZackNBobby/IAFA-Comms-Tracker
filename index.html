@@ -1587,7 +1587,12 @@ function renderDash(){
   +"</div>"
   // Easy Bonus progress + Credit Tier progress
   +"<div class='card'><div style='font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;'>🎉 Easy Bonus Progress</div><div class='prog-wrap'><div class='prog-bar pb-candy' style='width:"+Math.min(100,(qd.tm/3000)*100)+"%'></div></div><div style='font-size:13px;color:#b0c4d4;margin-top:6px;'>"+$f(qd.tm)+" / $3,000.00 "+(qd.tm>=3000?"✅ Unlocked!":"· "+$f(3000-qd.tm)+" more to unlock")+"</div></div>"
-  +"<div class='card' style='margin-bottom:16px;'><div style='font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:12px;'>📊 Credit Tier Progress</div>"
+  +"<div class='card' style='margin-bottom:16px;'>"
+  +"<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;'>"
+  +"<div style='font-size:13px;font-weight:700;color:#60a5fa;'>📊 Credit Tier Progress</div>"
+  +"<div style='text-align:right;'><div style='font-size:16px;font-weight:900;color:#34d399;'>"+$c(qd.tc)+"<span style='font-size:10px;font-weight:600;color:#64748b;margin-left:3px;'>pts</span></div>"
+  +(nt?"<div style='font-size:10px;color:#f59e0b;font-weight:600;'>"+$c(nt.min-qd.tc)+" more → "+nt.bonus+"%</div>":"<div style='font-size:10px;color:#34d399;font-weight:600;'>Max tier reached ✓</div>")
+  +"</div></div>"
   +TIERS.map(t=>{const isA=qd.tc>=t.min&&qd.tc<=t.max,isU=qd.tc>=t.min;return "<div style='display:flex;align-items:center;gap:10px;margin-bottom:8px;'><div class='t-dot' style='background:"+(isA?"#34d399":isU?"#1d4ed8":"#334155")+";'></div><div style='flex:1;font-size:12px;color:"+(isA?"#e2e8f0":isU?"#94a3b8":"#475569")+";'>"+t.label+" credits</div><div style='font-size:13px;font-weight:700;color:"+(isA?"#34d399":isU?"#60a5fa":"#475569")+";'>"+t.bonus+"% "+(isA?"← YOU ARE HERE":"")+"</div></div>";}).join("")
   +(nt?"<div style='margin-top:10px;font-size:12px;color:#f59e0b;'>⚡ Need <strong>"+$c(nt.min-qd.tc)+" more credits</strong> to reach "+nt.bonus+"% tier</div>":"")
   +"</div>"
