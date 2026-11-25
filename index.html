@@ -455,7 +455,7 @@ let sales=[],fwdSales=[],singlifeSales=[],giSales=[],tab="log",activeQ=(()=>{con
 let incomeTimelineExpanded=false,dashSubTab="active",chartExpanded=false,logSubTab="life",thirdPartyTab="fwd",apEditing={};
 let pipelineCases=[],pipFilter="all",closingPid=null,followPid=null,pipSaving=false;
 let pipCalOpen=false,pipCalY=new Date().getFullYear(),pipCalM=new Date().getMonth();
-let pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:"",riders:[]}]};
+let pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:"",isUpgrade:false,riders:[]}]};
 let pipClosePols={};
 let pipFollowNote="";
 let campTab="ignite";
@@ -776,15 +776,24 @@ function buildSrch(pid,sel){
 function buildPolBlock(b,i){
   const def=PROD[b.product]||null,terms=def?def.terms:[],avR=def&&def.riders?def.riders:[];
   const selT=terms.find(t=>t.l===b.term)||null,ap=parseFloat(b.ap)||0;
+  const isISEPform=b.product==="Enhanced IncomeShield / IncomeShield Standard (ISEP)";
+  const isGSTform=b.product==="Care Secure Pro"||isISEPform;
+  const isUpgradeForm=isISEPform&&(b.isUpgrade===true);
+  const gstBaseForm=isGSTform&&ap>0?ap/1.09:ap;
+  const effRateForm=isUpgradeForm?5:(selT?selT.y:0);
   const chosen=b.riders.map(r=>r.name).filter(Boolean);
   const rC=b.riders.map(r=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return{...r,rp,comm:rd&&rp?rp*rd.y/100:0,cred:rd&&rp?rp*rd.c:0,pct:rd?rd.y:0};});
-  const bc=selT&&ap?ap*selT.y/100:0,bCr=selT&&ap?ap*selT.c:0;
+  const bc=selT&&ap?gstBaseForm*effRateForm/100:0,bCr=selT&&ap?gstBaseForm*selT.c:0;
   const rComm=rC.reduce((a,r)=>a+r.comm,0),rCred=rC.reduce((a,r)=>a+r.cred,0);
   const hasR=rC.some(r=>r.name&&r.rp>0);
   let html="<div class='pol-block'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;'><span style='font-size:13px;font-weight:700;color:#60a5fa;'>📋 Policy "+(i+1)+"</span>"+(pols.length>1?"<button class='btn-del' onclick='remPol(\""+b.id+"\")'>✕ Remove</button>":"")+"</div>"
   +"<div class='g2' style='margin-bottom:12px;'><div><label class='lbl'>🏷️ Base Product</label>"+buildSrch(b.id,b.product)+"</div>"
   +"<div><label class='lbl'>📆 Premium Term</label><select class='sel' id='term-"+b.id+"' style='color:"+(b.term?"#e2e8f0":"#64748b")+";opacity:"+(b.product?1:0.4)+"' "+(b.product?"":"disabled")+" onchange='updPolF(\""+b.id+"\",\"term\",this.value)'><option value=''>-- Select Term --</option>"+terms.map(t=>"<option value='"+esc(t.l)+"'"+(b.term===t.l?" selected":"")+">"+esc(t.l)+"</option>").join("")+"</select></div></div>"
   +"<div style='margin-bottom:12px;'><label class='lbl'>💰 Annual Premium (SGD)</label><input class='inp pp-inp' id='ap-"+b.id+"' type='number' data-pid='"+b.id+"' placeholder='e.g. 12000' value='"+esc(b.ap)+"'/></div>"
+  +(isISEPform?"<div style='display:flex;gap:6px;margin-bottom:12px;'>"
+  +"<button onclick='updPolF(\""+b.id+"\",\"isUpgrade\",false)' style='flex:1;padding:8px;border-radius:8px;border:1px solid;font-size:12px;font-weight:700;cursor:pointer;"+(isUpgradeForm?"border-color:#334155;background:rgba(30,41,59,0.3);color:#475569;":"border-color:rgba(52,211,153,0.6);background:rgba(15,80,72,0.7);color:#34d399;")+"'>New Biz (30%)</button>"
+  +"<button onclick='updPolF(\""+b.id+"\",\"isUpgrade\",true)' style='flex:1;padding:8px;border-radius:8px;border:1px solid;font-size:12px;font-weight:700;cursor:pointer;"+(isUpgradeForm?"border-color:rgba(251,191,36,0.6);background:rgba(120,53,15,0.5);color:#fbbf24;":"border-color:#334155;background:rgba(30,41,59,0.3);color:#475569;")+"'>Upgrade (5%)</button>"
+  +"</div>":"")
   +"<div style='border-top:1px solid #1e3a5f;padding-top:12px;'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;'><span style='font-size:12px;font-weight:700;color:#a78bfa;'>🔗 Riders</span>"+(avR.length>0&&b.riders.length<avR.length?"<button class='btn-rider' onclick='addRider(\""+b.id+"\")'>+ Add Rider</button>":"<span style='font-size:11px;color:#475569;'>"+(avR.length===0?"No riders for this product":"All riders added")+"</span>")+"</div>"
   +(b.riders.length===0&&avR.length>0?"<div style='font-size:11px;color:#475569;font-style:italic;margin-bottom:8px;'>Click \"+ Add Rider\" to attach riders.</div>":"");
   b.riders.forEach((row,ri)=>{
@@ -799,7 +808,8 @@ function buildPolBlock(b,i){
   html+="</div>";
   if(selT&&ap>0){
     html+="<div class='prev-box'><div style='font-size:11px;color:#60a5fa;font-weight:700;margin-bottom:8px;'>⚡ Preview — Policy "+(i+1)+"</div>"
-    +"<div class='g3' style='margin-bottom:"+(hasR?8:0)+"px;'><div class='mc'><div class='ml'>Base Comm</div><div class='mv' style='color:#34d399;'>"+$f(bc)+"</div></div><div class='mc'><div class='ml'>Base Credits</div><div class='mv' style='color:#60a5fa;'>"+$c(bCr)+" pts</div></div><div class='mc'><div class='ml'>Comm %</div><div class='mv' style='color:#94a3b8;'>"+selT.y+"%</div></div></div>"
+    +(isGSTform?"<div style='font-size:10px;color:#94a3b8;margin-bottom:6px;'>GST-adj base: <strong style=\"color:#f1f5f9;\">"+$f(gstBaseForm)+"</strong></div>":"")
+    +"<div class='g3' style='margin-bottom:"+(hasR?8:0)+"px;'><div class='mc'><div class='ml'>Base Comm</div><div class='mv' style='color:#34d399;'>"+$f(bc)+"</div></div><div class='mc'><div class='ml'>Base Credits</div><div class='mv' style='color:#60a5fa;'>"+$c(bCr)+" pts</div></div><div class='mc'><div class='ml'>Comm %</div><div class='mv' style='color:#94a3b8;'>"+effRateForm+"%</div></div></div>"
     +rC.filter(r=>r.name&&r.rp>0).map((r,ri)=>"<div style='margin-bottom:6px;'><div style='font-size:10px;color:#64748b;margin-bottom:4px;'>Rider "+(ri+1)+": "+esc(r.name)+(r.riderTerm?" ("+esc(r.riderTerm)+")":"")+"</div><div class='g3'><div class='mc'><div class='ml'>Comm</div><div class='mv' style='color:#a78bfa;'>"+$f(r.comm)+"</div></div><div class='mc'><div class='ml'>Credits</div><div class='mv' style='color:#a78bfa;'>"+$c(r.cred)+" pts</div></div><div class='mc'><div class='ml'>Comm %</div><div class='mv' style='color:#64748b;'>"+r.pct+"%</div></div></div></div>").join("")
     +(hasR?"<div style='border-top:1px solid #1e40af;padding-top:8px;' class='g2'><div class='mc'><div class='ml'>Total Comm</div><div class='mv' style='color:#34d399;font-size:14px;'>"+$f(bc+rComm)+"</div></div><div class='mc'><div class='ml'>Total Credits</div><div class='mv' style='color:#60a5fa;font-size:14px;'>"+$c(bCr+rCred)+" pts</div></div></div>":"")
     +"</div>";
@@ -809,7 +819,7 @@ function buildPolBlock(b,i){
 
 function grandTot(){
   let comm=0,cred=0;
-  for(const b of pols){const def=PROD[b.product];if(!def)continue;const t=def.terms.find(t=>t.l===b.term);if(!t)continue;const ap=parseFloat(b.ap)||0;comm+=ap*t.y/100;cred+=ap*t.c;for(const r of b.riders){const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.y/100;cred+=rp*rd.c;}}}
+  for(const b of pols){const def=PROD[b.product];if(!def)continue;const t=def.terms.find(t=>t.l===b.term);if(!t)continue;const ap=parseFloat(b.ap)||0;const isISEPgt=b.product==="Enhanced IncomeShield / IncomeShield Standard (ISEP)";const isGSTgt=b.product==="Care Secure Pro"||isISEPgt;const gstBgt=isGSTgt&&ap>0?ap/1.09:ap;const effRgt=isISEPgt&&b.isUpgrade===true?5:t.y;comm+=gstBgt*effRgt/100;cred+=gstBgt*t.c;for(const r of b.riders){const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;if(rd&&rp){comm+=rp*rd.y/100;cred+=rp*rd.c;}}}
   return{comm,cred};
 }
 
@@ -2054,10 +2064,14 @@ window.doAddSale=async()=>{
   const mo=new Date(fDate+"T00:00:00").getMonth();
   const saved=pols.filter(b=>b.product&&b.term&&b.ap).map(b=>{
     const def=PROD[b.product],t=def.terms.find(t=>t.l===b.term),ap=parseFloat(b.ap)||0;
-    const baseComm=ap*t.y/100,baseCred=ap*t.c;
+    const isISEPsave=b.product==="Enhanced IncomeShield / IncomeShield Standard (ISEP)";
+    const isGSTsave=b.product==="Care Secure Pro"||isISEPsave;
+    const gstBsave=isGSTsave?ap/1.09:ap;
+    const effRsave=isISEPsave&&b.isUpgrade===true?5:t.y;
+    const baseComm=gstBsave*effRsave/100,baseCred=gstBsave*t.c;
     const riders=b.riders.filter(r=>r.name&&parseFloat(r.premium)>0).map(r=>{const rd=getRiderRate(r.name,r.riderTerm),rp=parseFloat(r.premium)||0;return{name:r.name,riderTerm:r.riderTerm,premium:rp,commPct:rd?rd.y:0,comm:rd?rp*rd.y/100:0,credit:rd?rp*rd.c:0};});
     const rC=riders.reduce((a,r)=>a+r.comm,0),rCr=riders.reduce((a,r)=>a+r.credit,0);
-    return{product:b.product,term:b.term,annualPremium:ap,commPct:t.y,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
+    return{product:b.product,term:b.term,annualPremium:ap,commPct:effRsave,baseComm,baseCred,riders,totalComm:baseComm+rC,totalCredit:baseCred+rCr};
   });
   const obj={date:fDate,clientName:fClient,policies:saved,totalComm:saved.reduce((a,p)=>a+p.totalComm,0),baseComm:saved.reduce((a,p)=>a+p.baseComm,0),totalCredit:saved.reduce((a,p)=>a+p.totalCredit,0),quarter:getQ(mo),month:mo};
   await addSaleDB(obj);
@@ -2266,7 +2280,7 @@ function pipEstimate(product,term,premium){
 
 // Pipeline window functions — all state mutations go through window.*
 function resetPipForm(){pipCalOpen=false;pipForm={client:"",stage:"hot",lastMeeting:"",notes:"",targetQ:"",pols:[{product:"",term:"",estPremium:"",riders:[]}]};Object.keys(srch).filter(k=>/^pip/.test(k)).forEach(k=>delete srch[k]);}
-function newPipPol(){return{product:"",term:"",estPremium:"",riders:[]};}
+function newPipPol(){return{product:"",term:"",estPremium:"",isUpgrade:false,riders:[]};}
 function newPipRider(){return{name:"",riderTerm:"",premium:""};}
 window.addPipPol=()=>{pipForm.pols=[...pipForm.pols,newPipPol()];renderPage();};
 window.delPipPol=i=>{if(pipForm.pols.length<=1)return;pipForm.pols=pipForm.pols.filter((_,j)=>j!==i);delete srch["pip_"+i];renderPage();};
@@ -2290,13 +2304,8 @@ window.setPipPolRiderPrem=(i,ri,v)=>{
 window.closePipForm=()=>{resetPipForm();renderPage();};
 window.setPipFilter=f=>{pipFilter=f;renderPage();};
 window.setPipPolTerm=(i,v)=>{pipForm.pols[i].term=v;renderPage();};
-window.setPipPolPrem=(i,v)=>{
-  pipForm.pols[i].estPremium=v;
-  const el=document.getElementById("pip-pp-"+i);
-  if(!el)return;
-  const est=pipEstimate(pipForm.pols[i].product,pipForm.pols[i].term,v);
-  el.innerHTML=est.comm>0?"<span style='font-size:11px;color:#64748b;margin-top:4px;display:block;'>"+$f(est.comm)+" comm · "+$c(est.credit)+" credits</span>":"";
-};
+window.setPipPolUpgrade=(i,v)=>{pipForm.pols[i].isUpgrade=v;renderPage();};
+window.setPipPolPrem=(i,v)=>{pipForm.pols[i].estPremium=v;renderPage();};
 window.setPipStage=s=>{pipForm.stage=s;renderPage()};
 window.setPipFormStr=(k,v)=>{pipForm[k]=v;};
 window.setPipTargetQ=v=>{pipForm.targetQ=v;renderPage();};
@@ -2600,7 +2609,15 @@ function buildPipForm(){
     const def=PROD[pol.product];
     const avR=def&&def.riders?def.riders:[];
     const chosenR=(pol.riders||[]).map(r=>r.name).filter(Boolean);
-    const est=pipEstimate(pol.product,pol.term,pol.estPremium);
+    const isISEPpip=pol.product==="Enhanced IncomeShield / IncomeShield Standard (ISEP)";
+    const isGSTpip=pol.product==="Care Secure Pro"||isISEPpip;
+    const isUpgradePip=isISEPpip&&(pol.isUpgrade===true);
+    const rawPremPip=parseFloat(pol.estPremium)||0;
+    const gstBasePip=isGSTpip&&rawPremPip>0?rawPremPip/1.09:rawPremPip;
+    const pipTermObj=def&&def.terms&&(def.terms.find(x=>x.l===pol.term)||def.terms[0]);
+    const effRatePip=isUpgradePip?5:(pipTermObj?pipTermObj.y:0);
+    const pipComm=gstBasePip&&pipTermObj?gstBasePip*effRatePip/100:0;
+    const pipCred=gstBasePip&&pipTermObj?gstBasePip*pipTermObj.c:0;
     const rComm=(pol.riders||[]).reduce((s,r)=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return s+(rd&&rp?rp*rd.y/100:0);},0);
     const rCred=(pol.riders||[]).reduce((s,r)=>{const rd=getRiderRate(r.name,r.riderTerm);const rp=parseFloat(r.premium)||0;return s+(rd&&rp?rp*rd.c:0);},0);
     html+="<div style='background:rgba(15,23,42,0.7);border-radius:10px;padding:12px;margin-top:8px;border:1px solid #1e293b;'>"
@@ -2611,6 +2628,10 @@ function buildPipForm(){
     +def.terms.map(t=>"<option value='"+t.l+"'"+(pol.term===t.l?" selected":"")+">"+t.l+" (Y1: "+t.y+"%)</option>").join("")
     +"</select>":"")
     +"<input class='inp' type='number' placeholder='Est Annual Premium (SGD)' value='"+esc(pol.estPremium)+"' oninput='setPipPolPrem("+i+",this.value)' style='width:100%;margin-bottom:8px;'/>"
+    +(isISEPpip?"<div style='display:flex;gap:6px;margin-bottom:8px;'>"
+    +"<button onclick='setPipPolUpgrade("+i+",false)' style='flex:1;padding:6px;border-radius:7px;border:1px solid;font-size:11px;font-weight:700;cursor:pointer;"+(isUpgradePip?"border-color:#334155;background:rgba(30,41,59,0.3);color:#475569;":"border-color:rgba(52,211,153,0.6);background:rgba(15,80,72,0.7);color:#34d399;")+"'>New Biz (30%)</button>"
+    +"<button onclick='setPipPolUpgrade("+i+",true)' style='flex:1;padding:6px;border-radius:7px;border:1px solid;font-size:11px;font-weight:700;cursor:pointer;"+(isUpgradePip?"border-color:rgba(251,191,36,0.6);background:rgba(120,53,15,0.5);color:#fbbf24;":"border-color:#334155;background:rgba(30,41,59,0.3);color:#475569;")+"'>Upgrade (5%)</button>"
+    +"</div>":"")
     // Riders
     +(avR.length>0?"<div style='border-top:1px solid #1e293b;padding-top:8px;margin-top:4px;'>"
     +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'>"
@@ -2646,7 +2667,7 @@ function buildPipForm(){
     +"</div>":"")
     // Total preview for this policy
     +"<div id='pip-pp-"+i+"'>"
-    +((est.comm+rComm)>0?"<div style='font-size:11px;color:#64748b;margin-top:6px;'>Base: "+$f(est.comm)+(rComm>0?" + Riders: "+$f(rComm)+" = <strong style=\"color:#34d399;\">"+$f(est.comm+rComm)+"</strong> · "+$c(est.credit+rCred)+" credits":"")+"</div>":"")
+    +((pipComm+rComm)>0?"<div style='font-size:11px;color:#64748b;margin-top:6px;'>Base: "+$f(pipComm)+(rComm>0?" + Riders: "+$f(rComm)+" = <strong style=\"color:#34d399;\">"+$f(pipComm+rComm)+"</strong> · "+$c(pipCred+rCred)+" credits":"")+(isGSTpip&&rawPremPip>0?" <span style='color:#475569;font-size:10px;'>(GST-adj)</span>":"")+"</div>":"")
     +"</div>"
     +"</div>";
   });
